@@ -22,7 +22,7 @@ This specification will create a weather forecast application, to be deployed wi
 #### Acceptance Criteria
 
 1. WHEN the weather-forecast-app is generated THEN the system SHALL provide a modern front-end application
-2. WHEN the weather-forecast-app is generated THEN the system SHALL look up weather forecasts from https://api.met.no/weatherapi/locationforecast/2.0/documentation
+2. WHEN the weather-forecast-app is generated THEN the system SHALL look up weather forecasts from https://api.met.no/weatherapi/locationforecast/2.0/documentation and cache the results for 1 hour
 3. WHEN the weather-forecast-app is generated THEN the system SHALL respect the Terms of Service defined at https://developer.yr.no/doc/TermsOfService/
 4. WHEN the weather-forecast-app is generated THEN the system SHALL be tested
 
