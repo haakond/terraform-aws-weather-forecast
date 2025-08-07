@@ -86,3 +86,4 @@ coverage.xml
 
 # AWS
 .aws/
+lambda_deployment.zip
