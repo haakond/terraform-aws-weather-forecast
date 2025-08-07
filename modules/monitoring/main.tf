@@ -337,22 +337,6 @@ resource "aws_budgets_budget" "weather_app_budget" {
     values = ["Service$weather-forecast-app"]
   }
 
-  notification {
-    comparison_operator        = "GREATER_THAN"
-    threshold                  = 80
-    threshold_type             = "PERCENTAGE"
-    notification_type          = "ACTUAL"
-    subscriber_email_addresses = []
-  }
-
-  notification {
-    comparison_operator        = "GREATER_THAN"
-    threshold                  = 100
-    threshold_type             = "PERCENTAGE"
-    notification_type          = "FORECASTED"
-    subscriber_email_addresses = []
-  }
-
   tags = var.common_tags
 }
 
@@ -465,10 +449,59 @@ resource "aws_iam_role_policy" "synthetics_canary_policy" {
   })
 }
 
-# Attach AWS managed policy for Synthetics execution
-resource "aws_iam_role_policy_attachment" "synthetics_canary_execution" {
-  role       = aws_iam_role.synthetics_canary_role.name
-  policy_arn = "arn:aws:iam::aws:policy/CloudWatchSyntheticsExecutionRolePolicy"
+# Custom policy for Synthetics execution (replaces deprecated AWS managed policy)
+resource "aws_iam_role_policy" "synthetics_canary_execution" {
+  name = "${var.name_prefix}-synthetics-execution-policy"
+  role = aws_iam_role.synthetics_canary_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:GetObjectVersion",
+          "s3:PutObjectAcl",
+          "s3:GetBucketLocation"
+        ]
+        Resource = [
+          "${aws_s3_bucket.synthetics_artifacts.arn}",
+          "${aws_s3_bucket.synthetics_artifacts.arn}/*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:CreateLogGroup"
+        ]
+        Resource = "arn:aws:logs:*:*:log-group:/aws/lambda/cwsyn-*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:ListAllMyBuckets",
+          "xray:PutTraceSegments"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "cloudwatch:PutMetricData"
+        ]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "cloudwatch:namespace" = "CloudWatchSynthetics"
+          }
+        }
+      }
+    ]
+  })
 }
 
 # CloudWatch Synthetics Canary for end-to-end testing
@@ -501,7 +534,7 @@ resource "aws_synthetics_canary" "weather_app_e2e" {
   tags = var.common_tags
 
   depends_on = [
-    aws_iam_role_policy_attachment.synthetics_canary_execution,
+    aws_iam_role_policy.synthetics_canary_execution,
     aws_iam_role_policy.synthetics_canary_policy
   ]
 }
