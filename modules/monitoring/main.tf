@@ -306,22 +306,9 @@ resource "aws_cloudwatch_metric_alarm" "weather_api_success_rate" {
   tags = var.common_tags
 }
 
-# Log Retention Policies (180 days as per requirements)
-resource "aws_cloudwatch_log_group" "lambda_logs_retention" {
-  count             = var.cloudwatch_log_group_name != "" ? 1 : 0
-  name              = var.cloudwatch_log_group_name
-  retention_in_days = 180
-
-  tags = var.common_tags
-}
-
-resource "aws_cloudwatch_log_group" "api_gateway_logs_retention" {
-  count             = var.api_gateway_log_group_name != "" ? 1 : 0
-  name              = var.api_gateway_log_group_name
-  retention_in_days = 180
-
-  tags = var.common_tags
-}
+# Note: Both Lambda and API Gateway log groups are created in the backend module
+# with proper retention periods. No need to create them again here to avoid
+# ResourceAlreadyExistsException.
 
 # AWS Budget for cost monitoring
 resource "aws_budgets_budget" "weather_app_budget" {
