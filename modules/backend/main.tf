@@ -224,6 +224,42 @@ data "aws_region" "current" {}
 # Data source for current AWS caller identity
 data "aws_caller_identity" "current" {}
 
+# IAM role for API Gateway CloudWatch Logs
+resource "aws_iam_role" "api_gateway_cloudwatch_role" {
+  name = "${var.project_name}-api-gateway-cloudwatch-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "apigateway.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = merge(var.common_tags, {
+    Name    = "${var.project_name}-api-gateway-cloudwatch-role"
+    Service = var.service_name
+  })
+}
+
+# Attach the AWS managed policy for API Gateway CloudWatch Logs
+resource "aws_iam_role_policy_attachment" "api_gateway_cloudwatch_logs" {
+  role       = aws_iam_role.api_gateway_cloudwatch_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+}
+
+# Configure API Gateway account settings for CloudWatch Logs
+resource "aws_api_gateway_account" "main" {
+  cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch_role.arn
+
+  depends_on = [aws_iam_role_policy_attachment.api_gateway_cloudwatch_logs]
+}
+
 # API Gateway REST API
 resource "aws_api_gateway_rest_api" "weather_api" {
   name        = "${var.project_name}-weather-api"
@@ -310,6 +346,9 @@ resource "aws_api_gateway_stage" "weather_api" {
     Name    = "${var.project_name}-weather-api-${var.api_stage_name}"
     Service = var.service_name
   })
+
+  # Ensure API Gateway account is configured with CloudWatch Logs role before enabling logging
+  depends_on = [aws_api_gateway_account.main]
 }
 
 # CloudWatch Log Group for API Gateway
