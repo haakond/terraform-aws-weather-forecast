@@ -1,41 +1,73 @@
-# Examples
+# Weather Forecast App - Usage Examples
 
-This directory contains examples of how to use the weather forecast Terraform module in different scenarios.
+This directory contains examples of how to use the Weather Forecast App Terraform module in different scenarios.
 
-## Basic Usage
+## TL;DR
 
-### Simple Deployment
+The Weather Forecast App is a serverless web application that displays tomorrow's weather forecast for four European cities (Oslo, Paris, London, Barcelona). It's built with AWS serverless services and deployed using Terraform.
+
+### Quick Start
+
 ```hcl
-module "weather_forecast" {
-  source = "path/to/weather-forecast-module"
+module "weather_forecast_app" {
+  source = "path/to/weather-forecast-app"
 
-  project_name     = "my-weather-app"
-  environment      = "prod"
-  aws_region       = "eu-west-1"
-  company_website  = "example.com"
+  project_name    = "my-weather-app"
+  environment     = "prod"
+  aws_region      = "eu-west-1"
+  company_website = "mycompany.com"
+  budget_limit    = 50
 }
 ```
 
-### Custom Configuration
-```hcl
-module "weather_forecast" {
-  source = "path/to/weather-forecast-module"
+## Available Examples
 
-  project_name        = "weather-forecast"
-  environment         = "prod"
-  aws_region          = "eu-central-1"
-  company_website     = "mycompany.com"
-  budget_limit        = 100
-  log_retention_days  = 365
+- [**basic-deployment**](./basic-deployment/) - Simple deployment with default settings
+- [**production-deployment**](./production-deployment/) - Production-ready deployment with custom configuration
+- [**multi-environment**](./multi-environment/) - Deploy multiple environments (dev, staging, prod)
+- [**custom-cities**](./custom-cities/) - Customize the cities displayed in weather forecasts
+- [**custom-configuration**](./custom-configuration/) - Advanced configuration with custom settings
+
+## Module Outputs
+
+After deployment, the module provides several useful outputs:
+
+```hcl
+# Access the deployed application
+output "website_url" {
+  value = module.weather_forecast_app.cloudfront_distribution_domain
+}
+
+# API endpoint for direct access
+output "api_url" {
+  value = module.weather_forecast_app.api_gateway_url
+}
+
+# Monitoring dashboard
+output "dashboard_url" {
+  value = module.weather_forecast_app.cloudwatch_dashboard_url
 }
 ```
+
+## Prerequisites
+
+- Terraform >= 1.0
+- AWS CLI configured with appropriate permissions
+- AWS account with sufficient permissions to create:
+  - Lambda functions
+  - API Gateway
+  - DynamoDB tables
+  - S3 buckets
+  - CloudFront distributions
+  - CloudWatch resources
+  - IAM roles and policies
 
 ## CI/CD Integration
 
 ### GitHub Actions Example
+
 ```yaml
 name: Deploy Weather Forecast App
-
 on:
   push:
     branches: [main]
@@ -45,100 +77,90 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+      - uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
 
       - name: Terraform Init
         run: terraform init
 
       - name: Terraform Plan
-        run: terraform plan -var-file="environments/prod.tfvars"
+        run: terraform plan
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var-file="environments/prod.tfvars"
+        run: terraform apply -auto-approve
 ```
 
-### AWS CodePipeline Example
-```hcl
-resource "aws_codepipeline" "weather_forecast_pipeline" {
-  name     = "weather-forecast-pipeline"
-  role_arn = aws_iam_role.codepipeline_role.arn
+### GitLab CI Example
 
-  artifact_store {
-    location = aws_s3_bucket.codepipeline_artifacts.bucket
-    type     = "S3"
-  }
+```yaml
+stages:
+  - validate
+  - plan
+  - deploy
 
-  stage {
-    name = "Source"
-    action {
-      name             = "Source"
-      category         = "Source"
-      owner            = "AWS"
-      provider         = "S3"
-      version          = "1"
-      output_artifacts = ["source_output"]
-    }
-  }
+variables:
+  TF_ROOT: ${CI_PROJECT_DIR}
+  TF_ADDRESS: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/terraform/state/weather-app
 
-  stage {
-    name = "Deploy"
-    action {
-      name            = "Deploy"
-      category        = "Deploy"
-      owner           = "AWS"
-      provider        = "CloudFormation"
-      version         = "1"
-      input_artifacts = ["source_output"]
-    }
-  }
-}
+terraform:validate:
+  stage: validate
+  script:
+    - terraform init
+    - terraform validate
+    - terraform fmt -check
+
+terraform:plan:
+  stage: plan
+  script:
+    - terraform init
+    - terraform plan -out=plan.tfplan
+  artifacts:
+    paths:
+      - plan.tfplan
+
+terraform:apply:
+  stage: deploy
+  script:
+    - terraform init
+    - terraform apply plan.tfplan
+  only:
+    - main
 ```
 
-## Environment-Specific Configurations
+## Environment Variables
 
-### Development Environment
-```hcl
-# environments/dev.tfvars
-project_name    = "weather-forecast-dev"
-environment     = "dev"
-aws_region      = "eu-west-1"
-budget_limit    = 25
-```
+The following environment variables can be used to configure the deployment:
 
-### Production Environment
-```hcl
-# environments/prod.tfvars
-project_name       = "weather-forecast-prod"
-environment        = "prod"
-aws_region         = "eu-west-1"
-budget_limit       = 100
-log_retention_days = 365
-```
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `TF_VAR_project_name` | Project name | `weather-forecast-app` |
+| `TF_VAR_environment` | Environment name | `dev` |
+| `TF_VAR_aws_region` | AWS region | `eu-west-1` |
+| `TF_VAR_company_website` | Company website for User-Agent | `example.com` |
+| `TF_VAR_budget_limit` | Monthly budget limit in USD | `50` |
 
-## Multi-Region Deployment
+## Cost Considerations
 
-For multi-region deployments, create separate Terraform configurations for each region:
+- **Lambda**: Pay per request and execution time
+- **API Gateway**: Pay per API call
+- **DynamoDB**: On-demand billing for read/write requests
+- **S3**: Storage and request costs
+- **CloudFront**: Data transfer and request costs
+- **CloudWatch**: Log storage and custom metrics
 
-```hcl
-# eu-west-1 deployment
-module "weather_forecast_ireland" {
-  source = "path/to/weather-forecast-module"
+Typical monthly cost for low-traffic usage: $5-15 USD
 
-  project_name = "weather-forecast-ireland"
-  environment  = "prod"
-  aws_region   = "eu-west-1"
-}
+## Support
 
-# eu-central-1 deployment
-module "weather_forecast_frankfurt" {
-  source = "path/to/weather-forecast-module"
-
-  project_name = "weather-forecast-frankfurt"
-  environment  = "prod"
-  aws_region   = "eu-central-1"
-}
-```
+For issues and questions:
+1. Check the [troubleshooting guide](../docs/troubleshooting.md)
+2. Review the [architecture documentation](../docs/architecture.md)
+3. Check CloudWatch logs and monitoring dashboard

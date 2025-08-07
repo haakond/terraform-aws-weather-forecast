@@ -57,7 +57,7 @@ The application follows a serverless architecture pattern with the following com
   - Return formatted weather data to frontend
   - Include identifying User-Agent header in all API requests (application name + configurable contact info)
 - **Configuration**:
-  - Company website configurable via environment variable (default: hedrange.com)
+  - Company website configurable via environment variable (default: example.com)
   - User-Agent format: "weather-forecast-app/1.0 (+https://[company_website])"
 
 #### Weather Data Processor

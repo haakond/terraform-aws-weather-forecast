@@ -20,7 +20,20 @@ variable "environment" {
 variable "company_website" {
   description = "Company website for User-Agent header"
   type        = string
-  default     = "hedrange.com"
+  default     = "example.com"
+}
+
+variable "cities_config" {
+  description = "Configuration for cities to display weather forecasts"
+  type = list(object({
+    id      = string
+    name    = string
+    country = string
+    coordinates = object({
+      latitude  = number
+      longitude = number
+    })
+  }))
 }
 
 variable "log_retention_days" {

@@ -38,6 +38,7 @@ module "backend" {
   service_name       = "weather-forecast-app"
   environment        = var.environment
   company_website    = var.company_website
+  cities_config      = var.cities_config
   log_retention_days = var.log_retention_days
   common_tags        = local.common_tags
 }
@@ -53,8 +54,16 @@ module "frontend" {
 module "monitoring" {
   source = "./modules/monitoring"
 
-  name_prefix  = local.name_prefix
-  environment  = var.environment
-  budget_limit = var.budget_limit
-  common_tags  = local.common_tags
+  name_prefix                    = local.name_prefix
+  environment                    = var.environment
+  budget_limit                   = var.budget_limit
+  common_tags                    = local.common_tags
+  lambda_function_name           = module.backend.lambda_function_name
+  api_gateway_id                 = module.backend.api_gateway_id
+  api_gateway_stage_name         = module.backend.api_gateway_stage_name
+  dynamodb_table_name            = module.backend.dynamodb_table_name
+  cloudwatch_log_group_name      = module.backend.cloudwatch_log_group_name
+  api_gateway_log_group_name     = module.backend.api_gateway_log_group_name
+  cloudfront_distribution_domain = module.frontend.cloudfront_distribution_domain
+  api_gateway_url                = module.backend.api_gateway_url
 }

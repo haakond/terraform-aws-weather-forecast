@@ -167,6 +167,7 @@ resource "aws_lambda_function" "weather_api" {
   environment {
     variables = {
       COMPANY_WEBSITE     = var.company_website
+      CITIES_CONFIG       = jsonencode(var.cities_config)
       DYNAMODB_TABLE_NAME = aws_dynamodb_table.weather_cache.name
       AWS_REGION          = data.aws_region.current.id
       LOG_LEVEL           = var.log_level

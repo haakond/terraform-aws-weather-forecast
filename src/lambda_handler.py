@@ -38,7 +38,7 @@ def get_weather_processor() -> WeatherProcessor:
 
     if _weather_processor is None:
         # Get company website from environment variable
-        company_website = os.getenv("COMPANY_WEBSITE", "hedrange.com")
+        company_website = os.getenv("COMPANY_WEBSITE", "example.com")
 
         # Create API client with proper configuration
         api_client = create_weather_client(
@@ -206,7 +206,7 @@ def handle_health_request(event: Dict[str, Any], context: Any) -> Dict[str, Any]
             "service": "weather-forecast-app",
             "requestId": context.aws_request_id,
             "environment": {
-                "company_website": os.getenv("COMPANY_WEBSITE", "hedrange.com"),
+                "company_website": os.getenv("COMPANY_WEBSITE", "example.com"),
                 "aws_region": os.getenv("AWS_REGION", "unknown"),
                 "function_name": context.function_name,
                 "function_version": context.function_version,

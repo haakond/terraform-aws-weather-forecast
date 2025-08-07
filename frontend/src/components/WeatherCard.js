@@ -4,7 +4,8 @@ import './WeatherCard.css';
 const WeatherCard = ({
   cityData,
   isLoading = false,
-  error = null
+  error = null,
+  onRetry = null
 }) => {
   if (error) {
     return (
@@ -24,7 +25,7 @@ const WeatherCard = ({
           </p>
           <button
             className="weather-card__retry-button"
-            onClick={() => window.location.reload()}
+            onClick={onRetry || (() => window.location.reload())}
             aria-label="Retry loading weather data"
           >
             Retry
@@ -66,11 +67,36 @@ const WeatherCard = ({
   const { cityName, country, forecast } = cityData;
   const { temperature, condition, description, icon } = forecast;
 
+  // Determine weather-based CSS class for dynamic styling
+  const getWeatherClass = (condition) => {
+    if (condition.includes('clear') || condition.includes('sun')) return 'weather-card--clear';
+    if (condition.includes('cloud')) return 'weather-card--cloudy';
+    if (condition.includes('rain')) return 'weather-card--rain';
+    if (condition.includes('snow')) return 'weather-card--snow';
+    if (condition.includes('thunder')) return 'weather-card--thunderstorm';
+    if (condition.includes('fog') || condition.includes('mist')) return 'weather-card--fog';
+    return '';
+  };
+
+  const weatherClass = getWeatherClass(condition || '');
+
   return (
-    <div className="weather-card">
+    <div
+      className={`weather-card ${weatherClass}`}
+      role="article"
+      aria-labelledby={`weather-${cityName.toLowerCase().replace(/\s+/g, '-')}-title`}
+      tabIndex="0"
+    >
       <div className="weather-card__header">
-        <h3 className="weather-card__city">{cityName}</h3>
-        <span className="weather-card__country">{country}</span>
+        <h3
+          id={`weather-${cityName.toLowerCase().replace(/\s+/g, '-')}-title`}
+          className="weather-card__city"
+        >
+          {cityName}
+        </h3>
+        <span className="weather-card__country" aria-label={`Country: ${country}`}>
+          {country}
+        </span>
       </div>
 
       <div className="weather-card__content">
@@ -78,31 +104,53 @@ const WeatherCard = ({
           <div
             className={`weather-card__icon weather-card__icon--${icon}`}
             aria-label={`Weather condition: ${description}`}
+            role="img"
           >
             {getWeatherIcon(icon)}
           </div>
         </div>
 
-        <div className="weather-card__temperature">
-          <span className="weather-card__temp-value">
+        <div className="weather-card__temperature" role="group" aria-label="Temperature">
+          <span
+            className="weather-card__temp-value"
+            aria-label={`Temperature: ${Math.round(temperature.value)} degrees Celsius`}
+          >
             {Math.round(temperature.value)}
           </span>
-          <span className="weather-card__temp-unit">°C</span>
+          <span className="weather-card__temp-unit" aria-hidden="true">°C</span>
         </div>
 
-        <p className="weather-card__description">{description}</p>
+        <p className="weather-card__description" aria-label={`Weather description: ${description}`}>
+          {description}
+        </p>
 
-        <div className="weather-card__details">
+        <div className="weather-card__details" role="group" aria-label="Additional weather details">
           {forecast.humidity && (
-            <div className="weather-card__detail">
-              <span className="weather-card__detail-label">Humidity</span>
-              <span className="weather-card__detail-value">{forecast.humidity}%</span>
+            <div className="weather-card__detail" role="group">
+              <span className="weather-card__detail-label" id={`humidity-${cityName.toLowerCase().replace(/\s+/g, '-')}`}>
+                Humidity
+              </span>
+              <span
+                className="weather-card__detail-value"
+                aria-labelledby={`humidity-${cityName.toLowerCase().replace(/\s+/g, '-')}`}
+                aria-label={`${forecast.humidity} percent humidity`}
+              >
+                {forecast.humidity}%
+              </span>
             </div>
           )}
           {forecast.windSpeed && (
-            <div className="weather-card__detail">
-              <span className="weather-card__detail-label">Wind</span>
-              <span className="weather-card__detail-value">{forecast.windSpeed} km/h</span>
+            <div className="weather-card__detail" role="group">
+              <span className="weather-card__detail-label" id={`wind-${cityName.toLowerCase().replace(/\s+/g, '-')}`}>
+                Wind
+              </span>
+              <span
+                className="weather-card__detail-value"
+                aria-labelledby={`wind-${cityName.toLowerCase().replace(/\s+/g, '-')}`}
+                aria-label={`${forecast.windSpeed} kilometers per hour wind speed`}
+              >
+                {forecast.windSpeed} km/h
+              </span>
             </div>
           )}
         </div>
@@ -111,19 +159,51 @@ const WeatherCard = ({
   );
 };
 
-// Weather icon mapping function
+// Enhanced weather icon mapping function with comprehensive conditions
 const getWeatherIcon = (iconType) => {
   const iconMap = {
+    // Clear sky conditions
     'clear_day': '☀️',
     'clear_night': '🌙',
+    'clearsky': '☀️',
+
+    // Partly cloudy conditions
     'partly_cloudy_day': '⛅',
     'partly_cloudy_night': '☁️',
+    'partlycloudy': '⛅',
+    'fair': '🌤️',
+
+    // Cloudy conditions
     'cloudy': '☁️',
+
+    // Rain conditions
+    'light_rain': '🌦️',
+    'lightrain': '🌦️',
     'rain': '🌧️',
+    'heavy_rain': '⛈️',
+    'heavyrain': '⛈️',
+
+    // Snow conditions
+    'light_snow': '🌨️',
+    'lightsnow': '🌨️',
     'snow': '❄️',
+    'heavy_snow': '🌨️',
+    'heavysnow': '🌨️',
+
+    // Thunderstorm conditions
     'thunderstorm': '⛈️',
+    'thunder': '⛈️',
+
+    // Fog conditions
     'fog': '🌫️',
+    'mist': '🌫️',
+
+    // Wind conditions
     'wind': '💨',
+    'windy': '💨',
+
+    // Unknown/default
+    'unknown': '🌤️',
     'default': '🌤️'
   };
 

@@ -68,7 +68,8 @@ The Lambda function is configured with the following environment variables:
 ### Optional Variables
 - `service_name`: Service name for tagging (default: "weather-forecast-app")
 - `environment`: Environment name (default: "prod")
-- `company_website`: Company website for User-Agent (default: "hedrange.com")
+- `company_website`: Company website for User-Agent (default: "example.com")
+- `cities_config`: List of cities with coordinates for weather forecasts (defaults to Oslo, Paris, London, Barcelona)
 - `log_retention_days`: CloudWatch log retention (default: 180)
 - `lambda_memory_size`: Lambda memory in MB (default: 512, range: 128-10240)
 - `lambda_reserved_concurrency`: Reserved concurrency (default: 10)

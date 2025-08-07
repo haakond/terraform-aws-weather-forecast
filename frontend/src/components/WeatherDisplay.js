@@ -1,12 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import WeatherCard from './WeatherCard';
+import { useWeatherData } from '../hooks/useWeatherData';
+import { WeatherAPIError } from '../services/weatherApi';
 import './WeatherDisplay.css';
 
 const WeatherDisplay = () => {
-  const [weatherData, setWeatherData] = useState({});
-  const [loading, setLoading] = useState({});
-  const [errors, setErrors] = useState({});
-  const [globalError, setGlobalError] = useState(null);
+  // Use the weather data hook for state management
+  const {
+    weatherData,
+    loading,
+    error,
+    lastUpdated,
+    refresh,
+    retry,
+    clearCacheAndRefresh,
+    isDataStale,
+    retryCount,
+    getCacheStatus,
+    getErrorMessage
+  } = useWeatherData({
+    autoRefresh: true,
+    refreshInterval: 5 * 60 * 1000, // 5 minutes
+    enableCache: true,
+    onError: (error) => {
+      console.error('Weather data error:', error);
+    },
+    onSuccess: (data) => {
+      console.log('Weather data loaded successfully:', data);
+    }
+  });
 
   // City configuration matching the design document
   const cities = [
@@ -36,94 +58,33 @@ const WeatherDisplay = () => {
     }
   ];
 
-  // Initialize loading states
-  useEffect(() => {
-    const initialLoading = {};
-    cities.forEach(city => {
-      initialLoading[city.id] = true;
-    });
-    setLoading(initialLoading);
-  }, []);
-
-  // Mock data fetching function (will be replaced in task 5.2)
-  const fetchWeatherData = async (cityId) => {
-    try {
-      setLoading(prev => ({ ...prev, [cityId]: true }));
-      setErrors(prev => ({ ...prev, [cityId]: null }));
-
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
-
-      // Mock weather data for demonstration
-      const mockData = {
-        cityId: cityId,
-        cityName: cities.find(c => c.id === cityId)?.name || 'Unknown',
-        country: cities.find(c => c.id === cityId)?.country || 'Unknown',
-        coordinates: cities.find(c => c.id === cityId)?.coordinates || { lat: 0, lon: 0 },
-        forecast: {
-          date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          temperature: {
-            value: Math.round(Math.random() * 30 - 5), // -5 to 25°C
-            unit: 'celsius'
-          },
-          condition: ['clear_day', 'partly_cloudy_day', 'cloudy', 'rain'][Math.floor(Math.random() * 4)],
-          description: ['Sunny', 'Partly cloudy', 'Cloudy', 'Light rain'][Math.floor(Math.random() * 4)],
-          icon: ['clear_day', 'partly_cloudy_day', 'cloudy', 'rain'][Math.floor(Math.random() * 4)],
-          humidity: Math.round(Math.random() * 40 + 40), // 40-80%
-          windSpeed: Math.round(Math.random() * 20 + 5) // 5-25 km/h
-        },
-        lastUpdated: new Date().toISOString(),
-        ttl: Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
-      };
-
-      // Simulate occasional errors for demonstration
-      if (Math.random() < 0.1) {
-        throw new Error('Weather service temporarily unavailable');
-      }
-
-      setWeatherData(prev => ({ ...prev, [cityId]: mockData }));
-      setLoading(prev => ({ ...prev, [cityId]: false }));
-    } catch (error) {
-      console.error(`Error fetching weather for ${cityId}:`, error);
-      setErrors(prev => ({ ...prev, [cityId]: error.message }));
-      setLoading(prev => ({ ...prev, [cityId]: false }));
+  // Helper function to get city data from API response
+  const getCityData = (cityId) => {
+    if (!weatherData || !weatherData.cities) {
+      return null;
     }
+    return weatherData.cities.find(city => city.cityId === cityId);
   };
 
-  // Load weather data for all cities
-  useEffect(() => {
-    const loadAllWeatherData = async () => {
-      try {
-        setGlobalError(null);
-
-        // Fetch weather data for all cities concurrently
-        const fetchPromises = cities.map(city => fetchWeatherData(city.id));
-        await Promise.allSettled(fetchPromises);
-
-      } catch (error) {
-        console.error('Error loading weather data:', error);
-        setGlobalError('Unable to load weather information. Please try again later.');
-      }
-    };
-
-    loadAllWeatherData();
-  }, []);
-
-  // Retry function for individual cities
-  const retryCity = (cityId) => {
-    fetchWeatherData(cityId);
+  // Helper function to check if a city has an error
+  const getCityError = (cityId) => {
+    const cityData = getCityData(cityId);
+    if (!cityData && error) {
+      return getErrorMessage;
+    }
+    return null;
   };
 
-  // Retry all cities
-  const retryAll = () => {
-    cities.forEach(city => fetchWeatherData(city.id));
+  // Helper function to check if a city is loading
+  const isCityLoading = (cityId) => {
+    return loading && !getCityData(cityId);
   };
 
-  // Check if all cities have errors
-  const allCitiesHaveErrors = cities.every(city => errors[city.id]);
-  const anyCityLoading = Object.values(loading).some(isLoading => isLoading);
+  // Check if all cities have errors or no data
+  const hasGlobalError = error && (!weatherData || !weatherData.cities || weatherData.cities.length === 0);
 
-  if (globalError && allCitiesHaveErrors) {
+  // Global error state - show when there's an error and no data available
+  if (hasGlobalError) {
     return (
       <div className="weather-display">
         <div className="weather-display__header">
@@ -135,15 +96,29 @@ const WeatherDisplay = () => {
           <div className="weather-display__error-icon">🌩️</div>
           <h2 className="weather-display__error-title">Weather Service Unavailable</h2>
           <p className="weather-display__error-message">
-            We're having trouble connecting to the weather service. Please check your internet connection and try again.
+            {getErrorMessage}
           </p>
-          <button
-            className="weather-display__retry-button"
-            onClick={retryAll}
-            disabled={anyCityLoading}
-          >
-            {anyCityLoading ? 'Loading...' : 'Try Again'}
-          </button>
+          <div className="weather-display__error-actions">
+            <button
+              className="weather-display__retry-button"
+              onClick={retry}
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : 'Try Again'}
+            </button>
+            <button
+              className="weather-display__clear-cache-button"
+              onClick={clearCacheAndRefresh}
+              disabled={loading}
+            >
+              Clear Cache & Retry
+            </button>
+          </div>
+          {retryCount > 0 && (
+            <p className="weather-display__retry-info">
+              Retry attempt {retryCount} of 3
+            </p>
+          )}
         </div>
       </div>
     );
@@ -152,8 +127,10 @@ const WeatherDisplay = () => {
   return (
     <div className="weather-display">
       <div className="weather-display__header">
-        <h1 className="weather-display__title">Tomorrow's Weather Forecast</h1>
-        <p className="weather-display__subtitle">
+        <h1 className="weather-display__title" id="main-title">
+          Tomorrow's Weather Forecast
+        </h1>
+        <p className="weather-display__subtitle" aria-describedby="main-title">
           European Cities - {new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
             weekday: 'long',
             year: 'numeric',
@@ -161,27 +138,108 @@ const WeatherDisplay = () => {
             day: 'numeric'
           })}
         </p>
+
+        {/* Status indicators */}
+        <div className="weather-display__status">
+          {lastUpdated && (
+            <p className="weather-display__last-updated">
+              Last updated: {lastUpdated.toLocaleTimeString()}
+              {isDataStale && <span className="weather-display__stale-indicator"> (stale)</span>}
+            </p>
+          )}
+
+          {/* Cache status for debugging */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="weather-display__debug">
+              <button
+                onClick={() => console.log('Cache status:', getCacheStatus())}
+                className="weather-display__debug-button"
+              >
+                Debug Cache
+              </button>
+              <button
+                onClick={() => refresh(true)}
+                className="weather-display__debug-button"
+                disabled={loading}
+              >
+                Force Refresh
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="weather-display__grid">
-        {cities.map(city => (
-          <WeatherCard
-            key={city.id}
-            cityData={weatherData[city.id] || {
-              cityName: city.name,
-              country: city.country
-            }}
-            isLoading={loading[city.id]}
-            error={errors[city.id]}
-            onRetry={() => retryCity(city.id)}
-          />
-        ))}
+      <div
+        className="weather-display__grid"
+        role="main"
+        aria-label="Weather forecast cards for European cities"
+      >
+        {cities.map((city, index) => {
+          const cityData = getCityData(city.id);
+          const cityError = getCityError(city.id);
+          const cityLoading = isCityLoading(city.id);
+
+          return (
+            <WeatherCard
+              key={city.id}
+              cityData={cityData || {
+                cityName: city.name,
+                country: city.country
+              }}
+              isLoading={cityLoading}
+              error={cityError}
+              onRetry={() => refresh(true)}
+              style={{ animationDelay: `${index * 0.1}s` }}
+            />
+          );
+        })}
       </div>
 
-      {anyCityLoading && (
+      {/* Global loading indicator */}
+      {loading && (
         <div className="weather-display__loading-indicator">
           <div className="weather-display__loading-spinner"></div>
-          <p className="weather-display__loading-text">Loading weather data...</p>
+          <p className="weather-display__loading-text">
+            {retryCount > 0 ? `Retrying... (${retryCount}/3)` : 'Loading weather data...'}
+          </p>
+        </div>
+      )}
+
+      {/* Refresh controls */}
+      {!loading && !hasGlobalError && (
+        <div className="weather-display__controls">
+          <button
+            className="weather-display__refresh-button"
+            onClick={() => refresh(false)}
+            disabled={loading}
+            title="Refresh weather data (uses cache if available)"
+          >
+            🔄 Refresh
+          </button>
+          <button
+            className="weather-display__force-refresh-button"
+            onClick={() => refresh(true)}
+            disabled={loading}
+            title="Force refresh (bypasses cache)"
+          >
+            ⚡ Force Refresh
+          </button>
+        </div>
+      )}
+
+      {/* Error banner for partial failures */}
+      {error && weatherData && weatherData.cities && weatherData.cities.length > 0 && (
+        <div className="weather-display__partial-error">
+          <p className="weather-display__partial-error-message">
+            ⚠️ Some weather data may be outdated due to service issues.
+            <button
+              className="weather-display__partial-error-retry"
+              onClick={retry}
+              disabled={loading}
+            >
+              Try updating
+            </button>
+          </p>
         </div>
       )}
     </div>

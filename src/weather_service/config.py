@@ -1,16 +1,19 @@
 """
 City configuration for the weather forecast application.
 
-This module defines the configuration for the four European cities:
+This module defines the configuration for cities, which can be customized
+via the CITIES_CONFIG environment variable or defaults to the four European cities:
 Oslo (Norway), Paris (France), London (United Kingdom), and Barcelona (Spain).
 """
 
+import json
+import os
 from typing import Dict, List
 from .models import CityConfig, Coordinates
 
 
-# City configurations with precise coordinates
-CITIES_CONFIG: List[CityConfig] = [
+# Default city configurations with precise coordinates
+DEFAULT_CITIES_CONFIG: List[CityConfig] = [
     CityConfig(
         id="oslo",
         name="Oslo",
@@ -36,6 +39,47 @@ CITIES_CONFIG: List[CityConfig] = [
         coordinates=Coordinates(latitude=41.3851, longitude=2.1734)
     )
 ]
+
+
+def _load_cities_from_env() -> List[CityConfig]:
+    """
+    Load cities configuration from environment variable.
+
+    Returns:
+        List of CityConfig objects loaded from environment or defaults
+    """
+    cities_json = os.getenv("CITIES_CONFIG")
+
+    if not cities_json:
+        return DEFAULT_CITIES_CONFIG.copy()
+
+    try:
+        cities_data = json.loads(cities_json)
+        cities_config = []
+
+        for city_data in cities_data:
+            city_config = CityConfig(
+                id=city_data["id"],
+                name=city_data["name"],
+                country=city_data["country"],
+                coordinates=Coordinates(
+                    latitude=city_data["coordinates"]["latitude"],
+                    longitude=city_data["coordinates"]["longitude"]
+                )
+            )
+            cities_config.append(city_config)
+
+        return cities_config
+
+    except (json.JSONDecodeError, KeyError, ValueError) as e:
+        # Log the error and fall back to defaults
+        print(f"Warning: Failed to parse CITIES_CONFIG environment variable: {e}")
+        print("Falling back to default cities configuration")
+        return DEFAULT_CITIES_CONFIG.copy()
+
+
+# Load cities configuration from environment or use defaults
+CITIES_CONFIG: List[CityConfig] = _load_cities_from_env()
 
 
 def get_cities_config() -> List[CityConfig]:

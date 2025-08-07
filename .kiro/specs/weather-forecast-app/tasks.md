@@ -7,7 +7,7 @@
   - Create basic project documentation structure with docs/ directory
   - _Requirements: 3.1, 3.2_
 
-- [ ] 2. Implement core Python weather service
+- [x] 2. Implement core Python weather service
   - [x] 2.1 Create weather data models and city configuration
     - Implement Python classes for weather data structure with proper validation
     - Define city configuration with coordinates for Oslo, Paris, London, Barcelona
@@ -69,29 +69,29 @@
     - _Requirements: 3.1, 3.5, 3.6_
 
 - [ ] 5. Create frontend application
-  - [ ] 5.1 Build responsive weather display components
+  - [x] 5.1 Build responsive weather display components
     - Create React components for weather card display
     - Implement responsive grid layout for four cities
     - Add loading states and error handling UI
     - Ensure mobile-optimized design with proper breakpoints
     - _Requirements: 1.1, 1.2, 1.3, 2.1_
 
-  - [ ] 5.2 Implement API integration and state management
+  - [x] 5.2 Implement API integration and state management
     - Create API client for backend weather service
     - Implement data fetching with error handling and retries
     - Add browser-side caching strategy respecting 1-hour backend cache
     - Create loading and error state management
     - _Requirements: 1.2, 2.1, 2.2_
 
-  - [ ] 5.3 Add weather icons and styling
+  - [x] 5.3 Add weather icons and styling
     - Implement weather condition icon mapping
     - Create CSS styling for responsive design
     - Add animations and transitions for better UX
     - Ensure accessibility compliance (WCAG)
     - _Requirements: 1.1, 1.3, 2.1_
 
-- [ ] 6. Configure static hosting infrastructure
-  - [ ] 6.1 Create S3 bucket for static hosting
+- [x] 6. Configure static hosting infrastructure
+  - [x] 6.1 Create S3 bucket for static hosting
     - Implement Terraform module for S3 bucket configuration
     - Configure bucket policies for static website hosting
     - Set up versioning and lifecycle policies
@@ -99,7 +99,7 @@
     - Write basic tests for the S3 configuration
     - _Requirements: 3.1, 3.4, 3.6_
 
-  - [ ] 6.2 Set up CloudFront distribution
+  - [x] 6.2 Set up CloudFront distribution
     - Create Terraform module for CloudFront CDN
     - Configure cache behaviors and TTL settings
     - Set up origin failover for high availability
@@ -107,44 +107,44 @@
     - Write basic tests for the Cloudfront configuration
     - _Requirements: 1.2, 3.1, 3.8_
 
-- [ ] 7. Implement monitoring and observability
-  - [ ] 7.1 Create CloudWatch dashboard and alarms
+- [x] 7. Implement monitoring and observability
+  - [x] 7.1 Create simple and intuitive CloudWatch dashboard and alarms
     - Implement Terraform module for CloudWatch dashboard
-    - Configure alarms for Lambda errors, API Gateway 5xx, and DynamoDB throttling
+    - Configure the most important alarms for Lambda errors, API Gateway 5xx, and DynamoDB throttling
     - Set up custom metrics for weather API success rates
     - Add log retention policies (180 days)
     - _Requirements: 3.6, 3.7_
 
-  - [ ] 7.2 Set up AWS Budget and cost monitoring
+  - [x] 7.2 Set up AWS Budget and cost monitoring
     - Create Terraform module for AWS Budget with Service tag filter
     - Configure budget alerts for cost thresholds
-    - Implement cost monitoring dashboard
+    - Implement simple and intuitive cost monitoring Cloudwatch dashboard
     - _Requirements: 3.3, 3.7_
 
-- [ ] 8. Create deployment and testing automation
-  - [ ] 8.1 Implement Terraform module packaging
+- [x] 8. Create deployment and testing automation
+  - [x] 8.1 Implement Terraform module packaging
     - Create main Terraform module with all sub-modules
     - Configure variable definitions and outputs
     - Add module documentation with terraform-docs
     - Create examples/ directory with usage examples
     - _Requirements: 3.1, 3.2, 3.7_
 
-  - [ ] 8.2 Add basic integration and end-to-end tests
+  - [x] 8.2 Add basic integration and end-to-end tests
     - Create integration tests for complete weather data flow
     - Implement end-to-end tests for user journey with CloudWatch synthetics
     - Create basic infrastructure deployment tests
     - Write basic test automation scripts with cleanup
     - _Requirements: 2.4, 3.2_
 
-- [ ] 9. Generate documentation and cost analysis
-  - [ ] 9.1 Create architecture diagrams
+- [x] 9. Generate documentation and cost analysis
+  - [x] 9.1 Create architecture diagrams
     - Generate AWS architecture diagram using MCP diagram server
     - Create sequence diagrams for weather data flow
     - Add deployment flow diagrams
     - Include diagrams in main README.md
     - _Requirements: 3.7_
 
-  - [ ] 9.2 Perform cost analysis and optimization
+  - [x] 9.2 Perform cost analysis and optimization
     - Use AWS Labs Pricing MCP server for cost calculations
     - Compare costs across eu-west-1, eu-central-1, eu-north-1 regions
     - Create cost projections for staging and production environments
@@ -152,7 +152,7 @@
     - Include cost analysis in main README.md
     - _Requirements: 3.7_
 
-- [ ] 10. Finalize project documentation
+- [x] 10. Finalize project documentation
   - Create crisp and clear README.md with TL;DR section
   - Add executive summary for project stakeholders
   - Create basic deployment guide and troubleshooting documentation

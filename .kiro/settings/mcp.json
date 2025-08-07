@@ -76,7 +76,9 @@
         "FASTMCP_LOG_LEVEL": "ERROR"
       },
       "disabled": false,
-      "autoApprove": []
+      "autoApprove": [
+        "SearchAwsProviderDocs"
+      ]
     },
     "awslabs-serverless": {
       "command": "uvx",
@@ -98,7 +100,11 @@
         "FASTMCP_LOG_LEVEL": "ERROR"
       },
       "disabled": false,
-      "autoApprove": []
+      "autoApprove": [
+        "get_diagram_examples",
+        "list_icons",
+        "generate_diagram"
+      ]
     },
     "awslabs-pricing": {
       "command": "uvx",
@@ -111,7 +117,10 @@
         "AWS_REGION": "us-east-1"
       },
       "disabled": false,
-      "autoApprove": []
+      "autoApprove": [
+        "get_pricing_service_codes",
+        "get_pricing_service_codes"
+      ]
     }
   }
 }

@@ -39,3 +39,23 @@ output "budget_name" {
   description = "AWS Budget name for cost monitoring"
   value       = try(module.monitoring.budget_name, null)
 }
+
+output "cost_dashboard_url" {
+  description = "Cost monitoring CloudWatch dashboard URL"
+  value       = try(module.monitoring.cost_dashboard_url, null)
+}
+
+output "monitoring_alarm_names" {
+  description = "List of CloudWatch alarm names for monitoring"
+  value       = try(module.monitoring.alarm_names, [])
+}
+
+output "synthetics_canary_name" {
+  description = "CloudWatch Synthetics canary name for end-to-end testing"
+  value       = try(module.monitoring.synthetics_canary_name, null)
+}
+
+output "synthetics_canary_arn" {
+  description = "CloudWatch Synthetics canary ARN"
+  value       = try(module.monitoring.synthetics_canary_arn, null)
+}

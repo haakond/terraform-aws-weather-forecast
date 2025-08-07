@@ -41,10 +41,10 @@ class TestWeatherAPIClient:
         """Test client initialization with default values."""
         client = WeatherAPIClient()
 
-        assert client.company_website == "hedrange.com"
+        assert client.company_website == "example.com"
         assert client.timeout == WeatherAPIClient.DEFAULT_TIMEOUT
         assert client.max_retries == WeatherAPIClient.MAX_RETRIES
-        assert client.user_agent == "weather-forecast-app/1.0 (+https://hedrange.com)"
+        assert client.user_agent == "weather-forecast-app/1.0 (+https://example.com)"
 
     def test_client_initialization_custom_values(self):
         """Test client initialization with custom values."""
@@ -301,7 +301,7 @@ class TestCreateWeatherClient:
         client = create_weather_client()
 
         assert isinstance(client, WeatherAPIClient)
-        assert client.company_website == "hedrange.com"
+        assert client.company_website == "example.com"
         assert client.timeout == WeatherAPIClient.DEFAULT_TIMEOUT
         assert client.max_retries == WeatherAPIClient.MAX_RETRIES
 

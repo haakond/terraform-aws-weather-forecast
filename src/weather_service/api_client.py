@@ -95,11 +95,11 @@ class WeatherAPIClient:
         Initialize the weather API client.
 
         Args:
-            company_website: Company website for User-Agent header (default: hedrange.com)
+            company_website: Company website for User-Agent header (default: example.com)
             timeout: Request timeout in seconds
             max_retries: Maximum number of retry attempts
         """
-        self.company_website = company_website or os.getenv("COMPANY_WEBSITE", "hedrange.com")
+        self.company_website = company_website or os.getenv("COMPANY_WEBSITE", "example.com")
         self.timeout = timeout
         self.max_retries = max_retries
         self.rate_limiter = RateLimiter()

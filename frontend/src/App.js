@@ -1,16 +1,25 @@
 // Weather Forecast App - Main Component
-// This will be implemented in subsequent tasks
-
-import React from 'react';
+import React, { useEffect } from 'react';
+import WeatherDisplay from './components/WeatherDisplay';
+import { setupMockApi, shouldUseMockApi } from './services/mockWeatherApi';
 import './App.css';
 
 function App() {
+  useEffect(() => {
+    // Setup mock API for development/testing
+    let cleanup = () => {};
+
+    if (shouldUseMockApi()) {
+      cleanup = setupMockApi();
+    }
+
+    // Cleanup on unmount
+    return cleanup;
+  }, []);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>Weather Forecast</h1>
-        <p>Coming soon...</p>
-      </header>
+      <WeatherDisplay />
     </div>
   );
 }

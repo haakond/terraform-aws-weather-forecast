@@ -335,7 +335,7 @@ class TestWeatherProcessorCreation:
     def test_get_weather_processor_reuse(self, mock_create_processor, mock_create_client):
         """Test that weather processor is reused across calls."""
         mock_client = Mock()
-        mock_client.get_user_agent.return_value = "weather-forecast-app/1.0 (+https://hedrange.com)"
+        mock_client.get_user_agent.return_value = "weather-forecast-app/1.0 (+https://example.com)"
         mock_create_client.return_value = mock_client
 
         mock_processor = Mock()
@@ -355,7 +355,7 @@ class TestWeatherProcessorCreation:
     def test_get_weather_processor_default_website(self, mock_create_processor, mock_create_client):
         """Test weather processor creation with default company website."""
         mock_client = Mock()
-        mock_client.get_user_agent.return_value = "weather-forecast-app/1.0 (+https://hedrange.com)"
+        mock_client.get_user_agent.return_value = "weather-forecast-app/1.0 (+https://example.com)"
         mock_create_client.return_value = mock_client
 
         mock_processor = Mock()
@@ -367,7 +367,7 @@ class TestWeatherProcessorCreation:
 
         # Should use default website
         mock_create_client.assert_called_once_with(
-            company_website="hedrange.com",
+            company_website="example.com",
             timeout=25.0,
             max_retries=2
         )
