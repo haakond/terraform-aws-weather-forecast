@@ -17,9 +17,9 @@ output "alarm_names" {
     aws_cloudwatch_metric_alarm.lambda_duration.alarm_name,
     aws_cloudwatch_metric_alarm.api_gateway_5xx_errors.alarm_name,
     aws_cloudwatch_metric_alarm.api_gateway_latency.alarm_name,
-    aws_cloudwatch_metric_alarm.dynamodb_throttling.alarm_name
+    aws_cloudwatch_metric_alarm.dynamodb_throttling.alarm_name,
+    aws_cloudwatch_metric_alarm.synthetics_canary_failure.alarm_name
     ],
-    var.cloudfront_distribution_domain != "" ? [aws_cloudwatch_metric_alarm.synthetics_canary_failure[0].alarm_name] : [],
     var.cloudwatch_log_group_name != "" ? [aws_cloudwatch_metric_alarm.weather_api_success_rate[0].alarm_name] : []
   )
 }
@@ -47,12 +47,12 @@ output "cost_dashboard_name" {
 # CloudWatch Synthetics outputs
 output "synthetics_canary_name" {
   description = "CloudWatch Synthetics canary name"
-  value       = var.cloudfront_distribution_domain != "" ? aws_synthetics_canary.weather_app_e2e[0].name : null
+  value       = aws_synthetics_canary.weather_app_e2e.name
 }
 
 output "synthetics_canary_arn" {
   description = "CloudWatch Synthetics canary ARN"
-  value       = var.cloudfront_distribution_domain != "" ? aws_synthetics_canary.weather_app_e2e[0].arn : null
+  value       = aws_synthetics_canary.weather_app_e2e.arn
 }
 
 output "synthetics_artifacts_bucket" {

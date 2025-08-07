@@ -39,13 +39,13 @@ const pageLoadBlueprint = async function () {
         }
 
         if (response.status() !== 200) {
-            throw new Error(`Page returned status ${response.status()}`);
+            throw new Error(`Page returned status $${response.status()}`);
         }
 
         // Verify page title
         const title = await page.title();
         if (!title.includes('Weather Forecast')) {
-            throw new Error(`Unexpected page title: ${title}`);
+            throw new Error(`Unexpected page title: $${title}`);
         }
 
         // Verify main container is present
@@ -68,7 +68,7 @@ const pageLoadBlueprint = async function () {
         const weatherCards = await page.$$('.weather-card');
 
         if (weatherCards.length !== 4) {
-            throw new Error(`Expected 4 weather cards, found ${weatherCards.length}`);
+            throw new Error(`Expected 4 weather cards, found $${weatherCards.length}`);
         }
 
         // Verify each city has weather data
@@ -80,25 +80,25 @@ const pageLoadBlueprint = async function () {
             // Check city name
             const cityName = await card.$eval('.city-name', el => el.textContent);
             if (!expectedCities.includes(cityName)) {
-                throw new Error(`Unexpected city: ${cityName}`);
+                throw new Error(`Unexpected city: $${cityName}`);
             }
 
             // Check temperature is displayed
             const temperature = await card.$eval('.temperature', el => el.textContent);
             if (!temperature || !temperature.includes('°C')) {
-                throw new Error(`Temperature not properly displayed for ${cityName}`);
+                throw new Error(`Temperature not properly displayed for $${cityName}`);
             }
 
             // Check weather icon is present
             const weatherIcon = await card.$('.weather-icon');
             if (!weatherIcon) {
-                throw new Error(`Weather icon not found for ${cityName}`);
+                throw new Error(`Weather icon not found for $${cityName}`);
             }
 
             // Check weather description is present
             const description = await card.$eval('.weather-description', el => el.textContent);
             if (!description) {
-                throw new Error(`Weather description not found for ${cityName}`);
+                throw new Error(`Weather description not found for $${cityName}`);
             }
         }
 
@@ -109,7 +109,7 @@ const pageLoadBlueprint = async function () {
     await synthetics.executeStep('apiHealthCheck', async function () {
         log.info('Testing API health endpoint');
 
-        const healthUrl = `${apiUrl}/health`;
+        const healthUrl = `$${apiUrl}/health`;
 
         const response = await page.goto(healthUrl, {
             waitUntil: 'networkidle0',
@@ -117,7 +117,7 @@ const pageLoadBlueprint = async function () {
         });
 
         if (response.status() !== 200) {
-            throw new Error(`Health endpoint returned status ${response.status()}`);
+            throw new Error(`Health endpoint returned status $${response.status()}`);
         }
 
         // Get response body
@@ -127,11 +127,11 @@ const pageLoadBlueprint = async function () {
         try {
             healthData = JSON.parse(responseText);
         } catch (e) {
-            throw new Error(`Invalid JSON response from health endpoint: ${responseText}`);
+            throw new Error(`Invalid JSON response from health endpoint: $${responseText}`);
         }
 
         if (healthData.status !== 'healthy') {
-            throw new Error(`API health check failed: ${healthData.status}`);
+            throw new Error(`API health check failed: $${healthData.status}`);
         }
 
         if (!healthData.timestamp) {
@@ -205,18 +205,18 @@ const pageLoadBlueprint = async function () {
 
         // Performance thresholds
         if (performanceMetrics.domContentLoaded > 3000) {
-            log.warn(`DOM Content Loaded took ${performanceMetrics.domContentLoaded}ms (threshold: 3000ms)`);
+            log.warn(`DOM Content Loaded took $${performanceMetrics.domContentLoaded}ms (threshold: 3000ms)`);
         }
 
         if (performanceMetrics.loadComplete > 5000) {
-            log.warn(`Load Complete took ${performanceMetrics.loadComplete}ms (threshold: 5000ms)`);
+            log.warn(`Load Complete took $${performanceMetrics.loadComplete}ms (threshold: 5000ms)`);
         }
 
         if (performanceMetrics.firstContentfulPaint > 2000) {
-            log.warn(`First Contentful Paint took ${performanceMetrics.firstContentfulPaint}ms (threshold: 2000ms)`);
+            log.warn(`First Contentful Paint took $${performanceMetrics.firstContentfulPaint}ms (threshold: 2000ms)`);
         }
 
-        log.info(`Performance metrics - DOM: ${performanceMetrics.domContentLoaded}ms, Load: ${performanceMetrics.loadComplete}ms, FCP: ${performanceMetrics.firstContentfulPaint}ms`);
+        log.info(`Performance metrics - DOM: $${performanceMetrics.domContentLoaded}ms, Load: $${performanceMetrics.loadComplete}ms, FCP: $${performanceMetrics.firstContentfulPaint}ms`);
     });
 
     // Test 6: Accessibility Check
@@ -231,7 +231,7 @@ const pageLoadBlueprint = async function () {
         );
 
         if (imagesWithoutAlt > 0) {
-            log.warn(`Found ${imagesWithoutAlt} images without alt text`);
+            log.warn(`Found $${imagesWithoutAlt} images without alt text`);
         }
 
         // Check for proper heading structure

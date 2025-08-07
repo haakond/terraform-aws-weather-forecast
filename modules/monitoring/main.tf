@@ -97,7 +97,7 @@ resource "aws_cloudwatch_dashboard" "weather_app" {
 
         properties = {
           metrics = var.cloudfront_distribution_domain != "" ? [
-            ["CloudWatchSynthetics", "SuccessPercent", "CanaryName", aws_synthetics_canary.weather_app_e2e[0].name],
+            ["CloudWatchSynthetics", "SuccessPercent", "CanaryName", aws_synthetics_canary.weather_app_e2e.name],
             [".", "Duration", ".", "."],
             [".", "Failed", ".", "."]
           ] : []
@@ -116,7 +116,7 @@ resource "aws_cloudwatch_dashboard" "weather_app" {
         height = 6
 
         properties = {
-          query  = var.cloudfront_distribution_domain != "" ? "SOURCE '/aws/lambda/cwsyn-${aws_synthetics_canary.weather_app_e2e[0].name}' | fields @timestamp, @message | filter @message like /ERROR/ or @message like /FAIL/ | sort @timestamp desc | limit 10" : "fields @timestamp | limit 1"
+          query  = var.cloudfront_distribution_domain != "" ? "SOURCE '/aws/lambda/cwsyn-${aws_synthetics_canary.weather_app_e2e.name}' | fields @timestamp, @message | filter @message like /ERROR/ or @message like /FAIL/ | sort @timestamp desc | limit 10" : "fields @timestamp | limit 1"
           region = data.aws_region.current.id
           title  = "End-to-End Test Failures"
           view   = "table"
@@ -473,12 +473,11 @@ resource "aws_iam_role_policy_attachment" "synthetics_canary_execution" {
 
 # CloudWatch Synthetics Canary for end-to-end testing
 resource "aws_synthetics_canary" "weather_app_e2e" {
-  count                = var.cloudfront_distribution_domain != "" ? 1 : 0
   name                 = "${replace(var.name_prefix, "-", "")}e2etest" # Canary names can't contain hyphens
   artifact_s3_location = "s3://${aws_s3_bucket.synthetics_artifacts.bucket}/canary-artifacts"
   execution_role_arn   = aws_iam_role.synthetics_canary_role.arn
   handler              = "pageLoadBlueprint.handler"
-  zip_file             = data.archive_file.synthetics_canary_zip[0].output_path
+  zip_file             = data.archive_file.synthetics_canary_zip.output_path
   runtime_version      = "syn-nodejs-puppeteer-6.2"
 
   schedule {
@@ -491,8 +490,8 @@ resource "aws_synthetics_canary" "weather_app_e2e" {
     memory_in_mb       = 960
     active_tracing     = true
     environment_variables = {
-      WEBSITE_URL = "https://${var.cloudfront_distribution_domain}"
-      API_URL     = var.api_gateway_url
+      WEBSITE_URL = var.cloudfront_distribution_domain != "" ? "https://${var.cloudfront_distribution_domain}" : "https://example.com"
+      API_URL     = var.api_gateway_url != "" ? var.api_gateway_url : "https://api.example.com"
     }
   }
 
@@ -509,14 +508,13 @@ resource "aws_synthetics_canary" "weather_app_e2e" {
 
 # Create the canary script zip file
 data "archive_file" "synthetics_canary_zip" {
-  count       = var.cloudfront_distribution_domain != "" ? 1 : 0
   type        = "zip"
   output_path = "${path.module}/synthetics_canary.zip"
 
   source {
     content = templatefile("${path.module}/synthetics_canary.js", {
-      website_url = "https://${var.cloudfront_distribution_domain}"
-      api_url     = var.api_gateway_url
+      website_url = var.cloudfront_distribution_domain != "" ? "https://${var.cloudfront_distribution_domain}" : "https://example.com"
+      api_url     = var.api_gateway_url != "" ? var.api_gateway_url : "https://api.example.com"
     })
     filename = "nodejs/node_modules/pageLoadBlueprint.js"
   }
@@ -524,7 +522,6 @@ data "archive_file" "synthetics_canary_zip" {
 
 # CloudWatch Alarm for Synthetics canary failures
 resource "aws_cloudwatch_metric_alarm" "synthetics_canary_failure" {
-  count               = var.cloudfront_distribution_domain != "" ? 1 : 0
   alarm_name          = "${var.name_prefix}-synthetics-canary-failure"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = "2"
@@ -538,7 +535,7 @@ resource "aws_cloudwatch_metric_alarm" "synthetics_canary_failure" {
   treat_missing_data  = "breaching"
 
   dimensions = {
-    CanaryName = aws_synthetics_canary.weather_app_e2e[0].name
+    CanaryName = aws_synthetics_canary.weather_app_e2e.name
   }
 
   tags = var.common_tags
