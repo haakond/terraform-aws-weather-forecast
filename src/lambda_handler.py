@@ -13,7 +13,7 @@ import traceback
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
-from weather_service import (
+from .weather_service import (
     WeatherProcessor, create_weather_processor,
     WeatherAPIClient, create_weather_client,
     WeatherAPIError, ValidationError

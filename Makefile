@@ -1,6 +1,12 @@
 # Weather Forecast App - Makefile
 
-.PHONY: help init plan apply destroy test clean install-deps
+.PHONY: help init plan apply destroy test clean install-deps setup-venv
+
+# Virtual environment settings
+VENV_DIR = .venv
+PYTHON = $(VENV_DIR)/bin/python
+PIP = $(VENV_DIR)/bin/pip
+PYTEST = $(VENV_DIR)/bin/pytest
 
 # Default target
 help:
@@ -12,6 +18,7 @@ help:
 	@echo "  test         - Run all tests"
 	@echo "  test-tf      - Run Terraform tests"
 	@echo "  test-python  - Run Python tests"
+	@echo "  setup-venv   - Set up Python virtual environment"
 	@echo "  clean        - Clean temporary files"
 	@echo "  install-deps - Install Python dependencies"
 	@echo "  format       - Format code"
@@ -30,26 +37,37 @@ apply:
 destroy:
 	terraform destroy -var-file="environments/dev.tfvars"
 
+# Virtual environment setup
+setup-venv:
+	@if [ ! -d "$(VENV_DIR)" ]; then \
+		echo "Creating virtual environment..."; \
+		python3 -m venv $(VENV_DIR); \
+	fi
+	@echo "Virtual environment ready at $(VENV_DIR)"
+
 # Testing targets
-test: test-python test-tf
+test: setup-venv install-deps test-python test-tf
 
 test-tf:
 	terraform test
 
-test-python:
-	pytest tests/ -v --cov=src
+test-python: setup-venv install-deps
+	@echo "Running Python tests in virtual environment..."
+	PYTHONPATH=. $(PYTEST) tests/ -v --cov=src
 
 # Development targets
-install-deps:
-	pip install -r requirements-dev.txt
+install-deps: setup-venv
+	@echo "Installing Python dependencies in virtual environment..."
+	$(PIP) install --upgrade pip
+	$(PIP) install -r requirements-dev.txt
 
-format:
-	black src/ tests/
+format: setup-venv install-deps
+	$(VENV_DIR)/bin/black src/ tests/
 	terraform fmt -recursive
 
-lint:
-	flake8 src/ tests/
-	mypy src/
+lint: setup-venv install-deps
+	$(VENV_DIR)/bin/flake8 src/ tests/
+	$(VENV_DIR)/bin/mypy src/
 
 # Cleanup
 clean:
@@ -58,3 +76,4 @@ clean:
 	rm -rf .pytest_cache/
 	rm -rf htmlcov/
 	rm -rf .coverage
+	rm -rf $(VENV_DIR)
