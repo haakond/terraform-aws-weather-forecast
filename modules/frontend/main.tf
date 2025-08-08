@@ -242,31 +242,6 @@ resource "aws_cloudfront_distribution" "website" {
     response_headers_policy_id = aws_cloudfront_response_headers_policy.security_headers.id
   }
 
-  # Cache behavior for other static content (images, fonts, etc.) - 15-minute caching
-  ordered_cache_behavior {
-    path_pattern           = "*.{png,jpg,jpeg,gif,svg,ico,woff,woff2,ttf,eot}"
-    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
-    cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "S3-${aws_s3_bucket.website.bucket}"
-    compress               = true
-    viewer_protocol_policy = "redirect-to-https"
-
-    forwarded_values {
-      query_string = false
-      headers      = ["Cache-Control"] # Forward Cache-Control headers from S3
-      cookies {
-        forward = "none"
-      }
-    }
-
-    # 15-minute caching for static content
-    min_ttl     = 0
-    default_ttl = 900 # 15 minutes
-    max_ttl     = 900 # 15 minutes
-
-    # Security headers
-    response_headers_policy_id = aws_cloudfront_response_headers_policy.security_headers.id
-  }
 
   # Geographic restrictions
   restrictions {
