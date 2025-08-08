@@ -45,3 +45,9 @@ variable "api_gateway_url" {
   description = "API Gateway URL for the backend service"
   type        = string
 }
+
+variable "frontend_source_path" {
+  description = "Path to the frontend source code directory"
+  type        = string
+  default     = "frontend"
+}

@@ -254,10 +254,10 @@ resource "aws_cloudfront_distribution" "website" {
 resource "null_resource" "frontend_build" {
   # Trigger rebuild when frontend source files change
   triggers = {
-    # Monitor key frontend files for changes
-    package_json = filemd5("${path.root}/frontend/package.json")
-    app_js       = filemd5("${path.root}/frontend/src/App.js")
-    index_js     = filemd5("${path.root}/frontend/src/index.js")
+    # Monitor key frontend files for changes (use try() to handle missing files gracefully)
+    package_json = try(filemd5("${path.root}/${var.frontend_source_path}/package.json"), "missing")
+    app_js       = try(filemd5("${path.root}/${var.frontend_source_path}/src/App.js"), "missing")
+    index_js     = try(filemd5("${path.root}/${var.frontend_source_path}/src/index.js"), "missing")
     # Add a timestamp to force rebuild on terraform apply
     timestamp = timestamp()
   }
@@ -265,7 +265,7 @@ resource "null_resource" "frontend_build" {
   # Build the React application
   provisioner "local-exec" {
     command = <<-EOT
-      cd ${path.root}/frontend
+      cd ${path.root}/${var.frontend_source_path}
       echo "Installing frontend dependencies..."
       npm ci --silent
 
@@ -289,12 +289,12 @@ EOF
 
 # Upload the built frontend files to S3
 resource "aws_s3_object" "frontend_files" {
-  # Get all files from the build directory
-  for_each = fileset("${path.root}/frontend/build", "**/*")
+  # Get all files from the build directory (use try() to handle missing directory gracefully)
+  for_each = try(fileset("${path.root}/${var.frontend_source_path}/build", "**/*"), toset([]))
 
   bucket = aws_s3_bucket.website.id
   key    = each.value
-  source = "${path.root}/frontend/build/${each.value}"
+  source = "${path.root}/${var.frontend_source_path}/build/${each.value}"
 
   # Set appropriate content type based on file extension
   content_type = lookup({
@@ -323,7 +323,7 @@ resource "aws_s3_object" "frontend_files" {
   }, split(".", each.value)[length(split(".", each.value)) - 1], "public, max-age=86400")
 
   # Generate ETag for cache invalidation
-  etag = filemd5("${path.root}/frontend/build/${each.value}")
+  etag = try(filemd5("${path.root}/${var.frontend_source_path}/build/${each.value}"), "missing")
 
   # Ensure files are uploaded after build completes
   depends_on = [null_resource.frontend_build]
