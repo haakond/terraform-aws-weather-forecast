@@ -28,10 +28,6 @@ locals {
 
   # Build directory path
   build_path = "${local.frontend_path}/build"
-
-  # Debug information for build files (only available after build)
-  build_files      = try(fileset(local.build_path, "**/*"), toset([]))
-  build_file_count = length(local.build_files)
 }
 
 # Random suffix for unique bucket naming
@@ -553,10 +549,61 @@ resource "null_resource" "build_verification" {
   }
 }
 
+# Generate file list after build completion
+resource "null_resource" "generate_file_list" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -e
+
+      echo "=== Generating file list for S3 upload ==="
+
+      FRONTEND_PATH="${local.frontend_path}"
+      BUILD_PATH="$FRONTEND_PATH/build"
+      FILE_LIST_PATH="$BUILD_PATH/.terraform-file-list.txt"
+
+      echo "Build path: $BUILD_PATH"
+
+      # Ensure build directory exists
+      if [ ! -d "$BUILD_PATH" ]; then
+        echo "ERROR: Build directory not found at $BUILD_PATH"
+        exit 1
+      fi
+
+      # Generate file list relative to build directory
+      cd "$BUILD_PATH"
+      find . -type f -not -name '.terraform-file-list.txt' | sed 's|^\./||' > .terraform-file-list.txt
+
+      file_count=$(wc -l < .terraform-file-list.txt)
+      echo "Generated file list with $file_count files"
+
+      # Show first few files for debugging
+      echo "First 10 files:"
+      head -10 .terraform-file-list.txt || true
+
+      echo "✓ File list generated successfully"
+    EOT
+  }
+
+  # This resource depends on build verification completing
+  depends_on = [null_resource.build_verification]
+
+  # Trigger re-generation when build changes
+  triggers = {
+    build_verification_hash = null_resource.build_verification.id
+  }
+}
+
+# Read the generated file list
+data "local_file" "build_file_list" {
+  filename = "${local.build_path}/.terraform-file-list.txt"
+
+  depends_on = [null_resource.generate_file_list]
+}
+
 # Upload the built frontend files to S3
 resource "aws_s3_object" "frontend_files" {
-  # Get all files from the resolved build directory with better error handling
-  for_each = local.build_files
+  # Get all files from the generated file list
+  for_each = toset(split("\n", trimspace(data.local_file.build_file_list.content)))
 
   bucket = aws_s3_bucket.website.id
   key    = each.value
@@ -606,10 +653,11 @@ resource "aws_s3_object" "frontend_files" {
   # Generate ETag for cache invalidation
   etag = try(filemd5("${local.build_path}/${each.value}"), "missing")
 
-  # Ensure files are uploaded after build completes and is verified
+  # Ensure files are uploaded after build completes and file list is generated
   depends_on = [
     aws_s3_bucket.website,
-    null_resource.build_verification
+    null_resource.generate_file_list,
+    data.local_file.build_file_list
   ]
 
   tags = merge(var.common_tags, {

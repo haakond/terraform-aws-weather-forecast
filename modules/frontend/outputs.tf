@@ -22,12 +22,17 @@ output "s3_bucket_arn" {
 
 output "frontend_build_file_count" {
   description = "Number of files in the frontend build directory"
-  value       = local.build_file_count
+  value       = length(split("\n", trimspace(try(data.local_file.build_file_list.content, ""))))
 }
 
 output "frontend_build_path" {
   description = "Path to the frontend build directory"
   value       = local.build_path
+}
+
+output "frontend_file_list_path" {
+  description = "Path to the generated file list for debugging"
+  value       = "${local.build_path}/.terraform-file-list.txt"
 }
 
 output "cloudfront_distribution_arn" {
