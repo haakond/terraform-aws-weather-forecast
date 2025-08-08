@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Refresh Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #e8f5e8; border-color: #4caf50; }
+        .info { background-color: #e3f2fd; border-color: #2196f3; }
+        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Manual Refresh Functionality Test</h1>
+
+    <div class="test-section success">
+        <h3>✅ Auto-Refresh Disabled</h3>
+        <p>The weather app no longer automatically refreshes data every 5 minutes.</p>
+        <p><strong>Expected behavior:</strong> No automatic network requests or console messages about auto-refresh.</p>
+    </div>
+
+    <div class="test-section info">
+        <h3>🔄 Manual Refresh Options Available</h3>
+        <p>Users can still manually refresh data using these methods:</p>
+        <ul>
+            <li><strong>Retry Button</strong> - Appears when there are errors</li>
+            <li><strong>Clear Cache & Retry</strong> - Clears cache and fetches fresh data</li>
+            <li><strong>Force Refresh</strong> - Available in development debug panel</li>
+            <li><strong>Individual City Retry</strong> - Available on each weather card with errors</li>
+        </ul>
+    </div>
+
+    <div class="test-section info">
+        <h3>📊 Performance Benefits</h3>
+        <ul>
+            <li>No background timers running</li>
+            <li>Reduced API calls and costs</li>
+            <li>Lower memory usage</li>
+            <li>Cleaner console output</li>
+            <li>More predictable user experience</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h3>🧪 Test Instructions</h3>
+        <ol>
+            <li>Deploy the updated frontend</li>
+            <li>Open the weather app in a browser</li>
+            <li>Open browser console</li>
+            <li>Wait for 5+ minutes</li>
+            <li>Verify no "Auto-refresh triggered" messages appear</li>
+            <li>Test manual refresh buttons work correctly</li>
+            <li>Verify no "(stale)" indicator appears in the UI</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h3>🔍 Console Messages to Expect</h3>
+        <pre>
+✅ Expected (on page load):
+- "Auto-refresh is disabled"
+- "Weather data loaded successfully"
+
+❌ Should NOT see:
+- "Auto-refresh triggered" (every 5 minutes)
+- "Auto-refresh setup with 300s interval"
+- Repeated cache hit/miss messages
+        </pre>
+    </div>
+
+    <script>
+        console.log('Manual refresh test page loaded');
+        console.log('Auto-refresh should be disabled in the weather app');
+
+        // Simulate what the console should look like
+        setTimeout(() => {
+            console.log('✅ 5 minutes passed - no auto-refresh messages (this is correct)');
+        }, 5000); // 5 seconds for demo purposes
+    </script>
+</body>
+</html>

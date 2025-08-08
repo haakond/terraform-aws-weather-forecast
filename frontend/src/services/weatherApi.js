@@ -69,7 +69,7 @@ class WeatherCache {
         JSON.stringify(cacheEntry)
       );
 
-      console.log(`Cached data for ${endpoint}, expires at:`, new Date(cacheEntry.expiresAt));
+      // console.log(`Cached data for ${endpoint}, expires at:`, new Date(cacheEntry.expiresAt));
     } catch (error) {
       console.warn('Failed to cache data:', error);
       // Continue without caching if localStorage is unavailable
@@ -91,12 +91,12 @@ class WeatherCache {
 
       // Check if cache entry is expired
       if (now > cacheEntry.expiresAt) {
-        console.log(`Cache expired for ${endpoint}`);
+        // console.log(`Cache expired for ${endpoint}`);
         this.delete(endpoint);
         return null;
       }
 
-      console.log(`Cache hit for ${endpoint}, expires in:`, Math.round((cacheEntry.expiresAt - now) / 1000), 'seconds');
+      // console.log(`Cache hit for ${endpoint}, expires in:`, Math.round((cacheEntry.expiresAt - now) / 1000), 'seconds');
       return cacheEntry.data;
     } catch (error) {
       console.warn('Failed to retrieve cached data:', error);
@@ -203,7 +203,7 @@ class HTTPClient {
 
     for (let attempt = 0; attempt <= API_CONFIG.MAX_RETRIES; attempt++) {
       try {
-        console.log(`Making request to ${url} (attempt ${attempt + 1}/${API_CONFIG.MAX_RETRIES + 1})`);
+        // console.log(`Making request to ${url} (attempt ${attempt + 1}/${API_CONFIG.MAX_RETRIES + 1})`);
 
         // Set up timeout
         const timeoutId = setTimeout(() => {
@@ -239,7 +239,7 @@ class HTTPClient {
 
         // Parse response
         const data = await response.json();
-        console.log(`Request successful to ${url}`);
+        // console.log(`Request successful to ${url}`);
         return data;
 
       } catch (error) {
@@ -319,7 +319,7 @@ export class WeatherAPIClient {
       if (useCache && !forceRefresh) {
         const cachedData = this.cache.get(endpoint);
         if (cachedData) {
-          console.log('Returning cached weather data');
+          // console.log('Returning cached weather data');
           return cachedData;
         }
       }

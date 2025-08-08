@@ -19,14 +19,13 @@ const WeatherDisplay = () => {
     getCacheStatus,
     getErrorMessage
   } = useWeatherData({
-    autoRefresh: true,
-    refreshInterval: 5 * 60 * 1000, // 5 minutes
+    autoRefresh: false, // Disabled auto-refresh
     enableCache: true,
     onError: (error) => {
       console.error('Weather data error:', error);
     },
     onSuccess: (data) => {
-      console.log('Weather data loaded successfully:', data);
+      // console.log('Weather data loaded successfully:', data);
     }
   });
 
@@ -144,7 +143,6 @@ const WeatherDisplay = () => {
           {lastUpdated && (
             <p className="weather-display__last-updated">
               Last updated: {lastUpdated.toLocaleTimeString()}
-              {isDataStale && <span className="weather-display__stale-indicator"> (stale)</span>}
             </p>
           )}
 

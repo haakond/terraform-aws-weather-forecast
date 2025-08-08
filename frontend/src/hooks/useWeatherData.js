@@ -23,7 +23,7 @@ const HOOK_CONFIG = {
  */
 export const useWeatherData = (options = {}) => {
   const {
-    autoRefresh = true,
+    autoRefresh = false, // Disabled by default
     refreshInterval = HOOK_CONFIG.AUTO_REFRESH_INTERVAL,
     enableCache = true,
     onError = null,
@@ -60,7 +60,7 @@ export const useWeatherData = (options = {}) => {
    * Fetch weather data with error handling
    */
   const fetchWeatherData = useCallback(async (options = {}) => {
-    const { forceRefresh = false, showLoading = true } = options;
+    const { forceRefresh = false, showLoading = true, currentRetryCount = 0 } = options;
 
     try {
       if (showLoading) {
@@ -68,7 +68,7 @@ export const useWeatherData = (options = {}) => {
       }
       setError(null);
 
-      console.log('Fetching weather data...', { forceRefresh, enableCache });
+      console.log('Fetching weather data...', { forceRefresh, enableCache, currentRetryCount });
 
       const data = await weatherApiClient.getWeatherData({
         useCache: enableCache,
@@ -86,7 +86,7 @@ export const useWeatherData = (options = {}) => {
           onSuccess(data);
         }
 
-        console.log('Weather data updated successfully');
+        // console.log('Weather data updated successfully');
       }
 
     } catch (err) {
@@ -102,15 +102,16 @@ export const useWeatherData = (options = {}) => {
         }
 
         // Implement automatic retry for certain errors
-        if (retryCount < HOOK_CONFIG.MAX_AUTO_RETRIES && shouldAutoRetry(err)) {
-          const retryDelay = HOOK_CONFIG.RETRY_INTERVALS[Math.min(retryCount, HOOK_CONFIG.RETRY_INTERVALS.length - 1)];
+        if (currentRetryCount < HOOK_CONFIG.MAX_AUTO_RETRIES && shouldAutoRetry(err)) {
+          const retryDelay = HOOK_CONFIG.RETRY_INTERVALS[Math.min(currentRetryCount, HOOK_CONFIG.RETRY_INTERVALS.length - 1)];
 
-          console.log(`Auto-retrying in ${retryDelay}ms (attempt ${retryCount + 1}/${HOOK_CONFIG.MAX_AUTO_RETRIES})`);
+          console.log(`Auto-retrying in ${retryDelay}ms (attempt ${currentRetryCount + 1}/${HOOK_CONFIG.MAX_AUTO_RETRIES})`);
 
           retryTimeoutRef.current = setTimeout(() => {
             if (mountedRef.current) {
-              setRetryCount(prev => prev + 1);
-              fetchWeatherData({ forceRefresh, showLoading: false });
+              const newRetryCount = currentRetryCount + 1;
+              setRetryCount(newRetryCount);
+              fetchWeatherData({ forceRefresh, showLoading: false, currentRetryCount: newRetryCount });
             }
           }, retryDelay);
         }
@@ -120,19 +121,19 @@ export const useWeatherData = (options = {}) => {
         setLoading(false);
       }
     }
-  }, [enableCache, retryCount, onError, onSuccess]);
+  }, [enableCache, onError, onSuccess]);
 
   /**
    * Determine if error should trigger automatic retry
    */
-  const shouldAutoRetry = useCallback((error) => {
+  const shouldAutoRetry = (error) => {
     if (!(error instanceof WeatherAPIError)) return false;
 
     // Retry on network errors, timeouts, and server errors
     return error.type === 'NetworkError' ||
            error.type === 'TimeoutError' ||
            (error.status && error.status >= 500);
-  }, []);
+  };
 
   /**
    * Manual refresh function
@@ -162,10 +163,13 @@ export const useWeatherData = (options = {}) => {
   }, [refresh]);
 
   /**
-   * Setup auto-refresh interval
+   * Setup auto-refresh interval (disabled by default)
    */
   const setupAutoRefresh = useCallback(() => {
-    if (!autoRefresh || refreshInterval <= 0) return;
+    if (!autoRefresh || refreshInterval <= 0) {
+      console.log('Auto-refresh is disabled');
+      return;
+    }
 
     clearTimers();
 
@@ -176,7 +180,7 @@ export const useWeatherData = (options = {}) => {
       }
     }, refreshInterval);
 
-    console.log(`Auto-refresh setup with ${refreshInterval}ms interval`);
+    console.log(`Auto-refresh setup with ${Math.round(refreshInterval/1000)}s interval`);
   }, [autoRefresh, refreshInterval, fetchWeatherData, clearTimers]);
 
   /**
@@ -213,12 +217,12 @@ export const useWeatherData = (options = {}) => {
   }, []);
 
   /**
-   * Check if data is stale (older than refresh interval)
+   * Check if data is stale (only relevant when auto-refresh is enabled)
    */
   const isDataStale = useCallback(() => {
-    if (!lastUpdated) return true;
+    if (!autoRefresh || !lastUpdated) return false;
     return Date.now() - lastUpdated.getTime() > refreshInterval;
-  }, [lastUpdated, refreshInterval]);
+  }, [lastUpdated, refreshInterval, autoRefresh]);
 
   /**
    * Get formatted error message
@@ -298,7 +302,7 @@ export const useCityWeatherData = (cityId, options = {}) => {
  * Hook for health check monitoring
  */
 export const useHealthCheck = (options = {}) => {
-  const { interval = 30000, enabled = true } = options; // 30 seconds default
+  const { interval = 30000, enabled = false } = options; // Disabled by default
 
   const [healthStatus, setHealthStatus] = useState(null);
   const [healthLoading, setHealthLoading] = useState(false);
