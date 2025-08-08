@@ -46,36 +46,36 @@ locals {
 module "weather_forecast_app_dev" {
   source = "../../"
 
-  project_name       = var.project_name
-  environment        = "dev"
-  aws_region         = var.aws_region
-  company_website    = var.company_website
-  budget_limit       = local.environments.dev.budget_limit
-  log_retention_days = local.environments.dev.log_retention_days
+  project_name                          = var.project_name
+  environment                           = "dev"
+  aws_region                            = var.aws_region
+  weather_service_identification_domain = var.weather_service_identification_domain
+  budget_limit                          = local.environments.dev.budget_limit
+  log_retention_days                    = local.environments.dev.log_retention_days
 }
 
 # Staging Environment
 module "weather_forecast_app_staging" {
   source = "../../"
 
-  project_name       = var.project_name
-  environment        = "staging"
-  aws_region         = var.aws_region
-  company_website    = var.company_website
-  budget_limit       = local.environments.staging.budget_limit
-  log_retention_days = local.environments.staging.log_retention_days
+  project_name                          = var.project_name
+  environment                           = "staging"
+  aws_region                            = var.aws_region
+  weather_service_identification_domain = var.weather_service_identification_domain
+  budget_limit                          = local.environments.staging.budget_limit
+  log_retention_days                    = local.environments.staging.log_retention_days
 }
 
 # Production Environment
 module "weather_forecast_app_prod" {
   source = "../../"
 
-  project_name       = var.project_name
-  environment        = "prod"
-  aws_region         = var.aws_region
-  company_website    = var.company_website
-  budget_limit       = local.environments.prod.budget_limit
-  log_retention_days = local.environments.prod.log_retention_days
+  project_name                          = var.project_name
+  environment                           = "prod"
+  aws_region                            = var.aws_region
+  weather_service_identification_domain = var.weather_service_identification_domain
+  budget_limit                          = local.environments.prod.budget_limit
+  log_retention_days                    = local.environments.prod.log_retention_days
 }
 
 # Output information for all environments

@@ -49,7 +49,8 @@ setup-venv:
 test: setup-venv install-deps test-python test-tf
 
 test-tf:
-	terraform test
+	@echo "Running Terraform tests..."
+	cd tests/terraform && terraform test
 
 test-python: setup-venv install-deps
 	@echo "Running Python tests in virtual environment..."

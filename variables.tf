@@ -33,14 +33,14 @@ variable "aws_region" {
   }
 }
 
-variable "company_website" {
-  description = "Company website for User-Agent header in weather API requests"
+variable "weather_service_identification_domain" {
+  description = "Domain name used to identify this weather service in HTTP User-Agent headers when making requests to the Norwegian Meteorological Institute API. This helps met.no identify and contact the service operator if needed, as required by their terms of service."
   type        = string
   default     = "example.com"
 
   validation {
-    condition     = can(regex("^[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", var.company_website))
-    error_message = "Company website must be a valid domain name."
+    condition     = can(regex("^[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", var.weather_service_identification_domain))
+    error_message = "Weather service identification domain must be a valid domain name (e.g., 'mycompany.com')."
   }
 }
 

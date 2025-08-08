@@ -34,13 +34,13 @@ locals {
 module "backend" {
   source = "./modules/backend"
 
-  project_name       = var.project_name
-  service_name       = "weather-forecast-app"
-  environment        = var.environment
-  company_website    = var.company_website
-  cities_config      = var.cities_config
-  log_retention_days = var.log_retention_days
-  common_tags        = local.common_tags
+  project_name                          = var.project_name
+  service_name                          = "weather-forecast-app"
+  environment                           = var.environment
+  weather_service_identification_domain = var.weather_service_identification_domain
+  cities_config                         = var.cities_config
+  log_retention_days                    = var.log_retention_days
+  common_tags                           = local.common_tags
 }
 
 module "frontend" {

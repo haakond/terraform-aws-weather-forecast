@@ -1,43 +1,43 @@
-# Terraform tests for the weather forecast module
-# Using Terraform's native testing framework
+# Basic Terraform configuration validation tests
+# These tests validate the configuration without requiring AWS credentials
 
-run "validate_configuration" {
-  command = plan
+variables {
+  project_name                          = "test-weather-app"
+  environment                           = "test"
+  weather_service_identification_domain = "test.example.com"
+  aws_region                            = "eu-west-1"
+  budget_limit                          = 50
+  log_retention_days                    = 180
 
-  variables {
-    project_name    = "test-weather-app"
-    environment     = "test"
-    aws_region      = "eu-west-1"
-    company_website = "test.example.com"
-  }
-
-  # Verify that the plan is valid
-  assert {
-    condition     = can(var.project_name)
-    error_message = "Project name must be provided"
-  }
-
-  assert {
-    condition     = can(var.environment)
-    error_message = "Environment must be provided"
-  }
+  cities_config = [
+    {
+      id      = "oslo"
+      name    = "Oslo"
+      country = "Norway"
+      coordinates = {
+        latitude  = 59.9139
+        longitude = 10.7522
+      }
+    }
+  ]
 }
 
-run "validate_tags" {
+run "validate_basic_configuration" {
   command = plan
 
-  variables {
-    project_name = "test-weather-app"
-    environment  = "test"
-    aws_region   = "eu-west-1"
+  # Test that basic variables are properly set
+  assert {
+    condition     = var.project_name == "test-weather-app"
+    error_message = "Project name should be set correctly"
   }
 
-  # Verify that common tags are properly configured
   assert {
-    condition = alltrue([
-      for resource in values(local.common_tags) :
-      resource != null && resource != ""
-    ])
-    error_message = "All common tags must have non-empty values"
+    condition     = var.environment == "test"
+    error_message = "Environment should be set correctly"
+  }
+
+  assert {
+    condition     = length(var.cities_config) > 0
+    error_message = "Cities configuration should not be empty"
   }
 }

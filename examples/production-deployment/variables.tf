@@ -18,8 +18,8 @@ variable "aws_region" {
   default     = "eu-west-1"
 }
 
-variable "company_website" {
-  description = "Company website for User-Agent header"
+variable "weather_service_identification_domain" {
+  description = "Domain name used to identify this weather service in HTTP User-Agent headers when making requests to the Norwegian Meteorological Institute API"
   type        = string
   default     = "mycompany.com"
 }

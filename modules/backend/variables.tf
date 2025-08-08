@@ -17,8 +17,8 @@ variable "environment" {
   default     = "prod"
 }
 
-variable "company_website" {
-  description = "Company website for User-Agent header"
+variable "weather_service_identification_domain" {
+  description = "Domain name used to identify this weather service in HTTP User-Agent headers when making requests to the Norwegian Meteorological Institute API. This helps met.no identify and contact the service operator if needed, as required by their terms of service."
   type        = string
   default     = "example.com"
 }

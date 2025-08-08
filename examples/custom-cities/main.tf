@@ -29,12 +29,12 @@ provider "aws" {
 module "weather_forecast_app" {
   source = "../../"
 
-  project_name    = var.project_name
-  environment     = var.environment
-  aws_region      = var.aws_region
-  company_website = var.company_website
-  cities_config   = var.cities_config
-  budget_limit    = var.budget_limit
+  project_name                          = var.project_name
+  environment                           = var.environment
+  aws_region                            = var.aws_region
+  weather_service_identification_domain = var.weather_service_identification_domain
+  cities_config                         = var.cities_config
+  budget_limit                          = var.budget_limit
 }
 
 # Outputs
