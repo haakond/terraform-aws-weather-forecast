@@ -9,14 +9,15 @@ locals {
   # 2. Submodule usage: frontend directory within the module
   # 3. CI/CD environments: frontend directory in .terraform/modules/
   possible_frontend_paths = [
+    ".",                                          # Explicit relative path
+    "frontend",                                   # Relative to current directory
+    "./frontend",                                 # Explicit relative path
     "${path.root}/${var.frontend_source_path}",   # User-specified path from root
     "${path.root}/frontend",                      # Default frontend at root
     "${path.module}/${var.frontend_source_path}", # User-specified path from module
     "${path.module}/frontend",                    # Default frontend in module
     "${path.module}/../frontend",                 # Frontend one level up from module
-    "${path.module}/../../frontend",              # Frontend two levels up from module
-    "frontend",                                   # Relative to current directory
-    "./frontend"                                  # Explicit relative path
+    "${path.module}/../../frontend"               # Frontend two levels up from module
   ]
 
   # Find the first path that contains package.json
@@ -353,7 +354,7 @@ resource "null_resource" "frontend_build" {
 
       # Install dependencies
       echo "Installing frontend dependencies..."
-      npm ci --silent
+      npm ci
 
       # Ensure public directory exists
       mkdir -p public
