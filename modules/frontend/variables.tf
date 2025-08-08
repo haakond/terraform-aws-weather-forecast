@@ -40,3 +40,8 @@ variable "cloudfront_price_class" {
     error_message = "CloudFront price class must be one of: PriceClass_All, PriceClass_200, PriceClass_100."
   }
 }
+
+variable "api_gateway_url" {
+  description = "API Gateway URL for the backend service"
+  type        = string
+}

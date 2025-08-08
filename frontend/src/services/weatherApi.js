@@ -10,8 +10,8 @@
 
 // Configuration constants
 const API_CONFIG = {
-  // Base URL will be set from environment or default to relative path
-  BASE_URL: process.env.REACT_APP_API_BASE_URL || '',
+  // Base URL will be set from window config (injected by Terraform) or environment or default to relative path
+  BASE_URL: (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || process.env.REACT_APP_API_BASE_URL || '',
   ENDPOINTS: {
     WEATHER: '/weather',
     HEALTH: '/health'

@@ -1,5 +1,5 @@
 # Frontend Module - S3 and CloudFront
-# This module handles the static website hosting infrastructure
+# This module handles the static website hosting infrastructure and frontend deployment
 
 # Random suffix for unique bucket naming
 resource "random_string" "bucket_suffix" {
@@ -248,4 +248,109 @@ resource "aws_cloudfront_distribution" "website" {
   tags = merge(var.common_tags, {
     Name = "${var.name_prefix}-frontend-distribution"
   })
+}
+
+# Build the React frontend application
+resource "null_resource" "frontend_build" {
+  # Trigger rebuild when frontend source files change
+  triggers = {
+    # Monitor key frontend files for changes
+    package_json = filemd5("${path.root}/frontend/package.json")
+    app_js       = filemd5("${path.root}/frontend/src/App.js")
+    index_js     = filemd5("${path.root}/frontend/src/index.js")
+    # Add a timestamp to force rebuild on terraform apply
+    timestamp = timestamp()
+  }
+
+  # Build the React application
+  provisioner "local-exec" {
+    command = <<-EOT
+      cd ${path.root}/frontend
+      echo "Installing frontend dependencies..."
+      npm ci --silent
+
+      echo "Creating frontend configuration..."
+      cat > public/config.js << EOF
+window.APP_CONFIG = {
+  API_BASE_URL: '${var.api_gateway_url}',
+  ENVIRONMENT: '${var.environment}'
+};
+EOF
+
+      echo "Building React application..."
+      npm run build
+      echo "Frontend build completed successfully"
+    EOT
+  }
+
+  # Ensure the build runs before S3 upload
+  depends_on = [aws_s3_bucket.website]
+}
+
+# Upload the built frontend files to S3
+resource "aws_s3_object" "frontend_files" {
+  # Get all files from the build directory
+  for_each = fileset("${path.root}/frontend/build", "**/*")
+
+  bucket = aws_s3_bucket.website.id
+  key    = each.value
+  source = "${path.root}/frontend/build/${each.value}"
+
+  # Set appropriate content type based on file extension
+  content_type = lookup({
+    "html"  = "text/html"
+    "css"   = "text/css"
+    "js"    = "application/javascript"
+    "json"  = "application/json"
+    "png"   = "image/png"
+    "jpg"   = "image/jpeg"
+    "jpeg"  = "image/jpeg"
+    "gif"   = "image/gif"
+    "svg"   = "image/svg+xml"
+    "ico"   = "image/x-icon"
+    "woff"  = "font/woff"
+    "woff2" = "font/woff2"
+    "ttf"   = "font/ttf"
+    "eot"   = "application/vnd.ms-fontobject"
+  }, split(".", each.value)[length(split(".", each.value)) - 1], "application/octet-stream")
+
+  # Set cache control headers
+  cache_control = lookup({
+    "html" = "no-cache, no-store, must-revalidate"
+    "css"  = "public, max-age=31536000, immutable"
+    "js"   = "public, max-age=31536000, immutable"
+    "json" = "no-cache, no-store, must-revalidate"
+  }, split(".", each.value)[length(split(".", each.value)) - 1], "public, max-age=86400")
+
+  # Generate ETag for cache invalidation
+  etag = filemd5("${path.root}/frontend/build/${each.value}")
+
+  # Ensure files are uploaded after build completes
+  depends_on = [null_resource.frontend_build]
+
+  tags = merge(var.common_tags, {
+    Name = "${var.name_prefix}-frontend-file-${each.value}"
+  })
+}
+
+# Create CloudFront invalidation after file upload
+resource "null_resource" "frontend_invalidation" {
+  # Trigger invalidation when files change
+  triggers = {
+    # Use a hash of all uploaded files to detect changes
+    files_hash = md5(join("", [for file in aws_s3_object.frontend_files : file.etag]))
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      echo "Creating CloudFront invalidation..."
+      aws cloudfront create-invalidation \
+        --distribution-id ${aws_cloudfront_distribution.website.id} \
+        --paths "/*" \
+        --output text
+      echo "CloudFront invalidation created successfully"
+    EOT
+  }
+
+  depends_on = [aws_s3_object.frontend_files]
 }

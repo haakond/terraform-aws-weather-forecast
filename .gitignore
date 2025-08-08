@@ -32,6 +32,7 @@ MANIFEST
 # Virtual environments
 .env
 .venv
+.frontend-venv/
 env/
 venv/
 ENV/
@@ -83,6 +84,7 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
+frontend/coverage/
 
 # AWS
 .aws/

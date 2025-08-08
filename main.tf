@@ -46,9 +46,10 @@ module "backend" {
 module "frontend" {
   source = "./modules/frontend"
 
-  name_prefix = local.name_prefix
-  environment = var.environment
-  common_tags = local.common_tags
+  name_prefix     = local.name_prefix
+  environment     = var.environment
+  common_tags     = local.common_tags
+  api_gateway_url = module.backend.api_gateway_url
 }
 
 module "monitoring" {
