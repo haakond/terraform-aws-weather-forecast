@@ -352,9 +352,77 @@ resource "null_resource" "frontend_build" {
       cd "$FRONTEND_PATH"
       echo "Changed to directory: $(pwd)"
 
-      # Install dependencies
-      echo "Installing frontend dependencies..."
-      npm ci
+      # Handle npm dependency installation with CI/CD compatibility
+      echo "=== Installing frontend dependencies ==="
+
+      # Check Node.js and npm versions
+      echo "Node.js version: $(node --version)"
+      echo "npm version: $(npm --version)"
+
+      # Function to clean and reinstall dependencies
+      clean_and_install() {
+        echo "Cleaning npm cache and node_modules..."
+        npm cache clean --force 2>/dev/null || true
+        rm -rf node_modules package-lock.json npm-shrinkwrap.json 2>/dev/null || true
+
+        echo "Installing dependencies with npm install..."
+        npm install --no-audit --no-fund --silent
+
+        echo "✓ Dependencies installed successfully"
+      }
+
+      # Check if package-lock.json exists
+      if [ -f "package-lock.json" ]; then
+        echo "Found package-lock.json, attempting npm ci..."
+
+        # Try npm ci first (preferred for CI/CD)
+        if npm ci --no-audit --no-fund --silent 2>/dev/null; then
+          echo "✓ npm ci completed successfully"
+        else
+          echo "⚠ npm ci failed, checking for common issues..."
+
+          # Check for specific error patterns
+          if npm ci 2>&1 | grep -q "does not satisfy"; then
+            echo "Detected version conflict in lock file"
+            clean_and_install
+          elif npm ci 2>&1 | grep -q "package.json and package-lock.json.*not.*sync"; then
+            echo "Detected package.json and package-lock.json sync issue"
+            clean_and_install
+          else
+            echo "Unknown npm ci error, falling back to clean install"
+            clean_and_install
+          fi
+        fi
+      else
+        echo "No package-lock.json found, using npm install..."
+        npm install --no-audit --no-fund --silent
+        echo "✓ Dependencies installed with npm install"
+      fi
+
+      # Verify installation was successful
+      if [ ! -d "node_modules" ]; then
+        echo "ERROR: node_modules directory not created"
+        echo "Attempting emergency clean install..."
+        clean_and_install
+
+        if [ ! -d "node_modules" ]; then
+          echo "FATAL: Unable to install dependencies"
+          exit 1
+        fi
+      fi
+
+      # Check for critical dependencies
+      if [ ! -d "node_modules/react" ]; then
+        echo "ERROR: React not found in node_modules"
+        exit 1
+      fi
+
+      if [ ! -d "node_modules/react-scripts" ]; then
+        echo "ERROR: react-scripts not found in node_modules"
+        exit 1
+      fi
+
+      echo "✓ Frontend dependencies installed and verified successfully"
 
       # Ensure public directory exists
       mkdir -p public
