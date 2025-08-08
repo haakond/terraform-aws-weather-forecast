@@ -96,15 +96,13 @@ if [ -d "build/static" ]; then
     echo "Static files: $static_count"
 fi
 
-# Test file list generation (same as Terraform module)
-echo "=== Testing File List Generation ==="
+# Test upload simulation (without actually uploading to S3)
+echo "=== Testing Upload Simulation ==="
 cd build
-find . -type f -not -name '.terraform-file-list.txt' | sed 's|^\./||' > .terraform-file-list.txt
-list_file_count=$(wc -l < .terraform-file-list.txt)
-echo "✓ Generated file list with $list_file_count files"
-
-echo "First 10 files in list:"
-head -10 .terraform-file-list.txt
+echo "Files that would be uploaded to S3:"
+find . -type f | head -10
+upload_file_count=$(find . -type f | wc -l)
+echo "Total files for upload: $upload_file_count"
 
 cd ..
 
@@ -114,7 +112,7 @@ echo "✓ Dependencies installed successfully"
 echo "✓ Build completed successfully"
 echo "✓ Build verification passed"
 echo "✓ Total files in build: $file_count"
-echo "✓ File list generated: $list_file_count files"
+echo "✓ Files ready for S3 upload: $upload_file_count"
 echo ""
 echo "🎉 Frontend build test completed successfully!"
-echo "The build process should work correctly in Terraform deployment."
+echo "The simplified upload process will use 'aws s3 sync' to upload all files."

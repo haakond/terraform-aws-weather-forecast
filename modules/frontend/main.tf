@@ -549,128 +549,72 @@ resource "null_resource" "build_verification" {
   }
 }
 
-# Generate file list after build completion
-resource "null_resource" "generate_file_list" {
+# Upload all frontend files to S3 using AWS CLI
+resource "null_resource" "frontend_upload" {
   provisioner "local-exec" {
     command = <<-EOT
       set -e
 
-      echo "=== Generating file list for S3 upload ==="
+      echo "=== Uploading frontend files to S3 ==="
 
       FRONTEND_PATH="${local.frontend_path}"
       BUILD_PATH="$FRONTEND_PATH/build"
-      FILE_LIST_PATH="$BUILD_PATH/.terraform-file-list.txt"
+      BUCKET_NAME="${aws_s3_bucket.website.id}"
 
       echo "Build path: $BUILD_PATH"
+      echo "S3 bucket: $BUCKET_NAME"
 
-      # Ensure build directory exists
+      # Verify build directory exists
       if [ ! -d "$BUILD_PATH" ]; then
         echo "ERROR: Build directory not found at $BUILD_PATH"
         exit 1
       fi
 
-      # Generate file list relative to build directory
+      # Count files to upload
       cd "$BUILD_PATH"
-      find . -type f -not -name '.terraform-file-list.txt' | sed 's|^\./||' > .terraform-file-list.txt
+      file_count=$(find . -type f | wc -l)
+      echo "Found $file_count files to upload"
 
-      file_count=$(wc -l < .terraform-file-list.txt)
-      echo "Generated file list with $file_count files"
+      if [ "$file_count" -eq 0 ]; then
+        echo "ERROR: No files found in build directory"
+        exit 1
+      fi
 
-      # Show first few files for debugging
-      echo "First 10 files:"
-      head -10 .terraform-file-list.txt || true
+      # Upload all files to S3 with sync
+      echo "Uploading files to S3..."
+      aws s3 sync . "s3://$BUCKET_NAME/" \
+        --delete \
+        --cache-control "public, max-age=900" \
+        --metadata-directive REPLACE
 
-      echo "✓ File list generated successfully"
+      echo "✓ Successfully uploaded $file_count files to S3"
+
+      # Verify upload
+      s3_file_count=$(aws s3 ls "s3://$BUCKET_NAME" --recursive | wc -l)
+      echo "S3 bucket now contains $s3_file_count files"
+
+      echo "✓ Frontend upload completed successfully"
     EOT
   }
 
   # This resource depends on build verification completing
-  depends_on = [null_resource.build_verification]
+  depends_on = [
+    aws_s3_bucket.website,
+    null_resource.build_verification
+  ]
 
-  # Trigger re-generation when build changes
+  # Trigger re-upload when build changes
   triggers = {
     build_verification_hash = null_resource.build_verification.id
   }
-}
-
-# Read the generated file list
-data "local_file" "build_file_list" {
-  filename = "${local.build_path}/.terraform-file-list.txt"
-
-  depends_on = [null_resource.generate_file_list]
-}
-
-# Upload the built frontend files to S3
-resource "aws_s3_object" "frontend_files" {
-  # Get all files from the generated file list
-  for_each = toset(split("\n", trimspace(data.local_file.build_file_list.content)))
-
-  bucket = aws_s3_bucket.website.id
-  key    = each.value
-  source = "${local.build_path}/${each.value}"
-
-  # Set appropriate content type based on file extension
-  content_type = lookup({
-    "html"  = "text/html"
-    "css"   = "text/css"
-    "js"    = "application/javascript"
-    "json"  = "application/json"
-    "png"   = "image/png"
-    "jpg"   = "image/jpeg"
-    "jpeg"  = "image/jpeg"
-    "gif"   = "image/gif"
-    "svg"   = "image/svg+xml"
-    "ico"   = "image/x-icon"
-    "woff"  = "font/woff"
-    "woff2" = "font/woff2"
-    "ttf"   = "font/ttf"
-    "eot"   = "application/vnd.ms-fontobject"
-  }, split(".", each.value)[length(split(".", each.value)) - 1], "application/octet-stream")
-
-  # Set cache control headers for 15-minute caching (900 seconds)
-  cache_control = lookup({
-    # HTML files should have short cache to allow quick updates
-    "html" = "public, max-age=900, must-revalidate"
-    # CSS and JS files with hashes can be cached longer but respect 15-minute requirement for consistency
-    "css" = "public, max-age=900"
-    "js"  = "public, max-age=900"
-    # JSON config files should have short cache
-    "json" = "public, max-age=900, must-revalidate"
-    # Images and other assets
-    "png"  = "public, max-age=900"
-    "jpg"  = "public, max-age=900"
-    "jpeg" = "public, max-age=900"
-    "gif"  = "public, max-age=900"
-    "svg"  = "public, max-age=900"
-    "ico"  = "public, max-age=900"
-    # Font files
-    "woff"  = "public, max-age=900"
-    "woff2" = "public, max-age=900"
-    "ttf"   = "public, max-age=900"
-    "eot"   = "public, max-age=900"
-  }, split(".", each.value)[length(split(".", each.value)) - 1], "public, max-age=900")
-
-  # Generate ETag for cache invalidation
-  etag = try(filemd5("${local.build_path}/${each.value}"), "missing")
-
-  # Ensure files are uploaded after build completes and file list is generated
-  depends_on = [
-    aws_s3_bucket.website,
-    null_resource.generate_file_list,
-    data.local_file.build_file_list
-  ]
-
-  tags = merge(var.common_tags, {
-    Name = "${var.name_prefix}-frontend-file-${each.value}"
-  })
 }
 
 # Create CloudFront invalidation after file upload
 resource "null_resource" "frontend_invalidation" {
   # Trigger invalidation when files change
   triggers = {
-    # Use a hash of all uploaded files to detect changes
-    files_hash = md5(join("", [for file in aws_s3_object.frontend_files : file.etag]))
+    # Use upload resource ID to detect changes
+    upload_hash = null_resource.frontend_upload.id
   }
 
   provisioner "local-exec" {
@@ -684,5 +628,5 @@ resource "null_resource" "frontend_invalidation" {
     EOT
   }
 
-  depends_on = [aws_s3_object.frontend_files]
+  depends_on = [null_resource.frontend_upload]
 }
