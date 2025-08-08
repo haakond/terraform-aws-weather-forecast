@@ -9,11 +9,205 @@ import json
 import logging
 import os
 import traceback
+import time
+import urllib.request
+import urllib.parse
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
-# Use the simple weather service to avoid dependency issues
-from simple_weather_service import get_weather_summary, WeatherServiceError
+# Weather service functionality embedded to avoid import issues
+# Weather service functionality embedded to avoid import issues
+
+# Configuration
+BASE_URL = "https://api.met.no/weatherapi/locationforecast/2.0/compact"
+DEFAULT_CITIES = [
+    {
+        "id": "oslo",
+        "name": "Oslo",
+        "country": "Norway",
+        "coordinates": {"latitude": 59.9139, "longitude": 10.7522}
+    },
+    {
+        "id": "paris",
+        "name": "Paris",
+        "country": "France",
+        "coordinates": {"latitude": 48.8566, "longitude": 2.3522}
+    },
+    {
+        "id": "london",
+        "name": "London",
+        "country": "United Kingdom",
+        "coordinates": {"latitude": 51.5074, "longitude": -0.1278}
+    },
+    {
+        "id": "barcelona",
+        "name": "Barcelona",
+        "country": "Spain",
+        "coordinates": {"latitude": 41.3851, "longitude": 2.1734}
+    }
+]
+
+
+class WeatherServiceError(Exception):
+    """Base exception for weather service errors."""
+    pass
+
+
+def get_cities_config() -> List[Dict[str, Any]]:
+    """Get cities configuration from environment or use defaults."""
+    cities_config = os.getenv("CITIES_CONFIG")
+    if cities_config:
+        try:
+            return json.loads(cities_config)
+        except json.JSONDecodeError:
+            logger.warning("Invalid CITIES_CONFIG, using defaults")
+    return DEFAULT_CITIES
+
+
+def fetch_weather_data(latitude: float, longitude: float) -> Dict[str, Any]:
+    """Fetch weather data from met.no API."""
+    company_website = os.getenv("COMPANY_WEBSITE", "example.com")
+    user_agent = f"weather-forecast-app/1.0 (+https://{company_website})"
+
+    # Build URL
+    params = urllib.parse.urlencode({
+        "lat": latitude,
+        "lon": longitude
+    })
+    url = f"{BASE_URL}?{params}"
+
+    # Create request
+    req = urllib.request.Request(url)
+    req.add_header("User-Agent", user_agent)
+    req.add_header("Accept", "application/json")
+
+    try:
+        logger.info(f"Fetching weather data for lat={latitude}, lon={longitude}")
+        with urllib.request.urlopen(req, timeout=30) as response:
+            data = json.loads(response.read().decode())
+            logger.info("Successfully fetched weather data")
+            return data
+    except Exception as e:
+        logger.error(f"Failed to fetch weather data: {e}")
+        raise WeatherServiceError(f"Failed to fetch weather data: {e}")
+
+
+def extract_tomorrow_forecast(weather_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Extract tomorrow's forecast from met.no response."""
+    try:
+        properties = weather_data.get("properties", {})
+        timeseries = properties.get("timeseries", [])
+
+        if not timeseries:
+            raise WeatherServiceError("No timeseries data found")
+
+        # Find tomorrow's data (approximately 24 hours from now)
+        now = datetime.now(timezone.utc)
+        tomorrow = now.replace(hour=12, minute=0, second=0, microsecond=0)
+        tomorrow = tomorrow.replace(day=tomorrow.day + 1)
+
+        # Find the closest forecast to tomorrow noon
+        best_forecast = None
+        min_time_diff = float('inf')
+
+        for entry in timeseries:
+            forecast_time = datetime.fromisoformat(entry["time"].replace("Z", "+00:00"))
+            time_diff = abs((forecast_time - tomorrow).total_seconds())
+
+            if time_diff < min_time_diff:
+                min_time_diff = time_diff
+                best_forecast = entry
+
+        if not best_forecast:
+            raise WeatherServiceError("No suitable forecast found")
+
+        # Extract forecast data
+        instant_data = best_forecast.get("data", {}).get("instant", {}).get("details", {})
+        next_6h_data = best_forecast.get("data", {}).get("next_6_hours", {})
+
+        temperature = instant_data.get("air_temperature", 0)
+        symbol_code = next_6h_data.get("summary", {}).get("symbol_code", "unknown")
+
+        # Map symbol code to condition
+        condition_map = {
+            "clearsky": "clear",
+            "fair": "partly_cloudy",
+            "partlycloudy": "partly_cloudy",
+            "cloudy": "cloudy",
+            "rain": "rain",
+            "snow": "snow",
+            "fog": "fog"
+        }
+
+        condition = "unknown"
+        for key, value in condition_map.items():
+            if key in symbol_code:
+                condition = value
+                break
+
+        return {
+            "temperature": {
+                "value": round(temperature),
+                "unit": "celsius"
+            },
+            "condition": condition,
+            "description": symbol_code.replace("_", " ").title()
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to extract forecast: {e}")
+        raise WeatherServiceError(f"Failed to extract forecast: {e}")
+
+
+def process_city_weather(city_config: Dict[str, Any]) -> Dict[str, Any]:
+    """Process weather data for a single city."""
+    try:
+        coords = city_config["coordinates"]
+        weather_data = fetch_weather_data(coords["latitude"], coords["longitude"])
+        forecast = extract_tomorrow_forecast(weather_data)
+
+        return {
+            "cityId": city_config["id"],
+            "cityName": city_config["name"],
+            "country": city_config["country"],
+            "forecast": forecast
+        }
+    except Exception as e:
+        logger.error(f"Failed to process weather for {city_config['name']}: {e}")
+        # Return a fallback response
+        return {
+            "cityId": city_config["id"],
+            "cityName": city_config["name"],
+            "country": city_config["country"],
+            "forecast": {
+                "temperature": {"value": 0, "unit": "celsius"},
+                "condition": "unknown",
+                "description": "Data unavailable"
+            },
+            "error": str(e)
+        }
+
+
+def get_weather_summary() -> Dict[str, Any]:
+    """Get weather summary for all configured cities."""
+    cities_config = get_cities_config()
+    cities_weather = []
+
+    for city_config in cities_config:
+        city_weather = process_city_weather(city_config)
+        cities_weather.append(city_weather)
+
+        # Add small delay to be respectful to the API
+        time.sleep(0.5)
+
+    return {
+        "cities": cities_weather,
+        "lastUpdated": datetime.now(timezone.utc).isoformat(),
+        "status": "success"
+    }
+
+
+# Configure logging
 
 # Configure logging
 logger = logging.getLogger()
