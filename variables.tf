@@ -142,3 +142,13 @@ variable "cities_config" {
     error_message = "All city IDs must be unique."
   }
 }
+
+variable "frontend_config" {
+  description = "Configuration for the frontend module"
+  type = object({
+    frontend_source_path = optional(string, "frontend")
+  })
+  default = {
+    frontend_source_path = "frontend"
+  }
+}

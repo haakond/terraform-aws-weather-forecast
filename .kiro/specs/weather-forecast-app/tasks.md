@@ -148,11 +148,19 @@
     - Write basic test automation scripts with cleanup
     - _Requirements: 2.4, 3.2_
 
-  - [ ] 8.3 Add cache header validation tests
+  - [x] 8.3 Add cache header validation tests
     - Create automated tests to verify Cache-Control headers are properly set
     - Test that static assets return max-age=900 in response headers
     - Validate cache behavior across different asset types (HTML, CSS, JS, images)
      - _Requirements: 1.4, 2.4_
+
+  - [ ] 8.4 Fix CI/CD deployment path issues
+    - Resolve frontend build path problems in CI/CD environments where working directory structure differs
+    - Update Terraform frontend module to handle different working directory structures and missing directories
+    - Add proper error handling and path validation for frontend build process
+    - Ensure frontend directory and package.json are found correctly in CI/CD pipelines
+    - Test build process works in both local development and CI/CD environments
+    - _Requirements: 3.1, 3.4_
 
 - [x] 9. Generate documentation and cost analysis
   - [x] 9.1 Create architecture diagrams

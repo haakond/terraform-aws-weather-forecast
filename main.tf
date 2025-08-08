@@ -50,7 +50,7 @@ module "frontend" {
   environment          = var.environment
   common_tags          = local.common_tags
   api_gateway_url      = module.backend.api_gateway_url
-  frontend_source_path = "frontend"
+  frontend_source_path = var.frontend_config.frontend_source_path
 }
 
 module "monitoring" {

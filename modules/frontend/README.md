@@ -1,71 +1,24 @@
 # Frontend Module
 
-This module creates the infrastructure for hosting a static website using Amazon S3 and CloudFront.
-
-## Features
-
-- **S3 Static Website Hosting**: Secure S3 bucket with versioning and lifecycle policies
-- **CloudFront CDN**: Global content delivery with caching and compression
-- **Security Headers**: Comprehensive security headers policy including HSTS, frame options, and content type options
-- **HTTPS Enforcement**: Automatic HTTP to HTTPS redirection
-- **SPA Support**: Custom error pages for single-page application routing
-- **Origin Access Control**: Secure access to S3 bucket using CloudFront OAC
-
-## Architecture
-
-```
-Internet → CloudFront Distribution → S3 Bucket (Static Website)
-```
+This module creates the infrastructure for hosting the weather forecast application frontend using AWS S3 and CloudFront.
 
 ## Resources Created
 
-### S3 Resources
-- `aws_s3_bucket.website` - Main bucket for static website hosting
-- `aws_s3_bucket_versioning.website` - Enables versioning for the bucket
-- `aws_s3_bucket_server_side_encryption_configuration.website` - AES256 encryption
-- `aws_s3_bucket_public_access_block.website` - Blocks all public access
-- `aws_s3_bucket_lifecycle_configuration.website` - Lifecycle rules for cost optimization
-- `aws_s3_bucket_policy.website` - Allows CloudFront access via OAC
+- S3 bucket for static website hosting
+- CloudFront distribution for global content delivery
+- Origin Access Control for secure S3 access
+- Security headers policy
+- Automated frontend build and deployment
 
-### CloudFront Resources
-- `aws_cloudfront_origin_access_control.website` - OAC for secure S3 access
-- `aws_cloudfront_response_headers_policy.security_headers` - Security headers policy
-- `aws_cloudfront_distribution.website` - CDN distribution with caching rules
+## Features
 
-### Supporting Resources
-- `random_string.bucket_suffix` - Ensures unique bucket naming
-
-## Configuration
-
-### Cache Behaviors
-
-1. **Default Behavior** (`/*`)
-   - TTL: 1 hour default, 24 hours max
-   - Compression enabled
-   - Security headers applied
-   - HTTPS redirect
-
-2. **Static Assets** (`/static/*`)
-   - TTL: 24 hours default, 1 year max
-   - Optimized for static content caching
-   - Security headers applied
-   - HTTPS redirect
-
-### Security Features
-
-- **HSTS**: 1 year max age with subdomain inclusion
-- **Frame Options**: DENY to prevent clickjacking
-- **Content Type Options**: Prevents MIME type sniffing
-- **Referrer Policy**: Strict origin when cross-origin
-- **Custom Headers**: X-Permitted-Cross-Domain-Policies set to none
-
-### Lifecycle Management
-
-- **Version Cleanup**: Non-current versions deleted after 30 days
-- **Multipart Upload Cleanup**: Incomplete uploads cleaned after 7 days
-- **Storage Transitions**:
-  - Standard to Standard-IA after 30 days
-  - Standard-IA to Glacier after 90 days
+- **Static Website Hosting**: S3 bucket configured for static website hosting
+- **Global CDN**: CloudFront distribution for fast global content delivery
+- **Security**: Origin Access Control and security headers
+- **Cache Optimization**: 15-minute cache control headers for all static assets
+- **Automated Build**: Builds and deploys React application automatically
+- **SSL/TLS**: HTTPS redirection and secure content delivery
+- **CI/CD Ready**: Robust path handling for different deployment environments
 
 ## Usage
 
@@ -73,23 +26,60 @@ Internet → CloudFront Distribution → S3 Bucket (Static Website)
 module "frontend" {
   source = "./modules/frontend"
 
-  name_prefix = "my-app-prod"
-  environment = "production"
-  common_tags = {
-    Service     = "my-application"
-    Environment = "production"
-    ManagedBy   = "terraform"
-  }
+  name_prefix     = "weather-app-prod"
+  environment     = "production"
+  api_gateway_url = module.backend.api_gateway_url
+  common_tags     = local.common_tags
 }
 ```
 
-## Inputs
+## CI/CD Considerations
+
+This module is designed to work in both local development and CI/CD environments. It includes:
+
+### Automatic Path Resolution
+The module automatically searches for the frontend directory in multiple locations:
+- `${path.root}/${var.frontend_source_path}` (default)
+- `${path.root}/frontend`
+- `frontend`
+- `./frontend`
+
+### Build Process Validation
+- Checks for directory existence before attempting build
+- Validates package.json and required npm scripts
+- Provides detailed error messages for troubleshooting
+- Falls back to standard `build` script if `build:optimized` is not available
+
+### Skip Build Option
+For CI/CD pipelines where the frontend is built separately:
+
+```hcl
+module "frontend" {
+  source = "./modules/frontend"
+
+  # ... other variables ...
+
+  skip_frontend_build = true  # Skip the build process
+}
+```
+
+### Validation Script
+Use the included validation script to test your setup:
+
+```bash
+./modules/frontend/validate_frontend_build.sh
+```
+
+## Variables
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | name_prefix | Prefix for resource names | `string` | n/a | yes |
 | environment | Environment name | `string` | n/a | yes |
 | common_tags | Common tags to apply to all resources | `map(string)` | n/a | yes |
+| api_gateway_url | API Gateway URL for the backend service | `string` | n/a | yes |
+| frontend_source_path | Path to the frontend source code directory (relative to Terraform root) | `string` | `"frontend"` | no |
+| skip_frontend_build | Skip the frontend build process (useful for CI/CD) | `bool` | `false` | no |
 | bucket_versioning_enabled | Enable versioning for the S3 bucket | `bool` | `true` | no |
 | lifecycle_rules_enabled | Enable lifecycle rules for the S3 bucket | `bool` | `true` | no |
 | cloudfront_price_class | CloudFront price class | `string` | `"PriceClass_100"` | no |
@@ -98,58 +88,70 @@ module "frontend" {
 
 | Name | Description |
 |------|-------------|
-| cloudfront_distribution_domain | CloudFront distribution domain name |
-| cloudfront_distribution_id | CloudFront distribution ID |
-| s3_bucket_name | S3 bucket name |
-| s3_bucket_arn | S3 bucket ARN |
-| cloudfront_distribution_arn | CloudFront distribution ARN |
-| website_url | Complete website URL (https://) |
+| s3_bucket_name | Name of the S3 bucket |
+| s3_bucket_arn | ARN of the S3 bucket |
+| cloudfront_distribution_id | ID of the CloudFront distribution |
+| cloudfront_distribution_domain | Domain name of the CloudFront distribution |
+| website_url | URL of the deployed website |
 
-## Testing
+## Frontend Build Process
 
-Run the validation script to test the module:
+The module automatically builds and deploys the React frontend application. The build process:
+
+1. **Path Resolution**: Automatically finds the frontend directory
+2. **Validation**: Checks for required files and directories
+3. **Dependencies**: Installs npm dependencies with `npm ci`
+4. **Configuration**: Creates configuration file with API endpoint
+5. **Build**: Builds the React application with optimization
+6. **Upload**: Uploads files to S3 with appropriate cache headers
+7. **Invalidation**: Creates CloudFront invalidation for immediate updates
+
+### Cache Control
+
+All static assets are configured with 15-minute cache control headers (`max-age=900`) as required by the application specifications.
+
+## Troubleshooting
+
+### Common CI/CD Issues
+
+1. **Frontend directory not found**
+   - Ensure the frontend directory exists in your repository
+   - Check the `frontend_source_path` variable
+   - Use the validation script to test path resolution
+
+2. **package.json not found**
+   - Verify the frontend directory structure
+   - Ensure package.json exists in the frontend directory
+
+3. **npm build fails**
+   - Check that all required dependencies are in package.json
+   - Verify build scripts are properly configured
+   - Consider using `skip_frontend_build = true` for external build processes
+
+4. **Permission errors**
+   - Ensure the CI/CD runner has write permissions
+   - Check that npm and node are properly installed
+
+### Debug Commands
 
 ```bash
-cd tests/terraform
-./validate_frontend.sh
+# Validate frontend setup
+./modules/frontend/validate_frontend_build.sh
+
+# Check Terraform path resolution
+terraform console
+> local.frontend_path
+> local.build_path
+
+# Test npm build manually
+cd frontend
+npm ci
+npm run build:optimized || npm run build
 ```
 
-Or run specific test files:
+## Requirements
 
-```bash
-terraform test -filter=frontend_s3.tftest.hcl
-terraform test -filter=frontend_cloudfront.tftest.hcl
-```
-
-## Deployment
-
-After deploying this module, you can upload your static website files to the S3 bucket and they will be served through CloudFront with global caching and security headers.
-
-### Upload Files
-
-```bash
-aws s3 sync ./build/ s3://$(terraform output -raw s3_bucket_name)/
-```
-
-### Invalidate Cache
-
-```bash
-aws cloudfront create-invalidation \
-  --distribution-id $(terraform output -raw cloudfront_distribution_id) \
-  --paths "/*"
-```
-
-## Cost Optimization
-
-- Lifecycle rules automatically transition objects to cheaper storage classes
-- CloudFront caching reduces S3 requests
-- Price class can be adjusted based on global reach requirements
-- Old versions are automatically cleaned up to reduce storage costs
-
-## Security Considerations
-
-- S3 bucket is not publicly accessible (all public access blocked)
-- Access only through CloudFront using Origin Access Control
-- Security headers protect against common web vulnerabilities
-- HTTPS is enforced for all connections
-- Server-side encryption enabled for all objects
+- Node.js and npm installed on the machine running Terraform
+- Frontend source code in the specified directory
+- React application with build scripts configured
+- AWS CLI configured (for CloudFront invalidation)

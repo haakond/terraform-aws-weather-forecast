@@ -1,3 +1,4 @@
+fail_fast: true
 repos:
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.77.3

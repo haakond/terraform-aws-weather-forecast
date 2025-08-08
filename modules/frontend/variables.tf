@@ -47,7 +47,8 @@ variable "api_gateway_url" {
 }
 
 variable "frontend_source_path" {
-  description = "Path to the frontend source code directory"
+  description = "Path to the frontend source code directory (relative to Terraform root). The module will automatically search for the directory if not found at the specified path."
   type        = string
   default     = "frontend"
 }
+

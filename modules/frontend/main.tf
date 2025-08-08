@@ -1,6 +1,26 @@
 # Frontend Module - S3 and CloudFront
 # This module handles the static website hosting infrastructure and frontend deployment
 
+# Local values for path resolution
+locals {
+  # Try to find the correct frontend path
+  possible_frontend_paths = [
+    "${path.root}/${var.frontend_source_path}",
+    "${path.root}/frontend",
+    "frontend",
+    "./frontend"
+  ]
+
+  # Find the first path that contains package.json
+  frontend_path = try(
+    [for p in local.possible_frontend_paths : p if fileexists("${p}/package.json")][0],
+    var.frontend_source_path
+  )
+
+  # Build directory path
+  build_path = "${local.frontend_path}/build"
+}
+
 # Random suffix for unique bucket naming
 resource "random_string" "bucket_suffix" {
   length  = 8
@@ -282,21 +302,57 @@ resource "aws_cloudfront_distribution" "website" {
 resource "null_resource" "frontend_build" {
   # Trigger rebuild when frontend source files change
   triggers = {
-    # Monitor key frontend files for changes (use try() to handle missing files gracefully)
-    package_json = try(filemd5("${path.root}/${var.frontend_source_path}/package.json"), "missing")
-    app_js       = try(filemd5("${path.root}/${var.frontend_source_path}/src/App.js"), "missing")
-    index_js     = try(filemd5("${path.root}/${var.frontend_source_path}/src/index.js"), "missing")
+    # Monitor key frontend files for changes (use resolved path)
+    package_json = try(filemd5("${local.frontend_path}/package.json"), "missing")
+    app_js       = try(filemd5("${local.frontend_path}/src/App.js"), "missing")
+    index_js     = try(filemd5("${local.frontend_path}/src/index.js"), "missing")
     # Add a timestamp to force rebuild on terraform apply
     timestamp = timestamp()
   }
 
-  # Build the React application
+  # Build the React application with improved path handling for CI/CD
   provisioner "local-exec" {
     command = <<-EOT
-      cd ${path.root}/${var.frontend_source_path}
+      set -e  # Exit on any error
+
+      # Use the resolved frontend path
+      FRONTEND_PATH="${local.frontend_path}"
+
+      echo "Using frontend directory: $FRONTEND_PATH"
+      echo "Current working directory: $(pwd)"
+
+      # Check if frontend directory exists
+      if [ ! -d "$FRONTEND_PATH" ]; then
+        echo "ERROR: Frontend directory not found at: $FRONTEND_PATH"
+        echo "Available directories in current location:"
+        ls -la . || echo "Cannot list current directory"
+        if [ -d "${path.root}" ]; then
+          echo "Available directories in root:"
+          ls -la "${path.root}" || echo "Cannot list root directory"
+        fi
+        exit 1
+      fi
+
+      # Check if package.json exists
+      if [ ! -f "$FRONTEND_PATH/package.json" ]; then
+        echo "ERROR: package.json not found in $FRONTEND_PATH"
+        echo "Contents of frontend directory:"
+        ls -la "$FRONTEND_PATH" || echo "Cannot list frontend directory"
+        exit 1
+      fi
+
+      # Change to frontend directory
+      cd "$FRONTEND_PATH"
+      echo "Changed to directory: $(pwd)"
+
+      # Install dependencies
       echo "Installing frontend dependencies..."
       npm ci --silent
 
+      # Ensure public directory exists
+      mkdir -p public
+
+      # Create frontend configuration
       echo "Creating frontend configuration..."
       cat > public/config.js << EOF
 window.APP_CONFIG = {
@@ -305,9 +361,25 @@ window.APP_CONFIG = {
 };
 EOF
 
-      echo "Building React application with cache optimization..."
-      npm run build:optimized
-      echo "Frontend build completed successfully with 15-minute cache optimization"
+      # Check if build script exists
+      if ! npm run --silent 2>/dev/null | grep -q "build:optimized"; then
+        echo "WARNING: build:optimized script not found, using standard build"
+        npm run build
+      else
+        echo "Building React application with cache optimization..."
+        npm run build:optimized
+      fi
+
+      echo "Frontend build completed successfully"
+
+      # Verify build directory was created
+      if [ ! -d "build" ]; then
+        echo "ERROR: Build directory was not created"
+        exit 1
+      fi
+
+      echo "Build directory contents:"
+      ls -la build/ || echo "Cannot list build directory"
     EOT
   }
 
@@ -317,12 +389,12 @@ EOF
 
 # Upload the built frontend files to S3
 resource "aws_s3_object" "frontend_files" {
-  # Get all files from the build directory (use try() to handle missing directory gracefully)
-  for_each = try(fileset("${path.root}/${var.frontend_source_path}/build", "**/*"), toset([]))
+  # Get all files from the resolved build directory
+  for_each = try(fileset(local.build_path, "**/*"), toset([]))
 
   bucket = aws_s3_bucket.website.id
   key    = each.value
-  source = "${path.root}/${var.frontend_source_path}/build/${each.value}"
+  source = "${local.build_path}/${each.value}"
 
   # Set appropriate content type based on file extension
   content_type = lookup({
@@ -366,10 +438,13 @@ resource "aws_s3_object" "frontend_files" {
   }, split(".", each.value)[length(split(".", each.value)) - 1], "public, max-age=900")
 
   # Generate ETag for cache invalidation
-  etag = try(filemd5("${path.root}/${var.frontend_source_path}/build/${each.value}"), "missing")
+  etag = try(filemd5("${local.build_path}/${each.value}"), "missing")
 
   # Ensure files are uploaded after build completes
-  depends_on = [null_resource.frontend_build]
+  depends_on = [
+    aws_s3_bucket.website,
+    null_resource.frontend_build
+  ]
 
   tags = merge(var.common_tags, {
     Name = "${var.name_prefix}-frontend-file-${each.value}"

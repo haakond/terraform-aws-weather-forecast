@@ -36,7 +36,7 @@ This document outlines the technical foundation and tooling for the project.
 - A solution specific AWS Cloudwatch Dashboard which includes relevant CloudWatch metrics for reliability, performance and cost, in addition to a list over the last failing requests
 
 ### Pre-commit for Terraform
-- Pre-commit is installed and leveraged for validation and formatting.
+- Pre-commit is installed and leveraged for validation and formatting. Fail fast is set to true for fast feedback.
   - terraform_fmt
   - terraform_docs in main README.md
   - check-merge-conflict
@@ -45,6 +45,7 @@ This document outlines the technical foundation and tooling for the project.
 
 Example .pre-commit-config.yaml located in the root directory:
 ```
+fail_fast: true
 repos:
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.77.3
