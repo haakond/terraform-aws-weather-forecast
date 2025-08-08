@@ -17,7 +17,7 @@ const API_CONFIG = {
     HEALTH: '/health'
   },
   TIMEOUT: 10000, // 10 seconds
-  MAX_RETRIES: 3,
+  MAX_RETRIES: 5, // Maximum of 5 retries for 5xx errors
   RETRY_DELAY_BASE: 1000, // 1 second base delay
   CACHE_DURATION: 60 * 60 * 1000, // 1 hour in milliseconds (matching backend)
   CACHE_KEY_PREFIX: 'weather_cache_'

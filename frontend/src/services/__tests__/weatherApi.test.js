@@ -131,6 +131,129 @@ describe('WeatherAPIClient', () => {
       expect(result).toBeDefined();
     });
 
+    it('should retry exactly 5 times on 5xx server errors with exponential backoff', async () => {
+      // Mock console.warn to track retry attempts
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+      // Mock 5 consecutive 500 errors, then success
+      fetch
+        .mockResolvedValueOnce({ ok: false, status: 500, statusText: 'Internal Server Error' })
+        .mockResolvedValueOnce({ ok: false, status: 500, statusText: 'Internal Server Error' })
+        .mockResolvedValueOnce({ ok: false, status: 500, statusText: 'Internal Server Error' })
+        .mockResolvedValueOnce({ ok: false, status: 500, statusText: 'Internal Server Error' })
+        .mockResolvedValueOnce({ ok: false, status: 500, statusText: 'Internal Server Error' })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve(mockWeatherData)
+        });
+
+      const result = await client.getWeatherData();
+
+      // Should succeed after 5 retries
+      expect(result).toEqual(mockWeatherData);
+
+      // Should have made 6 total requests (1 initial + 5 retries)
+      expect(fetch).toHaveBeenCalledTimes(6);
+
+      // Should have logged 5 retry warnings
+      expect(consoleSpy).toHaveBeenCalledTimes(5);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Request failed, retrying in'),
+        expect.any(String)
+      );
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should fail after maximum retries on persistent 5xx errors', async () => {
+      // Mock console.warn to track retry attempts
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+      // Mock persistent 500 errors (more than MAX_RETRIES)
+      fetch.mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        json: () => Promise.resolve({ error: { message: 'Server error' } })
+      });
+
+      // Should throw error after max retries
+      await expect(client.getWeatherData()).rejects.toThrow('Server error');
+
+      // Should have made 6 total requests (1 initial + 5 retries)
+      expect(fetch).toHaveBeenCalledTimes(6);
+
+      // Should have logged 5 retry warnings
+      expect(consoleSpy).toHaveBeenCalledTimes(5);
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should not retry on 4xx client errors', async () => {
+      // Mock console.warn to ensure no retries
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        json: () => Promise.resolve({ error: { message: 'Not found' } })
+      });
+
+      // Should throw error immediately without retries
+      await expect(client.getWeatherData()).rejects.toThrow('Not found');
+
+      // Should have made only 1 request (no retries)
+      expect(fetch).toHaveBeenCalledTimes(1);
+
+      // Should not have logged any retry warnings
+      expect(consoleSpy).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should use exponential backoff with jitter for retry delays', async () => {
+      // Mock setTimeout to capture delay values
+      const originalSetTimeout = global.setTimeout;
+      const delays = [];
+      global.setTimeout = jest.fn((callback, delay) => {
+        delays.push(delay);
+        return originalSetTimeout(callback, 0); // Execute immediately for test
+      });
+
+      // Mock console.warn to track retry attempts
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+      // Mock 3 consecutive 500 errors, then success
+      fetch
+        .mockResolvedValueOnce({ ok: false, status: 500, statusText: 'Internal Server Error' })
+        .mockResolvedValueOnce({ ok: false, status: 500, statusText: 'Internal Server Error' })
+        .mockResolvedValueOnce({ ok: false, status: 500, statusText: 'Internal Server Error' })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve(mockWeatherData)
+        });
+
+      await client.getWeatherData();
+
+      // Should have exponential backoff: base * 2^attempt + jitter
+      // Attempt 0: 1000 * 2^0 + jitter = 1000 + jitter
+      // Attempt 1: 1000 * 2^1 + jitter = 2000 + jitter
+      // Attempt 2: 1000 * 2^2 + jitter = 4000 + jitter
+      expect(delays).toHaveLength(3);
+      expect(delays[0]).toBeGreaterThanOrEqual(1000);
+      expect(delays[0]).toBeLessThan(2000);
+      expect(delays[1]).toBeGreaterThanOrEqual(2000);
+      expect(delays[1]).toBeLessThan(3000);
+      expect(delays[2]).toBeGreaterThanOrEqual(4000);
+      expect(delays[2]).toBeLessThan(5000);
+
+      global.setTimeout = originalSetTimeout;
+      consoleSpy.mockRestore();
+    });
+
     it('should return cached data as fallback on error', async () => {
       const cachedData = { ...mockWeatherData };
       localStorageMock.getItem.mockReturnValueOnce(JSON.stringify({

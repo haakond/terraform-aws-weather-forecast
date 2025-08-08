@@ -14,8 +14,8 @@ import { weatherApiClient, WeatherAPIError } from '../services/weatherApi';
 // Hook configuration
 const HOOK_CONFIG = {
   AUTO_REFRESH_INTERVAL: 5 * 60 * 1000, // 5 minutes
-  RETRY_INTERVALS: [1000, 2000, 5000], // Progressive retry delays
-  MAX_AUTO_RETRIES: 3
+  RETRY_INTERVALS: [2000, 5000], // Progressive retry delays (reduced from 3 to 2 attempts)
+  MAX_AUTO_RETRIES: 2 // Reduced since HTTP client already does 5 retries with exponential backoff
 };
 
 /**
