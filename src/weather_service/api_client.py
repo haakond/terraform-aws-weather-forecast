@@ -1,36 +1,42 @@
 """
-Weather API client for the Norwegian Meteorological Institute API.
+Weather API client for fetching data from the Norwegian Meteorological Institute.
 
-This module provides an HTTP client for fetching weather data from the met.no API
-with proper User-Agent identification, rate limiting, retry logic, and error handling.
+This module provides a client for interacting with the met.no weather API,
+including rate limiting, error handling, and retry logic.
 """
 
-import asyncio
-import logging
 import os
 import time
+import logging
 from typing import Dict, Optional, Any
 from urllib.parse import urlencode
-import aiohttp
-import backoff
+import requests
 from dataclasses import dataclass
 
-
 logger = logging.getLogger(__name__)
+
+# Configuration constants
+BASE_URL = "https://api.met.no/weatherapi/locationforecast/2.0/compact"
+MAX_RETRIES = 3
+RETRY_DELAY = 1.0  # seconds
+RATE_LIMIT_DELAY = 1.0  # seconds between requests
 
 
 class WeatherAPIError(Exception):
     """Base exception for weather API errors."""
-    pass
+
+    def __init__(self, message: str, status_code: Optional[int] = None):
+        super().__init__(message)
+        self.status_code = status_code
 
 
 class RateLimitError(WeatherAPIError):
-    """Exception raised when API rate limit is exceeded."""
+    """Exception raised when rate limit is exceeded."""
     pass
 
 
 class APIConnectionError(WeatherAPIError):
-    """Exception raised when API connection fails."""
+    """Exception raised when connection to API fails."""
     pass
 
 
@@ -41,61 +47,41 @@ class MalformedResponseError(WeatherAPIError):
 
 @dataclass
 class RateLimiter:
-    """Simple rate limiter for API requests."""
-    max_requests: int = 20  # met.no allows max 20 requests per second
-    time_window: float = 1.0  # 1 second window
+    """Simple rate limiter to respect API limits."""
 
-    def __post_init__(self):
-        self._requests = []
-        self._lock = asyncio.Lock()
+    last_request_time: float = 0.0
+    min_interval: float = RATE_LIMIT_DELAY
 
-    async def acquire(self) -> None:
-        """Acquire permission to make a request, blocking if necessary."""
-        async with self._lock:
-            now = time.time()
+    def wait_if_needed(self) -> None:
+        """Wait if necessary to respect rate limits."""
+        current_time = time.time()
+        time_since_last = current_time - self.last_request_time
 
-            # Remove requests older than the time window
-            self._requests = [req_time for req_time in self._requests
-                            if now - req_time < self.time_window]
+        if time_since_last < self.min_interval:
+            sleep_time = self.min_interval - time_since_last
+            logger.debug(f"Rate limiting: sleeping for {sleep_time:.2f} seconds")
+            time.sleep(sleep_time)
 
-            # If we're at the limit, wait until we can make another request
-            if len(self._requests) >= self.max_requests:
-                oldest_request = min(self._requests)
-                wait_time = self.time_window - (now - oldest_request)
-                if wait_time > 0:
-                    logger.debug(f"Rate limit reached, waiting {wait_time:.2f} seconds")
-                    await asyncio.sleep(wait_time)
-                    # Recursively try again after waiting
-                    await self.acquire()
-                    return
-
-            # Record this request
-            self._requests.append(now)
+        self.last_request_time = time.time()
 
 
 class WeatherAPIClient:
     """
-    HTTP client for the Norwegian Meteorological Institute weather API.
+    Client for fetching weather data from the Norwegian Meteorological Institute API.
 
-    Provides weather data retrieval with proper User-Agent identification,
-    rate limiting, retry logic, and comprehensive error handling.
+    This client handles:
+    - Rate limiting to respect API terms
+    - Retry logic for transient failures
+    - Proper error handling and logging
+    - User-Agent identification as required by met.no
     """
 
-    BASE_URL = "https://api.met.no/weatherapi/locationforecast/2.0/"
-    DEFAULT_TIMEOUT = 30.0
-    MAX_RETRIES = 3
-
-    def __init__(
-        self,
-        company_website: Optional[str] = None,
-        timeout: float = DEFAULT_TIMEOUT,
-        max_retries: int = MAX_RETRIES
-    ):
+    def __init__(self, company_website: Optional[str] = None, timeout: int = 30, max_retries: int = MAX_RETRIES):
         """
         Initialize the weather API client.
 
         Args:
-            company_website: Company website for User-Agent header (default: example.com)
+            company_website: Website domain for User-Agent identification
             timeout: Request timeout in seconds
             max_retries: Maximum number of retry attempts
         """
@@ -107,39 +93,13 @@ class WeatherAPIClient:
         # User-Agent as per met.no terms of service
         self.user_agent = f"weather-forecast-app/1.0 (+https://{self.company_website})"
 
-        # Session will be created when needed
-        self._session: Optional[aiohttp.ClientSession] = None
-
-    async def _get_session(self) -> aiohttp.ClientSession:
-        """Get or create HTTP session with proper configuration."""
-        if self._session is None or self._session.closed:
-            timeout = aiohttp.ClientTimeout(total=self.timeout)
-            headers = {
-                "User-Agent": self.user_agent,
-                "Accept": "application/json",
-                "Accept-Encoding": "gzip, deflate"
-            }
-
-            self._session = aiohttp.ClientSession(
-                timeout=timeout,
-                headers=headers,
-                connector=aiohttp.TCPConnector(limit=10, limit_per_host=5)
-            )
-
-        return self._session
-
-    async def close(self) -> None:
-        """Close the HTTP session."""
-        if self._session and not self._session.closed:
-            await self._session.close()
-
-    async def __aenter__(self):
-        """Async context manager entry."""
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Async context manager exit."""
-        await self.close()
+        # Configure session
+        self.session = requests.Session()
+        self.session.headers.update({
+            "User-Agent": self.user_agent,
+            "Accept": "application/json",
+            "Accept-Encoding": "gzip, deflate"
+        })
 
     def _should_retry(self, exception: Exception) -> bool:
         """
@@ -151,217 +111,128 @@ class WeatherAPIClient:
         Returns:
             True if the request should be retried, False otherwise
         """
-        # Retry on connection errors and server errors (5xx)
-        if isinstance(exception, (aiohttp.ClientConnectionError,
-                                aiohttp.ServerTimeoutError,
-                                asyncio.TimeoutError)):
+        # Retry on connection errors and timeouts
+        if isinstance(exception, (requests.ConnectionError, requests.Timeout)):
             return True
 
         # Retry on specific HTTP status codes
-        if isinstance(exception, aiohttp.ClientResponseError):
-            # Retry on server errors (5xx) and rate limiting (429)
-            return exception.status >= 500 or exception.status == 429
+        if isinstance(exception, requests.HTTPError):
+            if hasattr(exception, 'response') and exception.response is not None:
+                status_code = exception.response.status_code
+                # Retry on server errors (5xx) and rate limiting (429)
+                return status_code >= 500 or status_code == 429
 
         return False
 
-    @backoff.on_exception(
-        backoff.expo,
-        (aiohttp.ClientError, asyncio.TimeoutError, RateLimitError),
-        max_tries=MAX_RETRIES,
-        max_time=300,  # Maximum total time for retries: 5 minutes
-        jitter=backoff.random_jitter
-    )
-    async def _make_request(self, url: str, params: Dict[str, Any]) -> Dict[str, Any]:
+    def get_weather_data(self, latitude: float, longitude: float) -> Dict[str, Any]:
         """
-        Make an HTTP request with retry logic and error handling.
+        Fetch weather data for the specified coordinates.
 
         Args:
-            url: The URL to request
-            params: Query parameters
+            latitude: Latitude coordinate
+            longitude: Longitude coordinate
 
         Returns:
-            Parsed JSON response
+            Weather data as a dictionary
 
         Raises:
-            WeatherAPIError: For various API-related errors
-        """
-        # Apply rate limiting
-        await self.rate_limiter.acquire()
-
-        session = await self._get_session()
-
-        try:
-            logger.debug(f"Making request to {url} with params: {params}")
-
-            async with session.get(url, params=params) as response:
-                # Check for rate limiting
-                if response.status == 429:
-                    retry_after = response.headers.get('Retry-After')
-                    wait_time = int(retry_after) if retry_after else 60
-                    logger.warning(f"Rate limited, waiting {wait_time} seconds")
-                    await asyncio.sleep(wait_time)
-                    raise RateLimitError(f"Rate limited, retry after {wait_time} seconds")
-
-                # Check for client errors (4xx)
-                if 400 <= response.status < 500:
-                    error_text = await response.text()
-                    raise WeatherAPIError(
-                        f"Client error {response.status}: {error_text}"
-                    )
-
-                # Check for server errors (5xx)
-                if response.status >= 500:
-                    error_text = await response.text()
-                    raise APIConnectionError(
-                        f"Server error {response.status}: {error_text}"
-                    )
-
-                # Ensure we got a successful response
-                response.raise_for_status()
-
-                # Parse JSON response
-                try:
-                    data = await response.json()
-                    logger.debug(f"Received response with {len(str(data))} characters")
-                    return data
-
-                except (aiohttp.ContentTypeError, ValueError) as e:
-                    response_text = await response.text()
-                    logger.error(f"Failed to parse JSON response: {e}")
-                    logger.error(f"Response content: {response_text[:500]}...")
-                    raise MalformedResponseError(
-                        f"Invalid JSON response: {e}"
-                    ) from e
-
-        except aiohttp.ClientError as e:
-            logger.error(f"HTTP client error: {e}")
-            if self._should_retry(e):
-                raise  # Let backoff handle the retry
-            else:
-                raise APIConnectionError(f"HTTP client error: {e}") from e
-
-        except asyncio.TimeoutError as e:
-            logger.error(f"Request timeout: {e}")
-            raise APIConnectionError(f"Request timeout: {e}") from e
-
-    async def get_weather_forecast(
-        self,
-        latitude: float,
-        longitude: float,
-        altitude: Optional[int] = None
-    ) -> Dict[str, Any]:
-        """
-        Get weather forecast for specific coordinates.
-
-        Args:
-            latitude: Latitude coordinate (-90 to 90)
-            longitude: Longitude coordinate (-180 to 180)
-            altitude: Altitude in meters (optional)
-
-        Returns:
-            Weather forecast data from met.no API
-
-        Raises:
-            WeatherAPIError: For various API-related errors
-            ValueError: For invalid coordinate values
+            WeatherAPIError: If the API request fails
+            RateLimitError: If rate limit is exceeded
+            APIConnectionError: If connection fails
+            MalformedResponseError: If response is malformed
         """
         # Validate coordinates
-        if not -90 <= latitude <= 90:
-            raise ValueError(f"Latitude must be between -90 and 90, got {latitude}")
+        if not (-90 <= latitude <= 90):
+            raise WeatherAPIError(f"Invalid latitude: {latitude}. Must be between -90 and 90.")
+        if not (-180 <= longitude <= 180):
+            raise WeatherAPIError(f"Invalid longitude: {longitude}. Must be between -180 and 180.")
 
-        if not -180 <= longitude <= 180:
-            raise ValueError(f"Longitude must be between -180 and 180, got {longitude}")
-
-        # Build request parameters
+        # Build URL with parameters
         params = {
             "lat": latitude,
             "lon": longitude
         }
+        url = f"{BASE_URL}?{urlencode(params)}"
 
-        if altitude is not None:
-            if altitude < -500 or altitude > 9000:  # Reasonable altitude limits
-                raise ValueError(f"Altitude must be between -500 and 9000 meters, got {altitude}")
-            params["altitude"] = altitude
+        last_exception = None
 
-        url = f"{self.BASE_URL}compact"
+        for attempt in range(self.max_retries + 1):
+            try:
+                # Apply rate limiting
+                self.rate_limiter.wait_if_needed()
 
-        try:
-            data = await self._make_request(url, params)
+                logger.info(f"Fetching weather data for lat={latitude}, lon={longitude} (attempt {attempt + 1})")
 
-            # Basic validation of response structure
-            if not isinstance(data, dict):
-                raise MalformedResponseError("Response is not a JSON object")
+                # Make the request
+                response = self.session.get(url, timeout=self.timeout)
 
-            if "properties" not in data:
-                raise MalformedResponseError("Response missing 'properties' field")
+                # Check for rate limiting
+                if response.status_code == 429:
+                    logger.warning("Rate limit exceeded, waiting before retry")
+                    time.sleep(RETRY_DELAY * (2 ** attempt))  # Exponential backoff
+                    raise RateLimitError("Rate limit exceeded")
 
-            if "timeseries" not in data["properties"]:
-                raise MalformedResponseError("Response missing 'timeseries' field")
+                # Raise for HTTP errors
+                response.raise_for_status()
 
-            return data
+                # Parse JSON response
+                try:
+                    data = response.json()
+                    logger.info(f"Successfully fetched weather data for lat={latitude}, lon={longitude}")
+                    return data
 
-        except WeatherAPIError:
-            # Re-raise weather API errors as-is
-            raise
+                except ValueError as e:
+                    logger.error(f"Failed to parse JSON response: {e}")
+                    raise MalformedResponseError(f"Invalid JSON response: {e}") from e
 
-        except Exception as e:
-            logger.error(f"Unexpected error in get_weather_forecast: {e}")
-            raise WeatherAPIError(f"Unexpected error: {e}") from e
+            except Exception as e:
+                last_exception = e
+                logger.warning(f"Request attempt {attempt + 1} failed: {e}")
 
-    async def get_weather_for_city(self, city_config: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Get weather forecast for a city using its configuration.
+                # Don't retry if this is the last attempt
+                if attempt == self.max_retries:
+                    break
 
-        Args:
-            city_config: City configuration dictionary with coordinates
+                # Don't retry if it's not a retryable error
+                if not self._should_retry(e):
+                    break
 
-        Returns:
-            Weather forecast data from met.no API
+                # Wait before retrying with exponential backoff
+                sleep_time = RETRY_DELAY * (2 ** attempt)
+                logger.info(f"Retrying in {sleep_time} seconds...")
+                time.sleep(sleep_time)
 
-        Raises:
-            WeatherAPIError: For various API-related errors
-            ValueError: For invalid city configuration
-        """
-        if not isinstance(city_config, dict):
-            raise ValueError("City configuration must be a dictionary")
-
-        if "coordinates" not in city_config:
-            raise ValueError("City configuration missing 'coordinates' field")
-
-        coords = city_config["coordinates"]
-
-        # Support both lat/lon and latitude/longitude formats
-        if "lat" in coords and "lon" in coords:
-            latitude = coords["lat"]
-            longitude = coords["lon"]
-        elif "latitude" in coords and "longitude" in coords:
-            latitude = coords["latitude"]
-            longitude = coords["longitude"]
+        # All retries exhausted, raise the last exception
+        if isinstance(last_exception, requests.ConnectionError):
+            raise APIConnectionError(f"Failed to connect to weather API: {last_exception}") from last_exception
+        elif isinstance(last_exception, requests.Timeout):
+            raise APIConnectionError(f"Request timeout: {last_exception}") from last_exception
+        elif isinstance(last_exception, requests.HTTPError):
+            status_code = getattr(last_exception.response, 'status_code', None) if hasattr(last_exception, 'response') else None
+            raise WeatherAPIError(f"HTTP error: {last_exception}", status_code) from last_exception
         else:
-            raise ValueError("City coordinates must include lat/lon or latitude/longitude")
+            raise WeatherAPIError(f"Unexpected error: {last_exception}") from last_exception
 
-        return await self.get_weather_forecast(latitude, longitude)
+    def close(self) -> None:
+        """Close the HTTP session."""
+        if self.session:
+            self.session.close()
 
-    def get_user_agent(self) -> str:
-        """Get the User-Agent string used for API requests."""
-        return self.user_agent
+    def __enter__(self):
+        """Context manager entry."""
+        return self
 
-    def get_company_website(self) -> str:
-        """Get the company website used in the User-Agent."""
-        return self.company_website
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit."""
+        self.close()
 
 
-# Convenience function for creating a client instance
-def create_weather_client(
-    company_website: Optional[str] = None,
-    timeout: float = WeatherAPIClient.DEFAULT_TIMEOUT,
-    max_retries: int = WeatherAPIClient.MAX_RETRIES
-) -> WeatherAPIClient:
+def create_weather_client(company_website: Optional[str] = None, timeout: int = 30, max_retries: int = MAX_RETRIES) -> WeatherAPIClient:
     """
-    Create a weather API client instance.
+    Factory function to create a weather API client.
 
     Args:
-        company_website: Company website for User-Agent header
+        company_website: Website domain for User-Agent identification
         timeout: Request timeout in seconds
         max_retries: Maximum number of retry attempts
 

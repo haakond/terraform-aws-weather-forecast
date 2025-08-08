@@ -5,7 +5,6 @@ This module provides the main processing logic for fetching, transforming,
 and caching weather data from the met.no API.
 """
 
-import asyncio
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
@@ -43,7 +42,7 @@ class WeatherProcessor:
         self.api_client = api_client or WeatherAPIClient()
         self.cache_client = cache_client or create_weather_cache()
 
-    async def process_city_weather(self, city_id: str, use_cache: bool = True) -> CityWeatherData:
+    def process_city_weather(self, city_id: str, use_cache: bool = True) -> CityWeatherData:
         """
         Process weather data for a single city with caching support.
 
@@ -66,7 +65,7 @@ class WeatherProcessor:
         # Try to get cached data first if caching is enabled
         if use_cache:
             try:
-                cached_data = await self.cache_client.get_cached_weather(city_id)
+                cached_data = self.cache_client.get_cached_weather(city_id)
                 if cached_data is not None:
                     logger.info(f"Using cached weather data for {cached_data.city_name}")
                     return cached_data
@@ -79,7 +78,7 @@ class WeatherProcessor:
 
             # Fetch weather data from API
             logger.info(f"Fetching weather data from API for {city_config.name}")
-            api_response = await self.api_client.get_weather_forecast(
+            api_response = self.api_client.get_weather_data(
                 latitude=city_config.coordinates.latitude,
                 longitude=city_config.coordinates.longitude
             )
@@ -94,7 +93,7 @@ class WeatherProcessor:
             # Cache the weather data if caching is enabled
             if use_cache:
                 try:
-                    await self.cache_client.set_cached_weather(weather_data)
+                    self.cache_client.set_cached_weather(weather_data)
                     logger.debug(f"Cached weather data for {city_config.name}")
                 except CacheError as e:
                     logger.warning(f"Failed to cache weather data for {city_id}: {str(e)}")

@@ -202,7 +202,7 @@ class DynamoDBWeatherCache:
             logger.error(f"Failed to deserialize weather data: {e}")
             raise CacheOperationError(f"Failed to deserialize weather data: {e}") from e
 
-    async def get_cached_weather(self, city_id: str) -> Optional[CityWeatherData]:
+    def get_cached_weather(self, city_id: str) -> Optional[CityWeatherData]:
         """
         Get cached weather data for a city.
 
@@ -264,7 +264,7 @@ class DynamoDBWeatherCache:
             logger.error(f"Unexpected error getting cached weather for {city_id}: {e}")
             raise CacheOperationError(f"Unexpected cache error: {e}") from e
 
-    async def set_cached_weather(self, weather_data: CityWeatherData) -> bool:
+    def set_cached_weather(self, weather_data: CityWeatherData) -> bool:
         """
         Set cached weather data for a city.
 

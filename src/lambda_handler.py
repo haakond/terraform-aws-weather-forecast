@@ -5,7 +5,6 @@ This module provides the main Lambda function handler for the weather forecast
 application, including API endpoints for weather data and health checks.
 """
 
-import asyncio
 import json
 import logging
 import os
@@ -13,46 +12,12 @@ import traceback
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
-from weather_service import (
-    WeatherProcessor, create_weather_processor,
-    WeatherAPIClient, create_weather_client,
-    WeatherAPIError, ValidationError
-)
+# Use the simple weather service to avoid dependency issues
+from simple_weather_service import get_weather_summary, WeatherServiceError
 
 # Configure logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-
-# Global variables for connection reuse
-_weather_processor: Optional[WeatherProcessor] = None
-
-
-def get_weather_processor() -> WeatherProcessor:
-    """
-    Get or create a weather processor instance for connection reuse.
-
-    Returns:
-        WeatherProcessor instance
-    """
-    global _weather_processor
-
-    if _weather_processor is None:
-        # Get company website from environment variable
-        company_website = os.getenv("COMPANY_WEBSITE", "example.com")
-
-        # Create API client with proper configuration
-        api_client = create_weather_client(
-            company_website=company_website,
-            timeout=25.0,  # Leave 5 seconds for Lambda processing
-            max_retries=2   # Reduce retries for Lambda timeout constraints
-        )
-
-        # Create weather processor
-        _weather_processor = create_weather_processor(api_client=api_client)
-
-        logger.info(f"Created weather processor with User-Agent: {api_client.get_user_agent()}")
-
-    return _weather_processor
 
 
 def create_response(
@@ -126,7 +91,7 @@ def create_error_response(
     return create_response(status_code, error_body)
 
 
-async def handle_weather_request(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+def handle_weather_request(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
     Handle weather data request.
 
@@ -140,11 +105,8 @@ async def handle_weather_request(event: Dict[str, Any], context: Any) -> Dict[st
     try:
         logger.info("Processing weather data request")
 
-        # Get weather processor
-        processor = get_weather_processor()
-
-        # Process weather data for all cities
-        weather_summary = await processor.get_weather_summary()
+        # Get weather summary using simple service
+        weather_summary = get_weather_summary()
 
         # Add metadata
         weather_summary.update({
@@ -153,25 +115,16 @@ async def handle_weather_request(event: Dict[str, Any], context: Any) -> Dict[st
             "service": "weather-forecast-app"
         })
 
-        logger.info(f"Successfully processed weather data for {weather_summary.get('cities_count', 0)} cities")
+        logger.info(f"Successfully processed weather data for {len(weather_summary.get('cities', []))} cities")
 
         return create_response(200, weather_summary)
 
-    except WeatherAPIError as e:
-        logger.error(f"Weather API error: {str(e)}")
+    except WeatherServiceError as e:
+        logger.error(f"Weather service error: {str(e)}")
         return create_error_response(
             502,
             "Weather service temporarily unavailable",
-            "WeatherAPIError",
-            context.aws_request_id
-        )
-
-    except ValidationError as e:
-        logger.error(f"Data validation error: {str(e)}")
-        return create_error_response(
-            500,
-            "Weather data processing error",
-            "ValidationError",
+            "WeatherServiceError",
             context.aws_request_id
         )
 
@@ -276,8 +229,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return handle_health_request(event, context)
         elif path == "/" or path == "/weather":
             if http_method == "GET":
-                # Run async weather handler
-                return asyncio.run(handle_weather_request(event, context))
+                # Handle weather request
+                return handle_weather_request(event, context)
             else:
                 return create_error_response(
                     405,
