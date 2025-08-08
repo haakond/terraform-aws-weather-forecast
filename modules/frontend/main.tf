@@ -3,18 +3,26 @@
 
 # Local values for path resolution
 locals {
-  # Try to find the correct frontend path
+  # Frontend path resolution for both standalone and submodule usage
+  # This handles multiple scenarios:
+  # 1. Standalone usage: frontend directory at root level
+  # 2. Submodule usage: frontend directory within the module
+  # 3. CI/CD environments: frontend directory in .terraform/modules/
   possible_frontend_paths = [
-    "${path.root}/${var.frontend_source_path}",
-    "${path.root}/frontend",
-    "frontend",
-    "./frontend"
+    "${path.root}/${var.frontend_source_path}",   # User-specified path from root
+    "${path.root}/frontend",                      # Default frontend at root
+    "${path.module}/${var.frontend_source_path}", # User-specified path from module
+    "${path.module}/frontend",                    # Default frontend in module
+    "${path.module}/../frontend",                 # Frontend one level up from module
+    "${path.module}/../../frontend",              # Frontend two levels up from module
+    "frontend",                                   # Relative to current directory
+    "./frontend"                                  # Explicit relative path
   ]
 
   # Find the first path that contains package.json
   frontend_path = try(
     [for p in local.possible_frontend_paths : p if fileexists("${p}/package.json")][0],
-    var.frontend_source_path
+    "${path.module}/${var.frontend_source_path}"
   )
 
   # Build directory path
@@ -293,21 +301,44 @@ resource "null_resource" "frontend_build" {
       # Use the resolved frontend path
       FRONTEND_PATH="${local.frontend_path}"
 
-      echo "Using frontend directory: $FRONTEND_PATH"
+      echo "=== Frontend Build Debug Information ==="
+      echo "Resolved frontend path: $FRONTEND_PATH"
       echo "Current working directory: $(pwd)"
+      echo "Terraform path.root: ${path.root}"
+      echo "Terraform path.module: ${path.module}"
+      echo "Frontend source path variable: ${var.frontend_source_path}"
+
+      # List all possible paths we tried
+      echo "=== Checking all possible frontend paths ==="
+      %{for path in local.possible_frontend_paths}
+      if [ -d "${path}" ]; then
+        echo "✓ Found directory: ${path}"
+        if [ -f "${path}/package.json" ]; then
+          echo "  ✓ Contains package.json"
+        else
+          echo "  ✗ Missing package.json"
+        fi
+      else
+        echo "✗ Not found: ${path}"
+      fi
+      %{endfor}
 
       # Check if frontend directory exists
       if [ ! -d "$FRONTEND_PATH" ]; then
         echo "ERROR: Frontend directory not found at: $FRONTEND_PATH"
         echo "Available directories in current location:"
         ls -la . || echo "Cannot list current directory"
-        if [ -d "${path.root}" ]; then
-          echo "Available directories in root:"
-          ls -la "${path.root}" || echo "Cannot list root directory"
-        fi
+
+        # Try to find frontend directories recursively
+        echo "=== Searching for frontend directories recursively ==="
+        find . -name "frontend" -type d 2>/dev/null | head -10 || echo "No frontend directories found"
+
+        # Look for package.json files
+        echo "=== Searching for package.json files ==="
+        find . -name "package.json" 2>/dev/null | head -10 || echo "No package.json files found"
+
         exit 1
       fi
-
       # Check if package.json exists
       if [ ! -f "$FRONTEND_PATH/package.json" ]; then
         echo "ERROR: package.json not found in $FRONTEND_PATH"
