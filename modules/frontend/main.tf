@@ -172,7 +172,7 @@ resource "aws_cloudfront_distribution" "website" {
   default_root_object = "index.html"
   comment             = "${var.name_prefix} weather forecast app"
 
-  # Cache behavior for the default path
+  # Cache behavior for the default path (HTML files)
   default_cache_behavior {
     allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods         = ["GET", "HEAD"]
@@ -187,15 +187,16 @@ resource "aws_cloudfront_distribution" "website" {
       }
     }
 
+    # 15-minute caching for HTML files
     min_ttl     = 0
-    default_ttl = 3600  # 1 hour
-    max_ttl     = 86400 # 24 hours
+    default_ttl = 900 # 15 minutes
+    max_ttl     = 900 # 15 minutes
 
     # Security headers
     response_headers_policy_id = aws_cloudfront_response_headers_policy.security_headers.id
   }
 
-  # Cache behavior for static assets (CSS, JS, images)
+  # Cache behavior for static assets (CSS, JS, images) - 15-minute caching
   ordered_cache_behavior {
     path_pattern           = "/static/*"
     allowed_methods        = ["GET", "HEAD", "OPTIONS"]
@@ -206,15 +207,42 @@ resource "aws_cloudfront_distribution" "website" {
 
     forwarded_values {
       query_string = false
-      headers      = ["Origin"]
+      headers      = ["Cache-Control"] # Forward Cache-Control headers from S3
       cookies {
         forward = "none"
       }
     }
 
+    # 15-minute caching for static assets
     min_ttl     = 0
-    default_ttl = 86400    # 24 hours
-    max_ttl     = 31536000 # 1 year
+    default_ttl = 900 # 15 minutes
+    max_ttl     = 900 # 15 minutes
+
+    # Security headers
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security_headers.id
+  }
+
+  # Cache behavior for other static content (images, fonts, etc.) - 15-minute caching
+  ordered_cache_behavior {
+    path_pattern           = "*.{png,jpg,jpeg,gif,svg,ico,woff,woff2,ttf,eot}"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "S3-${aws_s3_bucket.website.bucket}"
+    compress               = true
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      query_string = false
+      headers      = ["Cache-Control"] # Forward Cache-Control headers from S3
+      cookies {
+        forward = "none"
+      }
+    }
+
+    # 15-minute caching for static content
+    min_ttl     = 0
+    default_ttl = 900 # 15 minutes
+    max_ttl     = 900 # 15 minutes
 
     # Security headers
     response_headers_policy_id = aws_cloudfront_response_headers_policy.security_headers.id
@@ -277,9 +305,9 @@ window.APP_CONFIG = {
 };
 EOF
 
-      echo "Building React application..."
-      npm run build
-      echo "Frontend build completed successfully"
+      echo "Building React application with cache optimization..."
+      npm run build:optimized
+      echo "Frontend build completed successfully with 15-minute cache optimization"
     EOT
   }
 
@@ -314,13 +342,28 @@ resource "aws_s3_object" "frontend_files" {
     "eot"   = "application/vnd.ms-fontobject"
   }, split(".", each.value)[length(split(".", each.value)) - 1], "application/octet-stream")
 
-  # Set cache control headers
+  # Set cache control headers for 15-minute caching (900 seconds)
   cache_control = lookup({
-    "html" = "no-cache, no-store, must-revalidate"
-    "css"  = "public, max-age=31536000, immutable"
-    "js"   = "public, max-age=31536000, immutable"
-    "json" = "no-cache, no-store, must-revalidate"
-  }, split(".", each.value)[length(split(".", each.value)) - 1], "public, max-age=86400")
+    # HTML files should have short cache to allow quick updates
+    "html" = "public, max-age=900, must-revalidate"
+    # CSS and JS files with hashes can be cached longer but respect 15-minute requirement for consistency
+    "css" = "public, max-age=900"
+    "js"  = "public, max-age=900"
+    # JSON config files should have short cache
+    "json" = "public, max-age=900, must-revalidate"
+    # Images and other assets
+    "png"  = "public, max-age=900"
+    "jpg"  = "public, max-age=900"
+    "jpeg" = "public, max-age=900"
+    "gif"  = "public, max-age=900"
+    "svg"  = "public, max-age=900"
+    "ico"  = "public, max-age=900"
+    # Font files
+    "woff"  = "public, max-age=900"
+    "woff2" = "public, max-age=900"
+    "ttf"   = "public, max-age=900"
+    "eot"   = "public, max-age=900"
+  }, split(".", each.value)[length(split(".", each.value)) - 1], "public, max-age=900")
 
   # Generate ETag for cache invalidation
   etag = try(filemd5("${path.root}/${var.frontend_source_path}/build/${each.value}"), "missing")

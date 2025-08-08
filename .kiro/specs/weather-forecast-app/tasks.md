@@ -68,7 +68,7 @@
     - Write basic tests for the API Gateway setup
     - _Requirements: 3.1, 3.5, 3.6_
 
-- [ ] 5. Create frontend application
+- [x] 5. Create frontend application
   - [x] 5.1 Build responsive weather display components
     - Create React components for weather card display
     - Implement responsive grid layout for four cities
@@ -90,6 +90,12 @@
     - Ensure accessibility compliance (WCAG)
     - _Requirements: 1.1, 1.3, 2.1_
 
+  - [x] 5.4 Optimize frontend build for caching
+    - Configure build process to generate static assets optimized for 15-minute caching
+    - Ensure proper file naming and versioning for cache busting when needed
+    - Validate that all static assets (HTML, CSS, JS, images) are properly configured
+    - _Requirements: 1.2, 1.4_
+
 - [x] 6. Configure static hosting infrastructure
   - [x] 6.1 Create S3 bucket for static hosting
     - Implement Terraform module for S3 bucket configuration
@@ -106,6 +112,12 @@
     - Add security headers and HTTPS redirection
     - Write basic tests for the Cloudfront configuration
     - _Requirements: 1.2, 3.1, 3.8_
+
+  - [x] 6.3 Configure Cache-Control headers for static content
+    - Configure S3 bucket metadata to set Cache-Control: max-age=900 for all static assets
+    - Update CloudFront cache behaviors to respect and forward Cache-Control headers
+    - Ensure consistent 15-minute caching for HTML, CSS, JavaScript, and image files
+    - _Requirements: 1.2, 1.4_
 
 - [x] 7. Implement monitoring and observability
   - [x] 7.1 Create simple and intuitive CloudWatch dashboard and alarms
@@ -135,6 +147,12 @@
     - Create basic infrastructure deployment tests
     - Write basic test automation scripts with cleanup
     - _Requirements: 2.4, 3.2_
+
+  - [ ] 8.3 Add cache header validation tests
+    - Create automated tests to verify Cache-Control headers are properly set
+    - Test that static assets return max-age=900 in response headers
+    - Validate cache behavior across different asset types (HTML, CSS, JS, images)
+     - _Requirements: 1.4, 2.4_
 
 - [x] 9. Generate documentation and cost analysis
   - [x] 9.1 Create architecture diagrams

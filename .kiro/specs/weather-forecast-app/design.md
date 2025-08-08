@@ -38,6 +38,14 @@ The application follows a serverless architecture pattern with the following com
   - Handle loading states and error conditions
   - Adapt layout for mobile devices
 
+#### Static Content Delivery
+- **Purpose**: Optimize static asset delivery with appropriate caching headers
+- **Configuration**:
+  - Set Cache-Control: max-age=900 (15 minutes) for all static assets
+  - Apply to HTML, CSS, JavaScript, images, and other static resources
+  - Configure both S3 bucket metadata and CloudFront cache behaviors
+  - Ensure consistent caching across all static content types
+
 #### City Weather Card Component
 - **Purpose**: Individual weather display for each city
 - **Properties**:
@@ -210,8 +218,8 @@ The application follows a serverless architecture pattern with the following com
 ### Frontend Performance
 - **Code Splitting**: Lazy load components for faster initial load
 - **Image Optimization**: Use WebP format with fallbacks
-- **Caching Strategy**: Implement browser caching for static assets
-- **CDN Distribution**: Leverage CloudFront for global content delivery
+- **Static Content Caching**: Configure Cache-Control headers with Max-Age=900 (15 minutes) for all static assets including HTML, CSS, JavaScript, and images
+- **CDN Distribution**: Leverage CloudFront for global content delivery with optimized cache behaviors
 
 ### Backend Performance
 - **Connection Pooling**: Reuse database connections in Lambda functions
@@ -220,7 +228,8 @@ The application follows a serverless architecture pattern with the following com
 - **API Response Compression**: Enable gzip compression for API responses
 
 ### Infrastructure Performance
-- **CloudFront Configuration**: Optimize cache behaviors and TTL settings
+- **CloudFront Configuration**: Configure cache behaviors with Cache-Control headers (Max-Age=900) for static content and optimize TTL settings
+- **S3 Static Hosting**: Configure S3 bucket metadata to set appropriate Cache-Control headers for static assets
 - **DynamoDB Provisioning**: Use on-demand billing for variable workloads
 - **Lambda Cold Start Optimization**: Minimize package size and initialization time
 - **Regional Deployment**: Deploy in eu-west-1 for optimal European latency

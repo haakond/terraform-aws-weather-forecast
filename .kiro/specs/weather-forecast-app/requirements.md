@@ -12,7 +12,8 @@ This specification will create a weather forecast application, to be deployed wi
 
 1. WHEN an end user is accessing the service THEN the system SHALL display a simple web site with a fancy design for the weather forecast for the cities as described in the User Story
 2. WHEN an end user is accessing the service THEN the system SHALL be snappy and respond fast
-2. WHEN an end user is accessing the service on a mobile device THEN the design SHALL be optimized for display on a small screen
+3. WHEN an end user is accessing the service on a mobile device THEN the design SHALL be optimized for display on a small screen
+4. WHEN static content is served to end users THEN the system SHALL set Cache-Control headers with Max-Age of 900 seconds (15 minutes) to optimize performance and reduce server load
 
 
 ### Requirement 2
