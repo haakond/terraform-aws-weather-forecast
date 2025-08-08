@@ -20,6 +20,16 @@ output "s3_bucket_arn" {
   value       = aws_s3_bucket.website.arn
 }
 
+output "frontend_build_file_count" {
+  description = "Number of files in the frontend build directory"
+  value       = local.build_file_count
+}
+
+output "frontend_build_path" {
+  description = "Path to the frontend build directory"
+  value       = local.build_path
+}
+
 output "cloudfront_distribution_arn" {
   description = "CloudFront distribution ARN"
   value       = aws_cloudfront_distribution.website.arn

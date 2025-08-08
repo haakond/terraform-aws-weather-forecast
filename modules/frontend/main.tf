@@ -28,6 +28,10 @@ locals {
 
   # Build directory path
   build_path = "${local.frontend_path}/build"
+
+  # Debug information for build files (only available after build)
+  build_files      = try(fileset(local.build_path, "**/*"), toset([]))
+  build_file_count = length(local.build_files)
 }
 
 # Random suffix for unique bucket naming
@@ -453,8 +457,38 @@ EOF
         exit 1
       fi
 
+      # Verify essential build files exist
+      echo "Verifying build output..."
+      if [ ! -f "build/index.html" ]; then
+        echo "ERROR: index.html not found in build directory"
+        exit 1
+      fi
+
+      # Check for static assets directory (common in React builds)
+      if [ -d "build/static" ]; then
+        echo "✓ Static assets directory found"
+        static_files=$(find build/static -type f | wc -l)
+        echo "✓ Found $static_files static files"
+      fi
+
+      # Wait a few seconds to ensure all file operations are complete
+      echo "Waiting for file system operations to complete..."
+      sleep 5
+
+      # Final verification of build contents
+      echo "Final build verification:"
+      total_files=$(find build -type f | wc -l)
+      echo "✓ Total build files: $total_files"
+
+      if [ "$total_files" -eq 0 ]; then
+        echo "ERROR: No files found in build directory"
+        exit 1
+      fi
+
       echo "Build directory contents:"
       ls -la build/ || echo "Cannot list build directory"
+
+      echo "✓ Frontend build verification completed successfully"
     EOT
   }
 
@@ -462,10 +496,67 @@ EOF
   depends_on = [aws_s3_bucket.website]
 }
 
+# Verify build completion and file readiness before S3 upload
+resource "null_resource" "build_verification" {
+  # This resource ensures the build is complete and files are ready
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -e
+
+      echo "=== Build Verification for S3 Upload ==="
+
+      # Use the resolved frontend path
+      FRONTEND_PATH="${local.frontend_path}"
+      BUILD_PATH="$FRONTEND_PATH/build"
+
+      echo "Verifying build at: $BUILD_PATH"
+
+      # Wait for build directory to be stable
+      echo "Waiting for build stability..."
+      sleep 3
+
+      # Verify build directory exists
+      if [ ! -d "$BUILD_PATH" ]; then
+        echo "ERROR: Build directory not found at $BUILD_PATH"
+        exit 1
+      fi
+
+      # Verify critical files exist
+      if [ ! -f "$BUILD_PATH/index.html" ]; then
+        echo "ERROR: index.html not found in build directory"
+        exit 1
+      fi
+
+      # Count files and ensure we have content
+      file_count=$(find "$BUILD_PATH" -type f | wc -l)
+      echo "Build contains $file_count files"
+
+      if [ "$file_count" -eq 0 ]; then
+        echo "ERROR: No files found in build directory"
+        exit 1
+      fi
+
+      # Additional wait to ensure all file operations are complete
+      echo "Final stability wait..."
+      sleep 2
+
+      echo "✓ Build verification completed - files ready for S3 upload"
+    EOT
+  }
+
+  # This resource depends on the build completing
+  depends_on = [null_resource.frontend_build]
+
+  # Trigger re-verification when build changes
+  triggers = {
+    build_hash = null_resource.frontend_build.id
+  }
+}
+
 # Upload the built frontend files to S3
 resource "aws_s3_object" "frontend_files" {
-  # Get all files from the resolved build directory
-  for_each = try(fileset(local.build_path, "**/*"), toset([]))
+  # Get all files from the resolved build directory with better error handling
+  for_each = local.build_files
 
   bucket = aws_s3_bucket.website.id
   key    = each.value
@@ -515,10 +606,10 @@ resource "aws_s3_object" "frontend_files" {
   # Generate ETag for cache invalidation
   etag = try(filemd5("${local.build_path}/${each.value}"), "missing")
 
-  # Ensure files are uploaded after build completes
+  # Ensure files are uploaded after build completes and is verified
   depends_on = [
     aws_s3_bucket.website,
-    null_resource.frontend_build
+    null_resource.build_verification
   ]
 
   tags = merge(var.common_tags, {
