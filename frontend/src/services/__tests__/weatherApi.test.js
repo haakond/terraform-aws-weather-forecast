@@ -381,7 +381,7 @@ describe('API_CONFIG', () => {
     expect(API_CONFIG.ENDPOINTS.WEATHER).toBe('/weather');
     expect(API_CONFIG.ENDPOINTS.HEALTH).toBe('/health');
     expect(API_CONFIG.TIMEOUT).toBe(10000);
-    expect(API_CONFIG.MAX_RETRIES).toBe(3);
+    expect(API_CONFIG.MAX_RETRIES).toBe(5);
     expect(API_CONFIG.CACHE_DURATION).toBe(60 * 60 * 1000); // 1 hour
   });
 });

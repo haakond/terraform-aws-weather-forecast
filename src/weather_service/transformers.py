@@ -9,11 +9,11 @@ from datetime import datetime, date, timedelta
 from typing import Dict, List, Optional, Any
 import logging
 
-from .models import (
+from weather_service.models import (
     CityWeatherData, WeatherForecast, Temperature, WeatherCondition,
     Coordinates, ValidationError
 )
-from .config import get_city_config
+from weather_service.config import get_city_config
 
 logger = logging.getLogger(__name__)
 

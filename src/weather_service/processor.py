@@ -10,11 +10,11 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 
-from .api_client import WeatherAPIClient, WeatherAPIError
-from .transformers import parse_met_no_response, validate_met_no_response
-from .config import get_cities_config, get_city_config, validate_city_id
-from .models import CityWeatherData, ValidationError
-from .cache import DynamoDBWeatherCache, CacheError, create_weather_cache
+from weather_service.api_client import WeatherAPIClient, WeatherAPIError
+from weather_service.transformers import parse_met_no_response, validate_met_no_response
+from weather_service.config import get_cities_config, get_city_config, validate_city_id
+from weather_service.models import CityWeatherData, ValidationError
+from weather_service.cache import DynamoDBWeatherCache, CacheError, create_weather_cache
 
 logger = logging.getLogger(__name__)
 

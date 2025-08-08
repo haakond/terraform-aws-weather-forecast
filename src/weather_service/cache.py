@@ -17,7 +17,7 @@ import boto3
 from botocore.exceptions import ClientError, BotoCoreError
 from botocore.config import Config
 
-from .models import CityWeatherData, ValidationError
+from weather_service.models import CityWeatherData, ValidationError
 
 logger = logging.getLogger(__name__)
 

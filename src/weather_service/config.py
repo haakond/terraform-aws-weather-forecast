@@ -9,7 +9,7 @@ Oslo (Norway), Paris (France), London (United Kingdom), and Barcelona (Spain).
 import json
 import os
 from typing import Dict, List
-from .models import CityConfig, Coordinates
+from weather_service.models import CityConfig, Coordinates
 
 
 # Default city configurations with precise coordinates
