@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Console Spam Test</title>
+</head>
+<body>
+    <h1>Console Spam Test</h1>
+    <p>Open the browser console and check for excessive logging.</p>
+    <p>The console should show minimal, relevant messages only.</p>
+
+    <div id="log-counter">
+        <h3>Console Log Counter</h3>
+        <p>Total logs in last 10 seconds: <span id="count">0</span></p>
+        <button onclick="clearCounter()">Clear Counter</button>
+    </div>
+
+    <script>
+        // Monitor console.log calls
+        let logCount = 0;
+        let originalLog = console.log;
+        let originalError = console.error;
+        let originalWarn = console.warn;
+
+        console.log = function(...args) {
+            logCount++;
+            updateCounter();
+            originalLog.apply(console, args);
+        };
+
+        console.error = function(...args) {
+            logCount++;
+            updateCounter();
+            originalError.apply(console, args);
+        };
+
+        console.warn = function(...args) {
+            logCount++;
+            updateCounter();
+            originalWarn.apply(console, args);
+        };
+
+        function updateCounter() {
+            document.getElementById('count').textContent = logCount;
+        }
+
+        function clearCounter() {
+            logCount = 0;
+            updateCounter();
+        }
+
+        // Reset counter every 10 seconds
+        setInterval(() => {
+            if (logCount > 20) {
+                document.body.style.backgroundColor = '#ffebee';
+                document.getElementById('count').style.color = 'red';
+                document.getElementById('count').style.fontWeight = 'bold';
+            } else if (logCount > 10) {
+                document.body.style.backgroundColor = '#fff3e0';
+                document.getElementById('count').style.color = 'orange';
+            } else {
+                document.body.style.backgroundColor = '#e8f5e8';
+                document.getElementById('count').style.color = 'green';
+            }
+
+            setTimeout(() => {
+                logCount = 0;
+                updateCounter();
+                document.body.style.backgroundColor = 'white';
+                document.getElementById('count').style.color = 'black';
+                document.getElementById('count').style.fontWeight = 'normal';
+            }, 10000);
+        }, 10000);
+
+        console.log('Console monitoring started');
+    </script>
+</body>
+</html>

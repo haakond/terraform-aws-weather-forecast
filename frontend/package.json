@@ -1,0 +1,38 @@
+{
+  "name": "weather-forecast-frontend",
+  "version": "1.0.0",
+  "description": "Weather forecast application frontend",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "build:optimized": "node scripts/build-optimized.js",
+    "validate:cache": "node scripts/validate-cache-headers.js",
+    "test": "react-scripts test --watchAll=false --ci --coverage",
+    "test:watch": "react-scripts test",
+    "test:ci": "react-scripts test --watchAll=false --ci --coverage --silent --passWithNoTests",
+    "eject": "react-scripts eject"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^14.4.3"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
