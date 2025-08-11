@@ -195,6 +195,28 @@
     - Test concurrency limits under load to ensure proper throttling behavior
     - _Requirements: 3.6, 3.8_
 
+  - [ ] 8.8 Implement dynamic cache-control headers in Lambda function
+    - Update Lambda handler to set cache-control: max-age=60 for successful weather API responses
+    - Set cache-control: max-age=0 for failed weather API responses or error conditions
+    - Ensure cache-control headers are properly included in HTTP response headers
+    - Test cache-control behavior for both success and failure scenarios
+    - _Requirements: 2.5, 2.6_
+
+  - [ ] 8.9 Implement lastUpdated timestamp handling in Lambda function
+    - Update Lambda handler to include lastUpdated timestamp in all API responses
+    - Use weather API timestamp when available in the met.no API response
+    - Fall back to DynamoDB cache timestamp when weather API timestamp is not provided
+    - Ensure timestamp is in ISO 8601 format for consistent frontend display
+    - Test timestamp handling for both fresh API calls and cached responses
+    - _Requirements: 2.7, 2.8_
+
+  - [ ] 8.10 Update frontend to display lastUpdated timestamp
+    - Modify weather display components to show the lastUpdated timestamp from API responses
+    - Format timestamp for user-friendly display (e.g., "Last updated: 2 minutes ago")
+    - Handle cases where lastUpdated is null or missing
+    - Ensure timestamp display is responsive and accessible
+    - _Requirements: 2.7_
+
 - [x] 9. Generate documentation and cost analysis
   - [x] 9.1 Create architecture diagrams
     - Generate AWS architecture diagram using MCP diagram server

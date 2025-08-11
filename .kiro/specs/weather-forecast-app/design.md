@@ -37,6 +37,8 @@ The application follows a serverless architecture pattern with the following com
   - Display weather information with icons and temperatures
   - Handle loading states and error conditions
   - Adapt layout for mobile devices
+  - Display Last updated timestamp from API response
+  - Respect cache-control headers from API responses
 
 #### Static Content Delivery
 - **Purpose**: Optimize static asset delivery with appropriate caching headers and cost-effective global distribution
@@ -69,9 +71,18 @@ The application follows a serverless architecture pattern with the following com
   - Handle API rate limiting and error scenarios
   - Return formatted weather data to frontend
   - Include identifying User-Agent header in all API requests (application name + configurable contact info)
+  - Set dynamic cache-control headers based on response success/failure
+  - Include lastUpdated timestamp in API responses
 - **Configuration**:
   - Company website configurable via environment variable (default: example.com)
   - User-Agent format: "weather-forecast-app/1.0 (+https://[company_website])"
+- **Cache-Control Behavior**:
+  - Successful API responses: Set cache-control: max-age=60 (1 minute client-side caching)
+  - Failed API responses: Set cache-control: max-age=0 (no client-side caching)
+- **Timestamp Handling**:
+  - Use weather API timestamp when available in response
+  - Fall back to DynamoDB cache timestamp when weather API timestamp is not provided
+  - Include lastUpdated field in all API responses for frontend display
 
 #### Weather Data Processor
 - **Purpose**: Processes and transforms weather data from met.no API
@@ -117,6 +128,43 @@ The application follows a serverless architecture pattern with the following com
   },
   "lastUpdated": "2024-01-14T10:30:00Z",
   "ttl": 1705230600
+}
+```
+
+### API Response Model
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "cityId": "oslo",
+      "cityName": "Oslo",
+      "country": "Norway",
+      "forecast": {
+        "date": "2024-01-15",
+        "temperature": {
+          "value": -2,
+          "unit": "celsius"
+        },
+        "condition": "partly_cloudy",
+        "description": "Partly cloudy",
+        "icon": "partly_cloudy_day"
+      }
+    }
+  ],
+  "lastUpdated": "2024-01-14T10:30:00Z",
+  "cacheControl": "max-age=60"
+}
+```
+
+### Error Response Model
+```json
+{
+  "success": false,
+  "error": "Failed to fetch weather data",
+  "data": [],
+  "lastUpdated": null,
+  "cacheControl": "max-age=0"
 }
 ```
 

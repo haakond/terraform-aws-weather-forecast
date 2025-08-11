@@ -26,6 +26,10 @@ This specification will create a weather forecast application, to be deployed wi
 2. WHEN the weather-forecast-app is generated THEN the system SHALL look up weather forecasts from https://api.met.no/weatherapi/locationforecast/2.0/documentation and cache the results for 1 hour
 3. WHEN the weather-forecast-app is generated THEN the system SHALL respect the Terms of Service defined at https://developer.yr.no/doc/TermsOfService/
 4. WHEN the weather-forecast-app is generated THEN the system SHALL be tested
+5. WHEN the Lambda function successfully retrieves weather data from the backend API THEN the system SHALL set cache-control: max-age=60 on the HTTP response
+6. WHEN the Lambda function fails to retrieve weather data from the backend API THEN the system SHALL set cache-control: max-age=0 on the HTTP response
+7. WHEN the frontend displays weather data THEN the system SHALL show the Last updated timestamp from the lastUpdated field in the API response
+8. WHEN weather data is cached in DynamoDB and the weather API does not provide timestamp information THEN the system SHALL use the DynamoDB cache timestamp as the lastUpdated value in the API response
 
 
 ### Requirement 3
