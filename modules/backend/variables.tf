@@ -60,9 +60,9 @@ variable "lambda_memory_size" {
 }
 
 variable "lambda_reserved_concurrency" {
-  description = "Reserved concurrency for Lambda function to prevent runaway costs"
+  description = "Reserved concurrency for Lambda function to prevent runaway costs. Set to 5 for weather API to balance cost control with service availability. This limits the function to 5 concurrent executions, preventing runaway costs while allowing sufficient capacity for typical weather data requests."
   type        = number
-  default     = 10
+  default     = 5
 
   validation {
     condition     = var.lambda_reserved_concurrency >= -1

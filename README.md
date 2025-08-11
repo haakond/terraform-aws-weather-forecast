@@ -520,6 +520,47 @@ For more detailed testing information:
 - **Dashboard**: Real-time cost tracking by service
 - **Tags**: All resources tagged with "Service=weather-forecast-app" for cost allocation
 
+### Lambda Concurrency Configuration
+
+The weather forecast application is configured with **Lambda reserved concurrency of 5 concurrent executions** to balance cost control with service availability.
+
+#### Why 5 Concurrent Executions?
+
+**Cost Control Benefits:**
+- Prevents runaway costs from unexpected traffic spikes or attacks
+- Limits maximum Lambda cost exposure to ~$2-5/month for continuous usage
+- Provides predictable cost ceiling for budget planning
+
+**Service Availability:**
+- Handles ~150-300 requests/minute (sufficient for typical weather app traffic)
+- Weather data cached for 1 hour reduces Lambda invocations
+- Most requests served from DynamoDB cache (fast response)
+
+**Configuration Options:**
+```hcl
+# Conservative (Development/Testing)
+lambda_reserved_concurrency = 1
+
+# Recommended (Production)
+lambda_reserved_concurrency = 5
+
+# High Traffic (Enterprise)
+lambda_reserved_concurrency = 10
+
+# Unreserved (Not Recommended - Cost Risk)
+lambda_reserved_concurrency = -1
+```
+
+**Monitoring Concurrency:**
+- CloudWatch metrics track concurrent executions and throttling
+- Alarms alert when throttling occurs (>1% of requests)
+- Dashboard shows real-time concurrency usage
+
+**When to Adjust:**
+- **Increase**: If consistent throttling errors or response times >2 seconds
+- **Decrease**: If actual usage is consistently <50% of capacity
+- **Monitor**: ConcurrentExecutions, Throttles, Duration, and Errors metrics
+
 ## Monitoring and Observability
 
 - **CloudWatch Dashboard**: Custom dashboard with key metrics
@@ -620,6 +661,7 @@ No resources.
 | <a name="input_cities_config"></a> [cities\_config](#input\_cities\_config) | Configuration for cities to display weather forecasts | <pre>list(object({<br/>    id      = string<br/>    name    = string<br/>    country = string<br/>    coordinates = object({<br/>      latitude  = number<br/>      longitude = number<br/>    })<br/>  }))</pre> | <pre>[<br/>  {<br/>    "coordinates": {<br/>      "latitude": 59.9139,<br/>      "longitude": 10.7522<br/>    },<br/>    "country": "Norway",<br/>    "id": "oslo",<br/>    "name": "Oslo"<br/>  },<br/>  {<br/>    "coordinates": {<br/>      "latitude": 48.8566,<br/>      "longitude": 2.3522<br/>    },<br/>    "country": "France",<br/>    "id": "paris",<br/>    "name": "Paris"<br/>  },<br/>  {<br/>    "coordinates": {<br/>      "latitude": 51.5074,<br/>      "longitude": -0.1278<br/>    },<br/>    "country": "United Kingdom",<br/>    "id": "london",<br/>    "name": "London"<br/>  },<br/>  {<br/>    "coordinates": {<br/>      "latitude": 41.3851,<br/>      "longitude": 2.1734<br/>    },<br/>    "country": "Spain",<br/>    "id": "barcelona",<br/>    "name": "Barcelona"<br/>  }<br/>]</pre> | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name (e.g., dev, staging, prod) | `string` | `"dev"` | no |
 | <a name="input_frontend_config"></a> [frontend\_config](#input\_frontend\_config) | Configuration for the frontend module | <pre>object({<br/>    frontend_source_path = optional(string, "frontend")<br/>  })</pre> | <pre>{<br/>  "frontend_source_path": "frontend"<br/>}</pre> | no |
+| <a name="input_lambda_reserved_concurrency"></a> [lambda\_reserved\_concurrency](#input\_lambda\_reserved\_concurrency) | Reserved concurrency for Lambda function to prevent runaway costs. Set to 5 for weather API to balance cost control with service availability. This limits the function to 5 concurrent executions, preventing runaway costs while allowing sufficient capacity for typical weather data requests. Set to -1 for unreserved concurrency (not recommended for cost control). | `number` | `5` | no |
 | <a name="input_log_retention_days"></a> [log\_retention\_days](#input\_log\_retention\_days) | CloudWatch log retention period in days | `number` | `180` | no |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Name of the project | `string` | `"weather-forecast-app"` | no |
 | <a name="input_weather_service_identification_domain"></a> [weather\_service\_identification\_domain](#input\_weather\_service\_identification\_domain) | Domain name used to identify this weather service in HTTP User-Agent headers when making requests to the Norwegian Meteorological Institute API. This helps met.no identify and contact the service operator if needed, as required by their terms of service. | `string` | `"example.com"` | no |

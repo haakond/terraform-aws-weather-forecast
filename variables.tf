@@ -152,3 +152,14 @@ variable "frontend_config" {
     frontend_source_path = "frontend"
   }
 }
+
+variable "lambda_reserved_concurrency" {
+  description = "Reserved concurrency for Lambda function to prevent runaway costs. Set to 5 for weather API to balance cost control with service availability. This limits the function to 5 concurrent executions, preventing runaway costs while allowing sufficient capacity for typical weather data requests. Set to -1 for unreserved concurrency (not recommended for cost control)."
+  type        = number
+  default     = 5
+
+  validation {
+    condition     = var.lambda_reserved_concurrency >= -1
+    error_message = "Lambda reserved concurrency must be -1 (unreserved) or a positive number."
+  }
+}

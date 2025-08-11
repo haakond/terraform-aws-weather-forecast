@@ -11,7 +11,7 @@ This module creates the AWS Lambda function and related infrastructure for the w
   - Timeout: 30 seconds
   - Memory: 512 MB (configurable)
   - X-Ray tracing: Active
-  - Reserved concurrency: 10 (configurable)
+  - Reserved concurrency: 5 (configurable, optimized for weather API workload)
 
 ### CloudWatch Logs
 - **aws_cloudwatch_log_group.lambda_logs**: Log group for Lambda function
@@ -72,7 +72,7 @@ The Lambda function is configured with the following environment variables:
 - `cities_config`: List of cities with coordinates for weather forecasts (defaults to Oslo, Paris, London, Barcelona)
 - `log_retention_days`: CloudWatch log retention (default: 180)
 - `lambda_memory_size`: Lambda memory in MB (default: 512, range: 128-10240)
-- `lambda_reserved_concurrency`: Reserved concurrency (default: 10)
+- `lambda_reserved_concurrency`: Reserved concurrency (default: 5, optimized for weather API)
 - `log_level`: Logging level (default: "INFO")
 - `vpc_config`: VPC configuration object (optional)
 - `dlq_target_arn`: Dead letter queue ARN (optional)
@@ -103,6 +103,9 @@ The module includes comprehensive tests:
 ```bash
 # Run validation tests
 ./tests/terraform/validate_lambda.sh
+
+# Validate Lambda concurrency configuration
+./scripts/validate-concurrency.sh
 ```
 
 ## Dependencies
@@ -130,7 +133,7 @@ module "backend" {
 
   # Optional Lambda configuration
   lambda_memory_size           = 512
-  lambda_reserved_concurrency  = 10
+  lambda_reserved_concurrency  = 5
   log_level                   = "INFO"
 
   # Optional VPC configuration
@@ -163,9 +166,105 @@ This Lambda function integrates with:
 - **Cold Start**: Minimal package size for faster cold starts
 - **Connection Reuse**: Global variables for connection pooling
 
+## Lambda Concurrency Configuration
+
+### Reserved Concurrency Limits
+
+The Lambda function is configured with **reserved concurrency of 5 concurrent executions** to balance cost control with service availability. This configuration is specifically optimized for the weather forecast application workload.
+
+#### Why 5 Concurrent Executions?
+
+1. **Weather API Characteristics**:
+   - Weather data is cached for 1 hour in DynamoDB
+   - Most requests will be served from cache (fast response)
+   - External API calls to met.no are only needed when cache expires
+   - Weather data doesn't change frequently, reducing API call volume
+
+2. **Traffic Patterns**:
+   - Weather apps typically have predictable usage patterns
+   - Peak usage during morning hours and weather events
+   - 5 concurrent executions can handle ~150-300 requests/minute
+   - Sufficient for typical weather app traffic
+
+3. **Cost Control**:
+   - Prevents runaway costs from unexpected traffic spikes
+   - Limits maximum Lambda cost exposure
+   - With 5 concurrent executions at 512MB, maximum cost is predictable
+   - Estimated maximum cost: ~$2-5/month for continuous usage
+
+#### Concurrency vs. Performance Trade-offs
+
+| Concurrency | Max RPS | Response Time | Monthly Cost | Use Case |
+|-------------|---------|---------------|--------------|----------|
+| 1           | ~30     | Fast (cache)  | $0.50        | Development/Testing |
+| 5           | ~150    | Fast (cache)  | $2-5         | **Production (Recommended)** |
+| 10          | ~300    | Fast (cache)  | $5-10        | High Traffic |
+| Unreserved  | ~1000+  | Variable      | $10-100+     | Enterprise (Risk) |
+
+#### Throttling Behavior
+
+When the concurrency limit is reached:
+1. **Synchronous Invocations** (API Gateway): Return 429 (Too Many Requests)
+2. **Client Behavior**: Frontend implements retry logic with exponential backoff
+3. **User Experience**: Brief delays during peak traffic, but service remains available
+4. **Monitoring**: CloudWatch alarms alert on throttling events
+
+#### Scaling Considerations
+
+**When to Increase Concurrency**:
+- Consistent throttling errors (>1% of requests)
+- Response times consistently >2 seconds
+- Business growth requires higher capacity
+- Multiple geographic regions accessing the service
+
+**When to Decrease Concurrency**:
+- Actual usage is consistently <50% of capacity
+- Cost optimization is priority over peak performance
+- Development/staging environments
+
+#### Configuration Options
+
+```hcl
+# Conservative (Development)
+lambda_reserved_concurrency = 1
+
+# Recommended (Production)
+lambda_reserved_concurrency = 5
+
+# High Traffic (Enterprise)
+lambda_reserved_concurrency = 10
+
+# Unreserved (Not Recommended)
+lambda_reserved_concurrency = -1
+```
+
+#### Monitoring Concurrency
+
+Key CloudWatch metrics to monitor:
+- `ConcurrentExecutions`: Current concurrent executions
+- `Throttles`: Number of throttled invocations
+- `Duration`: Function execution time
+- `Errors`: Function errors (may increase during throttling)
+
+#### Cost Impact Analysis
+
+**With Reserved Concurrency (5)**:
+- Predictable maximum cost
+- Protection against traffic spikes
+- Controlled resource usage
+- Recommended for production
+
+**Without Reserved Concurrency**:
+- Unlimited scaling potential
+- Risk of unexpected high costs
+- Vulnerable to traffic spikes or attacks
+- Not recommended for cost-sensitive deployments
+
 ## Cost Optimization
 
-- Reserved concurrency limits maximum cost exposure
-- Right-sized memory allocation for workload
-- Efficient packaging excludes unnecessary files
-- CloudWatch log retention balances observability and cost
+- **Reserved concurrency (5)** limits maximum cost exposure while maintaining service availability
+- Right-sized memory allocation (512MB) for weather API workload
+- Efficient packaging excludes unnecessary files to reduce cold start time
+- CloudWatch log retention (180 days) balances observability and cost
+- DynamoDB caching reduces external API calls and Lambda invocations
+- API Gateway throttling provides additional cost protection layer

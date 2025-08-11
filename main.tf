@@ -40,6 +40,7 @@ module "backend" {
   weather_service_identification_domain = var.weather_service_identification_domain
   cities_config                         = var.cities_config
   log_retention_days                    = var.log_retention_days
+  lambda_reserved_concurrency           = var.lambda_reserved_concurrency
   common_tags                           = local.common_tags
 }
 
