@@ -7,65 +7,63 @@
   - Create basic project documentation structure with docs/ directory
   - _Requirements: 3.1, 3.2_
 
-- [x] 2. Implement core Python weather service
-  - [x] 2.1 Create weather data models and city configuration
-    - Implement Python classes for weather data structure with proper validation
+- [x] 2. Implement simplified Lambda weather service
+  - [x] 2.1 Create embedded weather service in Lambda handler
+    - Implement weather data fetching directly in lambda_handler.py using urllib
     - Define city configuration with coordinates for Oslo, Paris, London, Barcelona
-    - Create data transformation utilities for met.no API response parsing
-    - Write basic unit tests for data models and validation logic
-    - _Requirements: 2.2, 1.1_
+    - Create weather data processing and transformation logic embedded in handler
+    - Implement proper User-Agent header with configurable company website
+    - Add rate limiting with simple delays between API calls
+    - _Requirements: 2.2, 2.3, 1.1_
 
-  - [x] 2.2 Implement weather API client with proper User-Agent
-    - Create HTTP client for met.no API with configurable User-Agent header
-    - Implement rate limiting and retry logic with exponential backoff
-    - Add error handling for API failures and malformed responses
-    - Write basic unit tests for API client functionality
-    - _Requirements: 2.2, 2.3_
-
-  - [x] 2.3 Create weather data processor
-    - Implement tomorrow's forecast extraction from met.no API responses
-    - Create weather condition mapping and icon selection logic
-    - Write basic unit tests for data processing
+  - [x] 2.2 Implement weather API integration and processing
+    - Create fetch_weather_data function for met.no API calls
+    - Implement extract_tomorrow_forecast for parsing API responses
+    - Add weather condition mapping and error handling
+    - Create process_city_weather for individual city processing
+    - Implement get_weather_summary for all cities with delay between calls
     - _Requirements: 2.2, 1.2_
 
 - [x] 3. Build Lambda function infrastructure
-  - [x] 3.1 Create Lambda function handler
-    - Implement main Lambda handler for weather API endpoint
+  - [x] 3.1 Create simplified Lambda function handler
+    - Implement main Lambda handler with embedded weather service
     - Add environment variable configuration for company website
-    - Implement proper error handling and logging
-    - Create /health endpoint for monitoring
-    - Write basic unit tests for Lambda handler logic
+    - Implement proper error handling and logging with standardized responses
+    - Create /health endpoint for monitoring with environment information
+    - Add CORS support and OPTIONS request handling
     - _Requirements: 2.1, 2.4, 3.6_
 
-  - [x] 3.2 Add DynamoDB integration for persistent caching
-    - Implement DynamoDB client with connection pooling
-    - Create weather data caching operations with 1-hour TTL (3600 seconds)
-    - Add error handling for database operations
+  - [x] 3.2 Add DynamoDB caching to simplified Lambda handler
+    - Implement DynamoDB caching directly in the lambda_handler.py file
+    - Add cache check before API calls and cache storage after successful API responses
+    - Implement 1-hour TTL (3600 seconds) for cached weather data
+    - Add error handling for DynamoDB operations with fallback to API calls
+    - Use boto3 client for DynamoDB operations embedded in the handler
     - _Requirements: 2.2, 1.2, 3.6_
 
-- [-] 4. Create Terraform infrastructure modules
-  - [x] 4.1 Implement DynamoDB table configuration
-    - Create Terraform module for DynamoDB table with TTL enabled (1-hour expiration)
-    - Configure on-demand billing and point-in-time recovery
-    - Set up TTL attribute for automatic cache expiration after 3600 seconds
-    - Add proper IAM permissions for Lambda access
-    - Write basic configuration tests for the DynamoDB configuration
-    - _Requirements: 2.2, 3.1, 3.6, 3.8_
+- [-] 4. Update Terraform infrastructure for simplified approach
+  - [x] 4.1 Maintain DynamoDB table configuration for caching
+    - Keep existing DynamoDB table from Terraform backend module
+    - Maintain DynamoDB-related IAM permissions for Lambda role
+    - Ensure DynamoDB table name is passed to Lambda via environment variable
+    - Keep TTL configuration for 1-hour cache expiration
+    - Maintain existing tests for DynamoDB validation
+    - _Requirements: 3.1, 3.6, 3.8_
 
-  - [x] 4.2 Create Lambda function Terraform module
-    - Implement Terraform configuration for Lambda function deployment
-    - Configure environment variables and memory/timeout settings
-    - Set up IAM roles with least privilege permissions
-    - Add X-Ray tracing configuration
-    - Write basic tests for the Lambda configuration
+  - [x] 4.2 Update Lambda function Terraform module for simplified deployment
+    - Update Terraform configuration for simplified Lambda function
+    - Maintain DynamoDB environment variables (table name) and permissions
+    - Keep COMPANY_WEBSITE environment variable configuration
+    - Maintain X-Ray tracing and CloudWatch logging
+    - Keep IAM role with DynamoDB permissions for caching
     - _Requirements: 3.1, 3.4, 3.6, 3.8_
 
-  - [x] 4.3 Implement API Gateway configuration
-    - Create Terraform module for API Gateway REST API
-    - Configure CORS settings and rate limiting
-    - Set up Lambda integration with proper error handling
-    - Add CloudWatch logging configuration
-    - Write basic tests for the API Gateway setup
+  - [x] 4.3 Maintain API Gateway configuration
+    - Keep existing API Gateway REST API configuration
+    - Maintain CORS settings and rate limiting
+    - Keep Lambda integration with proper error handling
+    - Maintain CloudWatch logging configuration
+    - Keep existing tests for the API Gateway setup
     - _Requirements: 3.1, 3.5, 3.6_
 
 - [x] 5. Create frontend application
@@ -154,13 +152,37 @@
     - Validate cache behavior across different asset types (HTML, CSS, JS, images)
      - _Requirements: 1.4, 2.4_
 
-  - [ ] 8.4 Fix CI/CD deployment path issues
+  - [x] 8.4 Fix CI/CD deployment path issues
     - Resolve frontend build path problems in CI/CD environments where working directory structure differs
     - Update Terraform frontend module to handle different working directory structures and missing directories
     - Add proper error handling and path validation for frontend build process
     - Ensure frontend directory and package.json are found correctly in CI/CD pipelines
     - Test build process works in both local development and CI/CD environments
     - _Requirements: 3.1, 3.4_
+
+  - [x] 8.5 Update unit tests for simplified Lambda implementation
+    - Update existing unit tests to work with the simplified embedded Lambda handler
+    - Remove tests for separate weather service modules (api_client, cache, processor, etc.)
+    - Create focused tests for the main Lambda handler functions
+    - Test weather data fetching, processing, response formatting, and DynamoDB caching
+    - Ensure tests cover error handling, cache hits/misses, and edge cases
+    - _Requirements: 2.4, 3.2_
+
+  - [x] 8.6 Add frontend error loop prevention safeguards
+    - Implement circuit breaker pattern in useWeatherData hook to prevent infinite retry loops
+    - Add exponential backoff with maximum delay caps for failed requests
+    - Implement request rate limiting to prevent rapid successive API calls on errors
+    - Add error threshold detection to disable auto-retry after consecutive failures
+    - Create user-friendly error states that prevent automatic retry loops
+    - _Requirements: 1.2, 2.1_
+
+  - [x] 8.7 Configure reasonable Lambda concurrency limits
+    - Set Lambda reserved concurrency to 5 concurrent executions (reasonable for weather API)
+    - Update backend module variables to reflect appropriate concurrency limits
+    - Add documentation explaining concurrency limits and cost implications
+    - Ensure concurrency limits prevent runaway costs while maintaining service availability
+    - Test concurrency limits under load to ensure proper throttling behavior
+    - _Requirements: 3.6, 3.8_
 
 - [x] 9. Generate documentation and cost analysis
   - [x] 9.1 Create architecture diagrams
