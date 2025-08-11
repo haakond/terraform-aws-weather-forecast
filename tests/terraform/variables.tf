@@ -59,3 +59,19 @@ variable "cities_config" {
     }
   ]
 }
+
+variable "lambda_reserved_concurrency" {
+  description = "Reserved concurrency for Lambda function"
+  type        = number
+  default     = 5
+}
+
+variable "frontend_config" {
+  description = "Frontend configuration"
+  type = object({
+    frontend_source_path = string
+  })
+  default = {
+    frontend_source_path = "frontend"
+  }
+}

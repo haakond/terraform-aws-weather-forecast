@@ -42,3 +42,7 @@ This specification will create a weather forecast application, to be deployed wi
 6. WHEN the infrastructure is deployed THEN the system SHALL include required IAM roles and permissions
 7. WHEN the infrastructure is deployed THEN the system SHALL output relevant URLs or connection information
 8. WHEN the infrastructure is deployed THEN the system SHALL be configured for high availability
+9. WHEN the CloudFront distribution is deployed THEN the system SHALL use price class 100 to optimize costs while covering Europe and the United States edge locations
+10. WHEN the CloudFront distribution is deployed THEN the system SHALL allow only GET, HEAD, and OPTIONS HTTP methods for security and performance optimization
+11. WHEN the CloudFront distribution is deployed THEN the system SHALL configure caching policies based on query parameters to optimize cache efficiency
+12. WHEN the CloudFront distribution is deployed THEN the system SHALL set the default TTL to 900 seconds (15 minutes) to align with static content caching requirements

@@ -39,3 +39,8 @@ output "website_url" {
   description = "Website URL"
   value       = "https://${aws_cloudfront_distribution.website.domain_name}"
 }
+
+output "cloudfront_price_class" {
+  description = "CloudFront price class used for cost optimization"
+  value       = var.cloudfront_price_class
+}

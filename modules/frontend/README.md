@@ -14,8 +14,10 @@ This module creates the infrastructure for hosting the weather forecast applicat
 
 - **Static Website Hosting**: S3 bucket configured for static website hosting
 - **Global CDN**: CloudFront distribution for fast global content delivery
-- **Security**: Origin Access Control and security headers
+- **Cost Optimization**: CloudFront price class 100 for Europe and US coverage
+- **Security**: Origin Access Control, security headers, and restricted HTTP methods
 - **Cache Optimization**: 15-minute cache control headers for all static assets
+- **Query Parameter Caching**: Optimized caching policies based on query parameters
 - **Automated Build**: Builds and deploys React application automatically
 - **SSL/TLS**: HTTPS redirection and secure content delivery
 - **CI/CD Ready**: Robust path handling for different deployment environments
@@ -82,7 +84,7 @@ Use the included validation script to test your setup:
 | skip_frontend_build | Skip the frontend build process (useful for CI/CD) | `bool` | `false` | no |
 | bucket_versioning_enabled | Enable versioning for the S3 bucket | `bool` | `true` | no |
 | lifecycle_rules_enabled | Enable lifecycle rules for the S3 bucket | `bool` | `true` | no |
-| cloudfront_price_class | CloudFront price class | `string` | `"PriceClass_100"` | no |
+| cloudfront_price_class | CloudFront price class for cost optimization (PriceClass_100 covers Europe and US) | `string` | `"PriceClass_100"` | no |
 
 ## Outputs
 
@@ -92,6 +94,7 @@ Use the included validation script to test your setup:
 | s3_bucket_arn | ARN of the S3 bucket |
 | cloudfront_distribution_id | ID of the CloudFront distribution |
 | cloudfront_distribution_domain | Domain name of the CloudFront distribution |
+| cloudfront_price_class | CloudFront price class used for cost optimization |
 | website_url | URL of the deployed website |
 
 ## Frontend Build Process
@@ -109,6 +112,16 @@ The module automatically builds and deploys the React frontend application. The 
 ### Cache Control
 
 All static assets are configured with 15-minute cache control headers (`max-age=900`) as required by the application specifications.
+
+### CloudFront Optimization
+
+The CloudFront distribution is optimized for cost and performance:
+
+- **Price Class 100**: Covers North America, Europe, Asia, Middle East, and Africa edge locations
+- **HTTP Methods**: Restricted to GET, HEAD, and OPTIONS for security and performance
+- **Query Parameter Caching**: Enabled for optimal cache efficiency
+- **Default TTL**: Set to 900 seconds (15 minutes) to align with static content caching requirements
+- **Compression**: Enabled for all content types to reduce bandwidth usage
 
 ## Troubleshooting
 

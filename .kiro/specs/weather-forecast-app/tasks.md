@@ -111,6 +111,17 @@
     - Write basic tests for the Cloudfront configuration
     - _Requirements: 1.2, 3.1, 3.8_
 
+  - [x] 6.4 Configure CloudFront price class and optimization settings
+    - Update CloudFront distribution to use price class 100 (PriceClass_100)
+    - Configure allowed HTTP methods to GET, HEAD, and OPTIONS only
+    - Set up caching policy configuration based on query parameters
+    - Configure default TTL to 900 seconds (15 minutes)
+    - Ensure coverage includes Europe and United States edge locations
+    - Validate cost optimization while maintaining performance for target regions
+    - Update Terraform configuration with appropriate price_class, allowed_methods, and caching parameters
+    - Test CloudFront distribution functionality with new configuration
+    - _Requirements: 3.9, 3.10, 3.11, 3.12_
+
   - [x] 6.3 Configure Cache-Control headers for static content
     - Configure S3 bucket metadata to set Cache-Control: max-age=900 for all static assets
     - Update CloudFront cache behaviors to respect and forward Cache-Control headers

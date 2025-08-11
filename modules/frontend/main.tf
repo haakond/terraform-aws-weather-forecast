@@ -200,23 +200,24 @@ resource "aws_cloudfront_distribution" "website" {
   is_ipv6_enabled     = true
   default_root_object = "index.html"
   comment             = "${var.name_prefix} weather forecast app"
+  price_class         = var.cloudfront_price_class # Cost optimization for Europe and US
 
   # Cache behavior for the default path (HTML files)
   default_cache_behavior {
-    allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"] # Restricted HTTP methods for security and performance
     cached_methods         = ["GET", "HEAD"]
     target_origin_id       = "S3-${aws_s3_bucket.website.bucket}"
     compress               = true
     viewer_protocol_policy = "redirect-to-https"
 
     forwarded_values {
-      query_string = false
+      query_string = true # Enable query parameter-based caching
       cookies {
         forward = "none"
       }
     }
 
-    # 15-minute caching for HTML files
+    # 15-minute caching for HTML files (default TTL)
     min_ttl     = 0
     default_ttl = 900 # 15 minutes
     max_ttl     = 900 # 15 minutes
@@ -228,14 +229,14 @@ resource "aws_cloudfront_distribution" "website" {
   # Cache behavior for static assets (CSS, JS, images) - 15-minute caching
   ordered_cache_behavior {
     path_pattern           = "/static/*"
-    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"] # Restricted HTTP methods for security and performance
     cached_methods         = ["GET", "HEAD"]
     target_origin_id       = "S3-${aws_s3_bucket.website.bucket}"
     compress               = true
     viewer_protocol_policy = "redirect-to-https"
 
     forwarded_values {
-      query_string = false
+      query_string = true              # Enable query parameter-based caching for static assets
       headers      = ["Cache-Control"] # Forward Cache-Control headers from S3
       cookies {
         forward = "none"
@@ -250,7 +251,6 @@ resource "aws_cloudfront_distribution" "website" {
     # Security headers
     response_headers_policy_id = aws_cloudfront_response_headers_policy.security_headers.id
   }
-
 
   # Geographic restrictions
   restrictions {

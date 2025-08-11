@@ -676,14 +676,17 @@ No resources.
 | <a name="output_budget_name"></a> [budget\_name](#output\_budget\_name) | AWS Budget name for cost monitoring |
 | <a name="output_cloudfront_distribution_domain"></a> [cloudfront\_distribution\_domain](#output\_cloudfront\_distribution\_domain) | CloudFront distribution domain name |
 | <a name="output_cloudfront_distribution_id"></a> [cloudfront\_distribution\_id](#output\_cloudfront\_distribution\_id) | CloudFront distribution ID |
+| <a name="output_cloudfront_price_class"></a> [cloudfront\_price\_class](#output\_cloudfront\_price\_class) | CloudFront price class used for cost optimization |
 | <a name="output_cloudwatch_dashboard_url"></a> [cloudwatch\_dashboard\_url](#output\_cloudwatch\_dashboard\_url) | CloudWatch dashboard URL |
 | <a name="output_cost_dashboard_url"></a> [cost\_dashboard\_url](#output\_cost\_dashboard\_url) | Cost monitoring CloudWatch dashboard URL |
 | <a name="output_dynamodb_table_name"></a> [dynamodb\_table\_name](#output\_dynamodb\_table\_name) | DynamoDB table name for weather data caching |
 | <a name="output_lambda_function_name"></a> [lambda\_function\_name](#output\_lambda\_function\_name) | Lambda function name |
 | <a name="output_monitoring_alarm_names"></a> [monitoring\_alarm\_names](#output\_monitoring\_alarm\_names) | List of CloudWatch alarm names for monitoring |
+| <a name="output_s3_bucket_arn"></a> [s3\_bucket\_arn](#output\_s3\_bucket\_arn) | S3 bucket ARN for static website hosting |
 | <a name="output_s3_bucket_name"></a> [s3\_bucket\_name](#output\_s3\_bucket\_name) | S3 bucket name for static website hosting |
 | <a name="output_synthetics_canary_arn"></a> [synthetics\_canary\_arn](#output\_synthetics\_canary\_arn) | CloudWatch Synthetics canary ARN |
 | <a name="output_synthetics_canary_name"></a> [synthetics\_canary\_name](#output\_synthetics\_canary\_name) | CloudWatch Synthetics canary name for end-to-end testing |
+| <a name="output_website_url"></a> [website\_url](#output\_website\_url) | Website URL |
 <!-- END_TF_DOCS -->
 
 ## License

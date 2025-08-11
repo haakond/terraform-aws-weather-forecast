@@ -10,6 +10,11 @@ output "cloudfront_distribution_id" {
   value       = try(module.frontend.cloudfront_distribution_id, null)
 }
 
+output "cloudfront_price_class" {
+  description = "CloudFront price class used for cost optimization"
+  value       = try(module.frontend.cloudfront_price_class, null)
+}
+
 output "api_gateway_url" {
   description = "API Gateway endpoint URL"
   value       = try(module.backend.api_gateway_url, null)
@@ -28,6 +33,16 @@ output "dynamodb_table_name" {
 output "s3_bucket_name" {
   description = "S3 bucket name for static website hosting"
   value       = try(module.frontend.s3_bucket_name, null)
+}
+
+output "s3_bucket_arn" {
+  description = "S3 bucket ARN for static website hosting"
+  value       = try(module.frontend.s3_bucket_arn, null)
+}
+
+output "website_url" {
+  description = "Website URL"
+  value       = try(module.frontend.website_url, null)
 }
 
 output "cloudwatch_dashboard_url" {

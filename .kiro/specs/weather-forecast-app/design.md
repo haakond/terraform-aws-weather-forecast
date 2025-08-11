@@ -39,12 +39,17 @@ The application follows a serverless architecture pattern with the following com
   - Adapt layout for mobile devices
 
 #### Static Content Delivery
-- **Purpose**: Optimize static asset delivery with appropriate caching headers
+- **Purpose**: Optimize static asset delivery with appropriate caching headers and cost-effective global distribution
 - **Configuration**:
   - Set Cache-Control: max-age=900 (15 minutes) for all static assets
   - Apply to HTML, CSS, JavaScript, images, and other static resources
   - Configure both S3 bucket metadata and CloudFront cache behaviors
   - Ensure consistent caching across all static content types
+  - Use CloudFront price class 100 (PriceClass_100) for cost optimization while maintaining coverage in Europe and United States
+  - Price class 100 includes edge locations in North America, Europe, Asia, Middle East, and Africa
+  - Allow only GET, HEAD, and OPTIONS HTTP methods for enhanced security and performance
+  - Configure caching policies based on query parameters for optimal cache efficiency
+  - Set default TTL to 900 seconds (15 minutes) to align with static content caching strategy
 
 #### City Weather Card Component
 - **Purpose**: Individual weather display for each city
@@ -229,6 +234,10 @@ The application follows a serverless architecture pattern with the following com
 
 ### Infrastructure Performance
 - **CloudFront Configuration**: Configure cache behaviors with Cache-Control headers (Max-Age=900) for static content and optimize TTL settings
+- **CloudFront Price Class**: Use price class 100 (PriceClass_100) to optimize costs while maintaining coverage for Europe and United States edge locations
+- **CloudFront HTTP Methods**: Restrict to GET, HEAD, and OPTIONS methods for security and performance optimization
+- **CloudFront Caching Policy**: Configure query parameter-based caching for optimal cache efficiency
+- **CloudFront Default TTL**: Set to 900 seconds (15 minutes) to align with static content caching requirements
 - **S3 Static Hosting**: Configure S3 bucket metadata to set appropriate Cache-Control headers for static assets
 - **DynamoDB Provisioning**: Use on-demand billing for variable workloads
 - **Lambda Cold Start Optimization**: Minimize package size and initialization time
