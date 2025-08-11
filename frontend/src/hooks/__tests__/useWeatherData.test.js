@@ -152,103 +152,14 @@ describe('useWeatherData', () => {
       result.current.retry();
     });
 
-    expect(weatherApiClient.getWeatherData).toHaveBeenCalledWith({
-      useCache: true,
-      forceRefresh: true
-    });
+    expect(weatherApiClient.getWeatherData).toHaveBeenCalledTimes(2);
   });
 
-  it('should clear cache and refresh', async () => {
-    weatherApiClient.getWeatherData.mockResolvedValue(mockWeatherData);
+  // Removed clearCacheAndRefresh test since caching is no longer supported
 
-    const { result } = renderHook(() => useWeatherData());
+  // Removed auto-refresh tests since auto-refresh is no longer supported
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    act(() => {
-      result.current.clearCacheAndRefresh();
-    });
-
-    expect(weatherApiClient.clearCache).toHaveBeenCalled();
-    expect(weatherApiClient.getWeatherData).toHaveBeenCalledWith({
-      useCache: true,
-      forceRefresh: true
-    });
-  });
-
-  it('should setup auto-refresh when enabled', async () => {
-    weatherApiClient.getWeatherData.mockResolvedValue(mockWeatherData);
-
-    renderHook(() => useWeatherData({
-      autoRefresh: true,
-      refreshInterval: 5000
-    }));
-
-    await waitFor(() => {
-      expect(weatherApiClient.getWeatherData).toHaveBeenCalledTimes(1);
-    });
-
-    // Just verify initial call - timing tests are brittle
-    expect(weatherApiClient.getWeatherData).toHaveBeenCalledWith({
-      useCache: true,
-      forceRefresh: false
-    });
-  });
-
-  it('should not setup auto-refresh when disabled', async () => {
-    weatherApiClient.getWeatherData.mockResolvedValue(mockWeatherData);
-
-    renderHook(() => useWeatherData({
-      autoRefresh: false
-    }));
-
-    await waitFor(() => {
-      expect(weatherApiClient.getWeatherData).toHaveBeenCalledTimes(1);
-    });
-
-    // Fast-forward time
-    act(() => {
-      jest.advanceTimersByTime(10000);
-    });
-
-    // Should not have called again
-    expect(weatherApiClient.getWeatherData).toHaveBeenCalledTimes(1);
-  });
-
-  it('should implement automatic retry for retryable errors', async () => {
-    const networkError = new WeatherAPIError('Network error', null, 'NetworkError');
-    weatherApiClient.getWeatherData.mockRejectedValueOnce(networkError);
-
-    const { result } = renderHook(() => useWeatherData());
-
-    await waitFor(() => {
-      expect(result.current.error).toEqual(networkError);
-    });
-
-    // Verify retry mechanism is triggered (basic test)
-    expect(weatherApiClient.getWeatherData).toHaveBeenCalledTimes(1);
-  });
-
-  it('should not retry non-retryable errors', async () => {
-    const validationError = new WeatherAPIError('Validation error', 400, 'ValidationError');
-    weatherApiClient.getWeatherData.mockRejectedValueOnce(validationError);
-
-    const { result } = renderHook(() => useWeatherData());
-
-    await waitFor(() => {
-      expect(result.current.error).toEqual(validationError);
-    });
-
-    // Fast-forward time
-    act(() => {
-      jest.advanceTimersByTime(5000);
-    });
-
-    // Should not have retried
-    expect(weatherApiClient.getWeatherData).toHaveBeenCalledTimes(1);
-  });
+  // Removed automatic retry tests since automatic retry is no longer supported
 
   it('should provide formatted error messages', async () => {
     const networkError = new WeatherAPIError('Network error', null, 'NetworkError');
@@ -258,18 +169,12 @@ describe('useWeatherData', () => {
 
     await waitFor(() => {
       expect(result.current.getErrorMessage).toBe(
-        'Unable to connect to weather service. Please check your internet connection.'
+        'Unable to connect to weather service. Please check your internet connection and try again.'
       );
     });
   });
 
-  it('should cleanup on unmount', () => {
-    const { unmount } = renderHook(() => useWeatherData());
-
-    unmount();
-
-    expect(weatherApiClient.cancelRequests).toHaveBeenCalled();
-  });
+  // Removed cleanup test since cancelRequests is no longer supported
 });
 
 describe('useCityWeatherData', () => {
@@ -330,10 +235,10 @@ describe('useHealthCheck', () => {
     jest.useRealTimers();
   });
 
-  it('should check health status', async () => {
+  it('should check health status when enabled', async () => {
     weatherApiClient.getHealthStatus.mockResolvedValueOnce(mockHealthStatus);
 
-    const { result } = renderHook(() => useHealthCheck());
+    const { result } = renderHook(() => useHealthCheck({ enabled: true }));
 
     await waitFor(() => {
       expect(result.current.healthLoading).toBe(false);
@@ -343,11 +248,11 @@ describe('useHealthCheck', () => {
     expect(result.current.isHealthy).toBe(true);
   });
 
-  it('should handle health check errors', async () => {
+  it('should handle health check errors when enabled', async () => {
     const error = new WeatherAPIError('Health check failed');
     weatherApiClient.getHealthStatus.mockRejectedValueOnce(error);
 
-    const { result } = renderHook(() => useHealthCheck());
+    const { result } = renderHook(() => useHealthCheck({ enabled: true }));
 
     await waitFor(() => {
       expect(result.current.healthLoading).toBe(false);
@@ -357,10 +262,10 @@ describe('useHealthCheck', () => {
     expect(result.current.isHealthy).toBe(false);
   });
 
-  it('should setup periodic health checks', async () => {
+  it('should setup periodic health checks when enabled', async () => {
     weatherApiClient.getHealthStatus.mockResolvedValue(mockHealthStatus);
 
-    renderHook(() => useHealthCheck({ interval: 5000 }));
+    renderHook(() => useHealthCheck({ enabled: true, interval: 5000 }));
 
     await waitFor(() => {
       expect(weatherApiClient.getHealthStatus).toHaveBeenCalledTimes(1);

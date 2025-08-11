@@ -8,7 +8,9 @@
     "build": "react-scripts build",
     "build:optimized": "node scripts/build-optimized.js",
     "validate:cache": "node scripts/validate-cache-headers.js",
-    "test": "react-scripts test",
+    "test": "react-scripts test --watchAll=false --ci --coverage",
+    "test:watch": "react-scripts test",
+    "test:ci": "react-scripts test --watchAll=false --ci --coverage --silent --passWithNoTests",
     "eject": "react-scripts eject"
   },
   "dependencies": {
