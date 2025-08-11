@@ -14,10 +14,19 @@ const WeatherDisplay = () => {
     refresh,
     retry,
     clearCacheAndRefresh,
+    resetCircuitBreaker,
+    resetRateLimit,
     isDataStale,
     retryCount,
     getCacheStatus,
-    getErrorMessage
+    getErrorMessage,
+    circuitState,
+    isCircuitOpen,
+    failureCount,
+    isRateLimited,
+    rateLimitResetTime,
+    consecutiveErrors,
+    autoRetryDisabled
   } = useWeatherData({
     autoRefresh: false, // Disabled auto-refresh
     enableCache: true,
@@ -92,11 +101,47 @@ const WeatherDisplay = () => {
         </div>
 
         <div className="weather-display__global-error">
-          <div className="weather-display__error-icon">🌩️</div>
-          <h2 className="weather-display__error-title">Weather Service Unavailable</h2>
+          <div className="weather-display__error-icon">
+            {isCircuitOpen ? '🚫' : isRateLimited ? '⏱️' : '🌩️'}
+          </div>
+          <h2 className="weather-display__error-title">
+            {isCircuitOpen ? 'Service Protection Active' :
+             isRateLimited ? 'Rate Limited' :
+             'Weather Service Unavailable'}
+          </h2>
           <p className="weather-display__error-message">
             {getErrorMessage}
           </p>
+
+          {/* Circuit breaker status */}
+          {isCircuitOpen && (
+            <div className="weather-display__circuit-status">
+              <p className="weather-display__circuit-info">
+                Circuit breaker is open after {failureCount} consecutive failures.
+                The service will be tested again automatically.
+              </p>
+            </div>
+          )}
+
+          {/* Rate limiting status */}
+          {isRateLimited && rateLimitResetTime && (
+            <div className="weather-display__rate-limit-status">
+              <p className="weather-display__rate-limit-info">
+                Rate limit will reset in {Math.ceil((rateLimitResetTime - Date.now()) / 1000)} seconds.
+              </p>
+            </div>
+          )}
+
+          {/* Auto-retry disabled status */}
+          {autoRetryDisabled && (
+            <div className="weather-display__auto-retry-status">
+              <p className="weather-display__auto-retry-info">
+                ⚠️ Auto-retry has been disabled after {consecutiveErrors} consecutive errors.
+                You can still try manually.
+              </p>
+            </div>
+          )}
+
           <div className="weather-display__error-actions">
             <button
               className="weather-display__retry-button"
@@ -112,7 +157,34 @@ const WeatherDisplay = () => {
             >
               Clear Cache & Retry
             </button>
+
+            {/* Advanced recovery options */}
+            {(isCircuitOpen || isRateLimited || autoRetryDisabled) && (
+              <div className="weather-display__advanced-actions">
+                {isCircuitOpen && (
+                  <button
+                    className="weather-display__reset-circuit-button"
+                    onClick={resetCircuitBreaker}
+                    disabled={loading}
+                    title="Reset circuit breaker protection"
+                  >
+                    Reset Protection
+                  </button>
+                )}
+                {isRateLimited && (
+                  <button
+                    className="weather-display__reset-rate-limit-button"
+                    onClick={resetRateLimit}
+                    disabled={loading}
+                    title="Reset rate limiting"
+                  >
+                    Reset Rate Limit
+                  </button>
+                )}
+              </div>
+            )}
           </div>
+
           {retryCount > 0 && (
             <p className="weather-display__retry-info">
               Retry attempt {retryCount} of 3

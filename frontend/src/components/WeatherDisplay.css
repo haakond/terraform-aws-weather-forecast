@@ -418,12 +418,93 @@ s indicators */
   cursor: not-allowed;
 }
 
+/* Circuit breaker and rate limiting status */
+.weather-display__circuit-status,
+.weather-display__rate-limit-status,
+.weather-display__auto-retry-status {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  border-left: 4px solid rgba(255, 255, 255, 0.5);
+}
+
+.weather-display__circuit-info,
+.weather-display__rate-limit-info,
+.weather-display__auto-retry-info {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+.weather-display__auto-retry-status {
+  border-left-color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+}
+
+.weather-display__rate-limit-status {
+  border-left-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.weather-display__circuit-status {
+  border-left-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
 /* Enhanced error actions */
 .weather-display__error-actions {
   display: flex;
   gap: 1rem;
   justify-content: center;
   flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
+}
+
+.weather-display__advanced-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.weather-display__reset-circuit-button,
+.weather-display__reset-rate-limit-button {
+  background: rgba(239, 68, 68, 0.8);
+  border: 1px solid rgba(239, 68, 68, 0.9);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.weather-display__reset-rate-limit-button {
+  background: rgba(245, 158, 11, 0.8);
+  border-color: rgba(245, 158, 11, 0.9);
+}
+
+.weather-display__reset-circuit-button:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.9);
+  transform: translateY(-1px);
+}
+
+.weather-display__reset-rate-limit-button:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.9);
+  transform: translateY(-1px);
+}
+
+.weather-display__reset-circuit-button:disabled,
+.weather-display__reset-rate-limit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .weather-display__clear-cache-button {
@@ -558,6 +639,25 @@ s indicators */
     flex-direction: column;
     align-items: center;
   }
+
+  .weather-display__advanced-actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .weather-display__circuit-status,
+  .weather-display__rate-limit-status,
+  .weather-display__auto-retry-status {
+    padding: 0.75rem;
+    margin: 0.75rem 0;
+  }
+
+  .weather-display__circuit-info,
+  .weather-display__rate-limit-info,
+  .weather-display__auto-retry-info {
+    font-size: 0.85rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -568,8 +668,27 @@ s indicators */
     font-size: 0.85rem;
   }
 
+  .weather-display__reset-circuit-button,
+  .weather-display__reset-rate-limit-button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
   .weather-display__partial-error {
     margin: 1rem;
     padding: 0.75rem;
+  }
+
+  .weather-display__circuit-status,
+  .weather-display__rate-limit-status,
+  .weather-display__auto-retry-status {
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+  }
+
+  .weather-display__circuit-info,
+  .weather-display__rate-limit-info,
+  .weather-display__auto-retry-info {
+    font-size: 0.8rem;
   }
 }
