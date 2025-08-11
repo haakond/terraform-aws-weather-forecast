@@ -12,11 +12,14 @@ import traceback
 import time
 import urllib.request
 import urllib.parse
+import boto3
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional, List
 
 # Weather service functionality embedded to avoid import issues
-# Weather service functionality embedded to avoid import issues
+
+# Initialize DynamoDB client
+dynamodb = boto3.client('dynamodb')
 
 # Configuration
 BASE_URL = "https://api.met.no/weatherapi/locationforecast/2.0/compact"
@@ -159,19 +162,133 @@ def extract_tomorrow_forecast(weather_data: Dict[str, Any]) -> Dict[str, Any]:
         raise WeatherServiceError(f"Failed to extract forecast: {e}")
 
 
-def process_city_weather(city_config: Dict[str, Any]) -> Dict[str, Any]:
-    """Process weather data for a single city."""
+
+def get_cached_weather_data(city_id: str) -> Optional[Dict[str, Any]]:
+    """
+    Retrieve cached weather data from DynamoDB.
+
+    Args:
+        city_id: The city identifier
+
+    Returns:
+        Cached weather data if found and not expired, None otherwise
+    """
+    table_name = os.getenv("DYNAMODB_TABLE_NAME")
+    if not table_name:
+        logger.warning("DYNAMODB_TABLE_NAME not set, skipping cache check")
+        return None
+
+    try:
+        response = dynamodb.get_item(
+            TableName=table_name,
+            Key={
+                'city_id': {'S': city_id}
+            }
+        )
+
+        if 'Item' not in response:
+            logger.info(f"No cached data found for city {city_id}")
+            return None
+
+        item = response['Item']
+
+        # Check if the item has expired (TTL is handled automatically by DynamoDB,
+        # but we can also check manually for logging purposes)
+        ttl = int(item.get('ttl', {}).get('N', '0'))
+        current_time = int(time.time())
+
+        if ttl <= current_time:
+            logger.info(f"Cached data for city {city_id} has expired")
+            return None
+
+        # Convert DynamoDB item to Python dict
+        cached_data = {
+            "cityId": item['city_id']['S'],
+            "cityName": item['city_name']['S'],
+            "country": item['country']['S'],
+            "forecast": json.loads(item['forecast']['S']),
+            "lastUpdated": item['last_updated']['S']
+        }
+
+        logger.info(f"Retrieved cached data for city {city_id}")
+        return cached_data
+
+    except Exception as e:
+        logger.error(f"Error retrieving cached data for city {city_id}: {e}")
+        return None
+
+
+def cache_weather_data(city_data: Dict[str, Any]) -> bool:
+    """
+    Cache weather data in DynamoDB with 1-hour TTL.
+
+    Args:
+        city_data: Weather data to cache
+
+    Returns:
+        True if caching was successful, False otherwise
+    """
+    table_name = os.getenv("DYNAMODB_TABLE_NAME")
+    if not table_name:
+        logger.warning("DYNAMODB_TABLE_NAME not set, skipping cache storage")
+        return False
+
+    try:
+        # Calculate TTL (1 hour = 3600 seconds from now)
+        ttl = int(time.time()) + 3600
+
+        # Prepare item for DynamoDB
+        item = {
+            'city_id': {'S': city_data['cityId']},
+            'city_name': {'S': city_data['cityName']},
+            'country': {'S': city_data['country']},
+            'forecast': {'S': json.dumps(city_data['forecast'])},
+            'last_updated': {'S': datetime.now(timezone.utc).isoformat()},
+            'ttl': {'N': str(ttl)}
+        }
+
+        dynamodb.put_item(
+            TableName=table_name,
+            Item=item
+        )
+
+        logger.info(f"Cached weather data for city {city_data['cityId']}")
+        return True
+
+    except Exception as e:
+        logger.error(f"Error caching weather data for city {city_data['cityId']}: {e}")
+        return False
+
+
+def process_city_weather_with_cache(city_config: Dict[str, Any]) -> Dict[str, Any]:
+    """Process weather data for a single city with caching support."""
+    city_id = city_config["id"]
+
+    # Try to get cached data first
+    cached_data = get_cached_weather_data(city_id)
+    if cached_data:
+        logger.info(f"Using cached data for city {city_id}")
+        return cached_data
+
+    # If no cached data, fetch from API
+    logger.info(f"No cached data for city {city_id}, fetching from API")
     try:
         coords = city_config["coordinates"]
         weather_data = fetch_weather_data(coords["latitude"], coords["longitude"])
         forecast = extract_tomorrow_forecast(weather_data)
 
-        return {
+        city_weather = {
             "cityId": city_config["id"],
             "cityName": city_config["name"],
             "country": city_config["country"],
             "forecast": forecast
         }
+
+        # Cache the successful result
+        cache_weather_data(city_weather)
+
+        return city_weather
+
     except Exception as e:
         logger.error(f"Failed to process weather for {city_config['name']}: {e}")
         # Return a fallback response
@@ -189,16 +306,17 @@ def process_city_weather(city_config: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def get_weather_summary() -> Dict[str, Any]:
-    """Get weather summary for all configured cities."""
+    """Get weather summary for all configured cities with caching support."""
     cities_config = get_cities_config()
     cities_weather = []
 
     for city_config in cities_config:
-        city_weather = process_city_weather(city_config)
+        city_weather = process_city_weather_with_cache(city_config)
         cities_weather.append(city_weather)
 
-        # Add small delay to be respectful to the API
-        time.sleep(0.5)
+        # Add small delay to be respectful to the API (only if we made an API call)
+        if 'error' not in city_weather:
+            time.sleep(0.5)
 
     return {
         "cities": cities_weather,
