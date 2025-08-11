@@ -309,10 +309,15 @@ def get_weather_summary() -> Dict[str, Any]:
     """Get weather summary for all configured cities with caching support."""
     cities_config = get_cities_config()
     cities_weather = []
+    has_errors = False
 
     for city_config in cities_config:
         city_weather = process_city_weather_with_cache(city_config)
         cities_weather.append(city_weather)
+
+        # Track if any city had an error
+        if 'error' in city_weather:
+            has_errors = True
 
         # Add small delay to be respectful to the API (only if we made an API call)
         if 'error' not in city_weather:
@@ -321,7 +326,8 @@ def get_weather_summary() -> Dict[str, Any]:
     return {
         "cities": cities_weather,
         "lastUpdated": datetime.now(timezone.utc).isoformat(),
-        "status": "success"
+        "status": "success" if not has_errors else "partial_failure",
+        "hasErrors": has_errors
     }
 
 
@@ -335,7 +341,8 @@ logger.setLevel(logging.INFO)
 def create_response(
     status_code: int,
     body: Any,
-    headers: Optional[Dict[str, str]] = None
+    headers: Optional[Dict[str, str]] = None,
+    cache_control: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Create a standardized Lambda response.
@@ -344,6 +351,7 @@ def create_response(
         status_code: HTTP status code
         body: Response body (will be JSON serialized)
         headers: Optional HTTP headers
+        cache_control: Optional cache-control header value
 
     Returns:
         Lambda response dictionary
@@ -357,6 +365,10 @@ def create_response(
 
     if headers:
         default_headers.update(headers)
+
+    # Add cache-control header if specified (this should override any custom headers)
+    if cache_control:
+        default_headers["Cache-Control"] = cache_control
 
     # Ensure body is JSON serializable
     if isinstance(body, (dict, list)):
@@ -400,7 +412,8 @@ def create_error_response(
     if request_id:
         error_body["error"]["requestId"] = request_id
 
-    return create_response(status_code, error_body)
+    # Error responses should not be cached
+    return create_response(status_code, error_body, cache_control="max-age=0")
 
 
 def handle_weather_request(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -429,7 +442,13 @@ def handle_weather_request(event: Dict[str, Any], context: Any) -> Dict[str, Any
 
         logger.info(f"Successfully processed weather data for {len(weather_summary.get('cities', []))} cities")
 
-        return create_response(200, weather_summary)
+        # Determine cache-control based on success/failure
+        # If there are errors in any city data, don't cache the response
+        cache_control = "max-age=0" if weather_summary.get("hasErrors", False) else "max-age=60"
+
+        logger.info(f"Setting cache-control: {cache_control} (hasErrors: {weather_summary.get('hasErrors', False)})")
+
+        return create_response(200, weather_summary, cache_control=cache_control)
 
     except WeatherServiceError as e:
         logger.error(f"Weather service error: {str(e)}")
@@ -480,7 +499,8 @@ def handle_health_request(event: Dict[str, Any], context: Any) -> Dict[str, Any]
         }
 
         logger.info("Health check successful")
-        return create_response(200, health_data)
+        # Health endpoints should not be cached as they provide real-time status
+        return create_response(200, health_data, cache_control="max-age=0")
 
     except Exception as e:
         logger.error(f"Health check error: {str(e)}")
@@ -503,12 +523,15 @@ def handle_options_request(event: Dict[str, Any], context: Any) -> Dict[str, Any
     Returns:
         Lambda response for CORS preflight
     """
-    return create_response(200, "", {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-        "Access-Control-Allow-Methods": "GET,OPTIONS",
-        "Access-Control-Max-Age": "86400"
-    })
+    return create_response(200, "",
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+            "Access-Control-Allow-Methods": "GET,OPTIONS",
+            "Access-Control-Max-Age": "86400"
+        },
+        cache_control="max-age=86400"  # CORS preflight can be cached for 24 hours
+    )
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -567,7 +590,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             "statusCode": 500,
             "headers": {
                 "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*"
+                "Access-Control-Allow-Origin": "*",
+                "Cache-Control": "max-age=0"  # Critical errors should not be cached
             },
             "body": json.dumps({
                 "error": {

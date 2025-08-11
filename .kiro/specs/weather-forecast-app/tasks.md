@@ -195,7 +195,7 @@
     - Test concurrency limits under load to ensure proper throttling behavior
     - _Requirements: 3.6, 3.8_
 
-  - [ ] 8.8 Implement dynamic cache-control headers in Lambda function
+  - [x] 8.8 Implement dynamic cache-control headers in Lambda function
     - Update Lambda handler to set cache-control: max-age=60 for successful weather API responses
     - Set cache-control: max-age=0 for failed weather API responses or error conditions
     - Ensure cache-control headers are properly included in HTTP response headers

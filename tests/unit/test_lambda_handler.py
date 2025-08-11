@@ -139,6 +139,7 @@ class TestLambdaHandler:
 
         assert response["statusCode"] == 500
         assert "application/json" in response["headers"]["Content-Type"]
+        assert response["headers"]["Cache-Control"] == "max-age=0"  # Critical errors should not be cached
 
 
 class TestResponseHelpers:
@@ -172,11 +173,28 @@ class TestResponseHelpers:
         assert response["headers"]["X-Custom-Header"] == "test-value"
         assert response["headers"]["Content-Type"] == "application/json"  # Default still present
 
+    def test_create_response_with_cache_control(self):
+        """Test creating response with cache-control header."""
+        response = create_response(200, {"data": "test"}, cache_control="max-age=60")
+
+        assert response["statusCode"] == 200
+        assert response["headers"]["Cache-Control"] == "max-age=60"
+        assert response["headers"]["Content-Type"] == "application/json"
+
+    def test_create_response_cache_control_overrides_custom_headers(self):
+        """Test that cache_control parameter overrides custom headers."""
+        custom_headers = {"Cache-Control": "max-age=300"}
+        response = create_response(200, {}, headers=custom_headers, cache_control="max-age=60")
+
+        # cache_control parameter should take precedence
+        assert response["headers"]["Cache-Control"] == "max-age=60"
+
     def test_create_error_response(self):
         """Test creating standardized error response."""
         response = create_error_response(400, "Bad request", "ValidationError", "req-123")
 
         assert response["statusCode"] == 400
+        assert response["headers"]["Cache-Control"] == "max-age=0"  # Error responses should not be cached
         body = json.loads(response["body"])
         assert body["error"]["type"] == "ValidationError"
         assert body["error"]["message"] == "Bad request"
@@ -526,9 +544,34 @@ class TestWeatherSummary:
         with patch('time.sleep'):  # Mock sleep to speed up tests
             result = get_weather_summary()
 
-        assert result["status"] == "success"
+        assert result["status"] == "partial_failure"
+        assert result["hasErrors"] is True
         assert len(result["cities"]) == 1
         # Should still include cities with errors
+        assert result["cities"][0]["cityId"] == "oslo"
+
+    @patch('src.lambda_handler.process_city_weather_with_cache')
+    @patch('src.lambda_handler.get_cities_config')
+    def test_get_weather_summary_no_errors(self, mock_get_cities, mock_process_city):
+        """Test weather summary generation with no errors."""
+        mock_get_cities.return_value = [
+            {"id": "oslo", "name": "Oslo", "country": "Norway", "coordinates": {"latitude": 59.9139, "longitude": 10.7522}}
+        ]
+
+        mock_process_city.return_value = {
+            "cityId": "oslo",
+            "cityName": "Oslo",
+            "country": "Norway",
+            "forecast": {}
+            # No error key means success
+        }
+
+        with patch('time.sleep'):  # Mock sleep to speed up tests
+            result = get_weather_summary()
+
+        assert result["status"] == "success"
+        assert result["hasErrors"] is False
+        assert len(result["cities"]) == 1
         assert result["cities"][0]["cityId"] == "oslo"
 
 
@@ -588,7 +631,8 @@ class TestRequestHandlers:
         mock_get_summary.return_value = {
             "cities": [],
             "lastUpdated": "2024-01-01T12:00:00Z",
-            "status": "success"
+            "status": "success",
+            "hasErrors": False
         }
 
         event = {"httpMethod": "GET", "path": "/weather"}
@@ -598,10 +642,35 @@ class TestRequestHandlers:
         response = handle_weather_request(event, context)
 
         assert response["statusCode"] == 200
+        assert response["headers"]["Cache-Control"] == "max-age=60"  # Successful response should be cached
         body = json.loads(response["body"])
         assert body["requestId"] == "test-request-id"
         assert body["version"] == "1.0.0"
         assert body["service"] == "weather-forecast-app"
+
+    @patch('src.lambda_handler.get_weather_summary')
+    def test_handle_weather_request_success_with_errors(self, mock_get_summary):
+        """Test weather request handling with partial errors."""
+        mock_get_summary.return_value = {
+            "cities": [
+                {"cityId": "oslo", "forecast": {}},
+                {"cityId": "paris", "forecast": {}, "error": "API error"}
+            ],
+            "lastUpdated": "2024-01-01T12:00:00Z",
+            "status": "partial_failure",
+            "hasErrors": True
+        }
+
+        event = {"httpMethod": "GET", "path": "/weather"}
+        context = Mock()
+        context.aws_request_id = "test-request-id"
+
+        response = handle_weather_request(event, context)
+
+        assert response["statusCode"] == 200
+        assert response["headers"]["Cache-Control"] == "max-age=0"  # Response with errors should not be cached
+        body = json.loads(response["body"])
+        assert body["hasErrors"] is True
 
     @patch('src.lambda_handler.get_weather_summary')
     def test_handle_weather_request_service_error(self, mock_get_summary):
@@ -647,6 +716,7 @@ class TestRequestHandlers:
         response = handle_health_request(event, context)
 
         assert response["statusCode"] == 200
+        assert response["headers"]["Cache-Control"] == "max-age=0"  # Health endpoints should not be cached
         body = json.loads(response["body"])
         assert body["status"] == "healthy"
         assert body["environment"]["company_website"] == "test.com"
@@ -665,6 +735,7 @@ class TestRequestHandlers:
         assert response["headers"]["Access-Control-Allow-Origin"] == "*"
         assert "GET,OPTIONS" in response["headers"]["Access-Control-Allow-Methods"]
         assert response["headers"]["Access-Control-Max-Age"] == "86400"
+        assert response["headers"]["Cache-Control"] == "max-age=86400"  # CORS preflight can be cached
 
 
 if __name__ == "__main__":
