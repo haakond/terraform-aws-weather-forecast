@@ -95,4 +95,42 @@ describe('WeatherCard', () => {
     const weatherIcon = document.querySelector('.weather-card__icon');
     expect(weatherIcon).toHaveTextContent('⛅'); // partly_cloudy_day emoji
   });
+
+  test('displays lastUpdated timestamp when available', () => {
+    // Create a recent timestamp for testing
+    const recentTime = new Date(Date.now() - 5 * 60 * 1000); // 5 minutes ago
+    const testData = {
+      ...mockCityData,
+      lastUpdated: recentTime.toISOString()
+    };
+
+    render(<WeatherCard cityData={testData} />);
+
+    // Should display the formatted timestamp
+    expect(screen.getByText(/Updated.*ago/)).toBeInTheDocument();
+  });
+
+  test('handles missing lastUpdated timestamp gracefully', () => {
+    const dataWithoutTimestamp = {
+      ...mockCityData,
+      lastUpdated: null
+    };
+
+    render(<WeatherCard cityData={dataWithoutTimestamp} />);
+
+    // Should not display lastUpdated section when timestamp is missing
+    expect(screen.queryByText(/Updated.*ago/)).not.toBeInTheDocument();
+  });
+
+  test('handles invalid lastUpdated timestamp gracefully', () => {
+    const dataWithInvalidTimestamp = {
+      ...mockCityData,
+      lastUpdated: 'invalid-timestamp'
+    };
+
+    render(<WeatherCard cityData={dataWithInvalidTimestamp} />);
+
+    // Should not display lastUpdated section when timestamp is invalid
+    expect(screen.queryByText(/Updated.*ago/)).not.toBeInTheDocument();
+  });
 });

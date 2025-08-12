@@ -7,6 +7,64 @@ const WeatherCard = ({
   error = null,
   onRetry = null
 }) => {
+  // Helper function to format timestamp for user-friendly display
+  const formatLastUpdated = (timestamp) => {
+    if (!timestamp) {
+      return null;
+    }
+
+    let date;
+    try {
+      // Handle both Date objects and ISO string timestamps
+      date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+
+      // Validate the parsed date
+      if (isNaN(date.getTime())) {
+        return null;
+      }
+    } catch (e) {
+      return null;
+    }
+
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    // Handle future timestamps (shouldn't happen but be defensive)
+    if (diffMs < 0) {
+      return 'Just now';
+    }
+
+    // Less than 1 minute
+    if (diffMinutes < 1) {
+      return 'Just now';
+    }
+
+    // Less than 1 hour
+    if (diffMinutes < 60) {
+      return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
+    }
+
+    // Less than 24 hours
+    if (diffHours < 24) {
+      return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    }
+
+    // Less than 7 days
+    if (diffDays < 7) {
+      return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    }
+
+    // More than 7 days - show actual date
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
   if (error) {
     return (
       <div className="weather-card weather-card--error">
@@ -154,6 +212,19 @@ const WeatherCard = ({
             </div>
           )}
         </div>
+
+        {/* Last updated timestamp */}
+        {cityData.lastUpdated && (
+          <div className="weather-card__last-updated" role="group" aria-label="Data freshness">
+            <span
+              className="weather-card__last-updated-text"
+              aria-live="polite"
+              aria-label={`Data for ${cityName} last updated ${formatLastUpdated(cityData.lastUpdated) || 'recently'}`}
+            >
+              Updated {formatLastUpdated(cityData.lastUpdated) || 'recently'}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

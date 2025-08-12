@@ -202,7 +202,7 @@
     - Test cache-control behavior for both success and failure scenarios
     - _Requirements: 2.5, 2.6_
 
-  - [ ] 8.9 Implement lastUpdated timestamp handling in Lambda function
+  - [x] 8.9 Implement lastUpdated timestamp handling in Lambda function
     - Update Lambda handler to include lastUpdated timestamp in all API responses
     - Use weather API timestamp when available in the met.no API response
     - Fall back to DynamoDB cache timestamp when weather API timestamp is not provided
@@ -210,7 +210,7 @@
     - Test timestamp handling for both fresh API calls and cached responses
     - _Requirements: 2.7, 2.8_
 
-  - [ ] 8.10 Update frontend to display lastUpdated timestamp
+  - [x] 8.10 Update frontend to display lastUpdated timestamp
     - Modify weather display components to show the lastUpdated timestamp from API responses
     - Format timestamp for user-friendly display (e.g., "Last updated: 2 minutes ago")
     - Handle cases where lastUpdated is null or missing

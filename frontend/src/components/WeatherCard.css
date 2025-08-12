@@ -259,6 +259,27 @@
   font-weight: 600;
 }
 
+/* Last Updated Section */
+.weather-card__last-updated {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  text-align: center;
+  width: 100%;
+}
+
+.weather-card__last-updated-text {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.8);
+  transition: opacity 0.2s ease;
+}
+
+.weather-card:hover .weather-card__last-updated-text {
+  opacity: 0.9;
+}
+
 /* Loading State */
 .weather-card--loading {
   background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%);
@@ -429,7 +450,7 @@
 @media (max-width: 480px) {
   .weather-card {
     padding: 1rem;
-    min-height: 240px;
+    min-height: 260px; /* Increased to accommodate lastUpdated */
   }
 
   .weather-card__city {
@@ -473,6 +494,15 @@
 
   .weather-card__detail-value {
     font-size: 0.8125rem;
+  }
+
+  .weather-card__last-updated {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+  }
+
+  .weather-card__last-updated-text {
+    font-size: 0.6875rem;
   }
 }
 
