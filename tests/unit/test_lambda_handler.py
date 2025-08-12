@@ -282,12 +282,14 @@ class TestWeatherDataProcessing:
         """Test successful forecast extraction."""
         weather_data = self.create_mock_weather_data(20.5, "clearsky_day")
 
-        forecast = extract_tomorrow_forecast(weather_data)
+        forecast_data, api_timestamp = extract_tomorrow_forecast(weather_data)
 
-        assert forecast["temperature"]["value"] == 20  # Rounded
-        assert forecast["temperature"]["unit"] == "celsius"
-        assert forecast["condition"] == "clear"
-        assert "Clear" in forecast["description"]
+        assert forecast_data["temperature"]["value"] == 20  # Rounded
+        assert forecast_data["temperature"]["unit"] == "celsius"
+        assert forecast_data["condition"] == "clear"
+        assert "Clear" in forecast_data["description"]
+        # API timestamp should be extracted from timeseries
+        assert api_timestamp is not None
 
     def test_extract_tomorrow_forecast_condition_mapping(self):
         """Test weather condition mapping."""
@@ -304,8 +306,8 @@ class TestWeatherDataProcessing:
 
         for symbol_code, expected_condition in test_cases:
             weather_data = self.create_mock_weather_data(15.0, symbol_code)
-            forecast = extract_tomorrow_forecast(weather_data)
-            assert forecast["condition"] == expected_condition
+            forecast_data, api_timestamp = extract_tomorrow_forecast(weather_data)
+            assert forecast_data["condition"] == expected_condition
 
     def test_extract_tomorrow_forecast_no_timeseries(self):
         """Test forecast extraction with no timeseries data."""
@@ -320,6 +322,44 @@ class TestWeatherDataProcessing:
 
         with pytest.raises(WeatherServiceError, match="Failed to extract forecast"):
             extract_tomorrow_forecast(weather_data)
+
+    def test_extract_tomorrow_forecast_with_api_timestamp(self):
+        """Test forecast extraction with API timestamp in meta."""
+        tomorrow = datetime.now(timezone.utc).replace(hour=12, minute=0, second=0, microsecond=0)
+        tomorrow = tomorrow.replace(day=tomorrow.day + 1)
+        api_updated_time = "2024-01-15T10:30:00Z"
+
+        weather_data = {
+            "properties": {
+                "meta": {
+                    "updated_at": api_updated_time
+                },
+                "timeseries": [
+                    {
+                        "time": tomorrow.isoformat().replace("+00:00", "Z"),
+                        "data": {
+                            "instant": {"details": {"air_temperature": 15.5}},
+                            "next_6_hours": {"summary": {"symbol_code": "partlycloudy_day"}}
+                        }
+                    }
+                ]
+            }
+        }
+
+        forecast_data, api_timestamp = extract_tomorrow_forecast(weather_data)
+
+        assert api_timestamp == api_updated_time
+        assert forecast_data["temperature"]["value"] == 16  # Rounded
+
+    def test_extract_tomorrow_forecast_no_api_timestamp(self):
+        """Test forecast extraction without API timestamp in meta."""
+        weather_data = self.create_mock_weather_data(15.0, "clearsky_day")
+
+        forecast_data, api_timestamp = extract_tomorrow_forecast(weather_data)
+
+        # Should fall back to first timeseries entry time
+        assert api_timestamp is not None
+        assert forecast_data["condition"] == "clear"
 
 
 class TestDynamoDBCaching:
@@ -339,13 +379,52 @@ class TestDynamoDBCaching:
                 "temperature": {"value": 15, "unit": "celsius"},
                 "condition": "partly_cloudy",
                 "description": "Partly cloudy"
-            }
+            },
+            "lastUpdated": "2024-01-15T10:30:00Z"
         }
 
         result = cache_weather_data(city_data)
 
         assert result is True
         mock_dynamodb.put_item.assert_called_once()
+
+        # Verify the cached data includes the lastUpdated timestamp
+        call_args = mock_dynamodb.put_item.call_args
+        cached_item = call_args[1]['Item']
+        assert cached_item['last_updated']['S'] == "2024-01-15T10:30:00Z"
+
+    @patch.dict(os.environ, {"DYNAMODB_TABLE_NAME": "test-weather-cache"})
+    @patch('src.lambda_handler.dynamodb')
+    def test_cache_weather_data_without_timestamp(self, mock_dynamodb):
+        """Test caching weather data without lastUpdated timestamp."""
+        mock_dynamodb.put_item.return_value = {}
+
+        city_data = {
+            "cityId": "oslo",
+            "cityName": "Oslo",
+            "country": "Norway",
+            "forecast": {
+                "temperature": {"value": 15, "unit": "celsius"},
+                "condition": "partly_cloudy",
+                "description": "Partly cloudy"
+            }
+            # No lastUpdated field
+        }
+
+        with patch('src.lambda_handler.datetime') as mock_datetime:
+            mock_now = datetime(2024, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
+            mock_datetime.now.return_value = mock_now
+            mock_datetime.side_effect = lambda *args, **kw: datetime(*args, **kw)
+
+            result = cache_weather_data(city_data)
+
+        assert result is True
+        mock_dynamodb.put_item.assert_called_once()
+
+        # Should use current time as fallback
+        call_args = mock_dynamodb.put_item.call_args
+        cached_item = call_args[1]['Item']
+        assert cached_item['last_updated']['S'] == mock_now.strftime('%Y-%m-%dT%H:%M:%SZ')
 
     @patch.dict(os.environ, {}, clear=True)
     def test_cache_weather_data_no_table_name(self):
@@ -430,7 +509,8 @@ class TestCityWeatherProcessing:
             "cityId": "oslo",
             "cityName": "Oslo",
             "country": "Norway",
-            "forecast": {"temperature": {"value": 15, "unit": "celsius"}}
+            "forecast": {"temperature": {"value": 15, "unit": "celsius"}},
+            "lastUpdated": "2024-01-15T09:30:00Z"
         }
         mock_get_cached.return_value = cached_data
 
@@ -444,6 +524,7 @@ class TestCityWeatherProcessing:
         result = process_city_weather_with_cache(city_config)
 
         assert result == cached_data
+        assert result["lastUpdated"] == "2024-01-15T09:30:00Z"
         mock_get_cached.assert_called_once_with("oslo")
 
     @patch('src.lambda_handler.cache_weather_data')
@@ -454,11 +535,14 @@ class TestCityWeatherProcessing:
         """Test processing city weather with cache miss."""
         mock_get_cached.return_value = None
         mock_fetch.return_value = {"properties": {"timeseries": []}}
-        mock_extract.return_value = {
-            "temperature": {"value": 20, "unit": "celsius"},
-            "condition": "clear",
-            "description": "Clear sky"
-        }
+        mock_extract.return_value = (
+            {
+                "temperature": {"value": 20, "unit": "celsius"},
+                "condition": "clear",
+                "description": "Clear sky"
+            },
+            "2024-01-15T10:30:00Z"  # API timestamp
+        )
         mock_cache.return_value = True
 
         city_config = {
@@ -473,6 +557,83 @@ class TestCityWeatherProcessing:
         assert result["cityId"] == "paris"
         assert result["cityName"] == "Paris"
         assert result["forecast"]["temperature"]["value"] == 20
+        assert result["lastUpdated"] == "2024-01-15T10:30:00Z"
+        mock_fetch.assert_called_once_with(48.8566, 2.3522)
+        mock_cache.assert_called_once()
+
+    @patch('src.lambda_handler.cache_weather_data')
+    @patch('src.lambda_handler.extract_tomorrow_forecast')
+    @patch('src.lambda_handler.fetch_weather_data')
+    @patch('src.lambda_handler.get_cached_weather_data')
+    def test_process_city_weather_with_cache_miss_no_api_timestamp(self, mock_get_cached, mock_fetch, mock_extract, mock_cache):
+        """Test processing city weather with cache miss and no API timestamp."""
+        mock_get_cached.return_value = None
+        mock_fetch.return_value = {"properties": {"timeseries": []}}
+        mock_extract.return_value = (
+            {
+                "temperature": {"value": 20, "unit": "celsius"},
+                "condition": "clear",
+                "description": "Clear sky"
+            },
+            None  # No API timestamp
+        )
+        mock_cache.return_value = True
+
+        city_config = {
+            "id": "paris",
+            "name": "Paris",
+            "country": "France",
+            "coordinates": {"latitude": 48.8566, "longitude": 2.3522}
+        }
+
+        with patch('src.lambda_handler.datetime') as mock_datetime:
+            mock_now = datetime(2024, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
+            mock_datetime.now.return_value = mock_now
+            mock_datetime.side_effect = lambda *args, **kw: datetime(*args, **kw)
+
+            result = process_city_weather_with_cache(city_config)
+
+        assert result["cityId"] == "paris"
+        assert result["lastUpdated"] == mock_now.strftime('%Y-%m-%dT%H:%M:%SZ')
+        mock_fetch.assert_called_once_with(48.8566, 2.3522)
+        mock_cache.assert_called_once()
+
+    @patch('src.lambda_handler.cache_weather_data')
+    @patch('src.lambda_handler.extract_tomorrow_forecast')
+    @patch('src.lambda_handler.fetch_weather_data')
+    @patch('src.lambda_handler.get_cached_weather_data')
+    def test_process_city_weather_with_malformed_api_timestamp(self, mock_get_cached, mock_fetch, mock_extract, mock_cache):
+        """Test processing city weather with malformed API timestamp."""
+        mock_get_cached.return_value = None
+        mock_fetch.return_value = {"properties": {"timeseries": []}}
+        mock_extract.return_value = (
+            {
+                "temperature": {"value": 20, "unit": "celsius"},
+                "condition": "clear",
+                "description": "Clear sky"
+            },
+            "invalid-timestamp-format"  # Malformed API timestamp
+        )
+        mock_cache.return_value = True
+
+        city_config = {
+            "id": "paris",
+            "name": "Paris",
+            "country": "France",
+            "coordinates": {"latitude": 48.8566, "longitude": 2.3522}
+        }
+
+        with patch('src.lambda_handler.datetime') as mock_datetime:
+            mock_now = datetime(2024, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
+            mock_datetime.now.return_value = mock_now
+            mock_datetime.fromisoformat.side_effect = ValueError("Invalid format")
+            mock_datetime.side_effect = lambda *args, **kw: datetime(*args, **kw)
+
+            result = process_city_weather_with_cache(city_config)
+
+        # Should fall back to current time when API timestamp is malformed
+        assert result["cityId"] == "paris"
+        assert result["lastUpdated"] == mock_now.strftime('%Y-%m-%dT%H:%M:%SZ')
         mock_fetch.assert_called_once_with(48.8566, 2.3522)
         mock_cache.assert_called_once()
 
@@ -490,13 +651,19 @@ class TestCityWeatherProcessing:
             "coordinates": {"latitude": 51.5074, "longitude": -0.1278}
         }
 
-        result = process_city_weather_with_cache(city_config)
+        with patch('src.lambda_handler.datetime') as mock_datetime:
+            mock_now = datetime(2024, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
+            mock_datetime.now.return_value = mock_now
+            mock_datetime.side_effect = lambda *args, **kw: datetime(*args, **kw)
+
+            result = process_city_weather_with_cache(city_config)
 
         assert result["cityId"] == "london"
         assert result["cityName"] == "London"
         assert "error" in result
         assert result["forecast"]["condition"] == "unknown"
         assert result["forecast"]["description"] == "Data unavailable"
+        assert result["lastUpdated"] == mock_now.strftime('%Y-%m-%dT%H:%M:%SZ')
 
 
 class TestWeatherSummary:
@@ -512,8 +679,8 @@ class TestWeatherSummary:
         ]
 
         mock_process_city.side_effect = [
-            {"cityId": "oslo", "cityName": "Oslo", "country": "Norway", "forecast": {}},
-            {"cityId": "paris", "cityName": "Paris", "country": "France", "forecast": {}}
+            {"cityId": "oslo", "cityName": "Oslo", "country": "Norway", "forecast": {}, "lastUpdated": "2024-01-15T09:30:00Z"},
+            {"cityId": "paris", "cityName": "Paris", "country": "France", "forecast": {}, "lastUpdated": "2024-01-15T10:30:00Z"}
         ]
 
         with patch('time.sleep'):  # Mock sleep to speed up tests
@@ -524,6 +691,54 @@ class TestWeatherSummary:
         assert result["cities"][0]["cityId"] == "oslo"
         assert result["cities"][1]["cityId"] == "paris"
         assert "lastUpdated" in result
+        # Should use the most recent timestamp (Paris at 10:30)
+        assert result["lastUpdated"] == "2024-01-15T10:30:00Z"
+
+    @patch('src.lambda_handler.process_city_weather_with_cache')
+    @patch('src.lambda_handler.get_cities_config')
+    def test_get_weather_summary_with_mixed_timestamps(self, mock_get_cities, mock_process_city):
+        """Test weather summary generation with mixed timestamp formats."""
+        mock_get_cities.return_value = [
+            {"id": "oslo", "name": "Oslo", "country": "Norway", "coordinates": {"latitude": 59.9139, "longitude": 10.7522}},
+            {"id": "paris", "name": "Paris", "country": "France", "coordinates": {"latitude": 48.8566, "longitude": 2.3522}}
+        ]
+
+        mock_process_city.side_effect = [
+            {"cityId": "oslo", "cityName": "Oslo", "country": "Norway", "forecast": {}, "lastUpdated": "invalid-timestamp"},
+            {"cityId": "paris", "cityName": "Paris", "country": "France", "forecast": {}, "lastUpdated": "2024-01-15T10:30:00Z"}
+        ]
+
+        with patch('time.sleep'):  # Mock sleep to speed up tests
+            result = get_weather_summary()
+
+        assert result["status"] == "success"
+        assert len(result["cities"]) == 2
+        # Should use the valid timestamp from Paris
+        assert result["lastUpdated"] == "2024-01-15T10:30:00Z"
+
+    @patch('src.lambda_handler.process_city_weather_with_cache')
+    @patch('src.lambda_handler.get_cities_config')
+    def test_get_weather_summary_no_valid_timestamps(self, mock_get_cities, mock_process_city):
+        """Test weather summary generation with no valid timestamps."""
+        mock_get_cities.return_value = [
+            {"id": "oslo", "name": "Oslo", "country": "Norway", "coordinates": {"latitude": 59.9139, "longitude": 10.7522}}
+        ]
+
+        mock_process_city.side_effect = [
+            {"cityId": "oslo", "cityName": "Oslo", "country": "Norway", "forecast": {}}  # No lastUpdated field
+        ]
+
+        with patch('time.sleep'):  # Mock sleep to speed up tests
+            with patch('src.lambda_handler.datetime') as mock_datetime:
+                mock_now = datetime(2024, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
+                mock_datetime.now.return_value = mock_now
+                mock_datetime.side_effect = lambda *args, **kw: datetime(*args, **kw)
+
+                result = get_weather_summary()
+
+        assert result["status"] == "success"
+        # Should fall back to current time
+        assert result["lastUpdated"] == mock_now.strftime('%Y-%m-%dT%H:%M:%SZ')
 
     @patch('src.lambda_handler.process_city_weather_with_cache')
     @patch('src.lambda_handler.get_cities_config')

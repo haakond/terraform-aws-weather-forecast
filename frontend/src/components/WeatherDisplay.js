@@ -13,7 +13,8 @@ const WeatherDisplay = () => {
     lastUpdated,
     refresh,
     retry,
-    getErrorMessage
+    getErrorMessage,
+    formatLastUpdated
   } = useWeatherData({
     onError: (error) => {
       console.error('Weather data error:', error);
@@ -124,8 +125,12 @@ const WeatherDisplay = () => {
         {/* Status indicators */}
         <div className="weather-display__status">
           {lastUpdated && (
-            <p className="weather-display__last-updated">
-              Last updated: {lastUpdated.toLocaleTimeString()}
+            <p
+              className="weather-display__last-updated"
+              aria-live="polite"
+              aria-label={`Weather data last updated ${formatLastUpdated(lastUpdated) || 'recently'}`}
+            >
+              Last updated: {formatLastUpdated(lastUpdated) || 'recently'}
             </p>
           )}
 

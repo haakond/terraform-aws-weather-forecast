@@ -95,14 +95,29 @@ def fetch_weather_data(latitude: float, longitude: float) -> Dict[str, Any]:
         raise WeatherServiceError(f"Failed to fetch weather data: {e}")
 
 
-def extract_tomorrow_forecast(weather_data: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract tomorrow's forecast from met.no response."""
+def extract_tomorrow_forecast(weather_data: Dict[str, Any]) -> tuple[Dict[str, Any], Optional[str]]:
+    """
+    Extract tomorrow's forecast from met.no response.
+
+    Returns:
+        Tuple of (forecast_data, api_timestamp) where api_timestamp is the
+        weather API's last updated timestamp if available
+    """
     try:
         properties = weather_data.get("properties", {})
         timeseries = properties.get("timeseries", [])
 
         if not timeseries:
             raise WeatherServiceError("No timeseries data found")
+
+        # Extract API timestamp from meta information if available
+        api_timestamp = None
+        meta = properties.get("meta", {})
+        if "updated_at" in meta:
+            api_timestamp = meta["updated_at"]
+        elif timeseries and "time" in timeseries[0]:
+            # Fall back to first timeseries entry time as a proxy for API update time
+            api_timestamp = timeseries[0]["time"]
 
         # Find tomorrow's data (approximately 24 hours from now)
         now = datetime.now(timezone.utc)
@@ -148,7 +163,7 @@ def extract_tomorrow_forecast(weather_data: Dict[str, Any]) -> Dict[str, Any]:
                 condition = value
                 break
 
-        return {
+        forecast_data = {
             "temperature": {
                 "value": round(temperature),
                 "unit": "celsius"
@@ -156,6 +171,8 @@ def extract_tomorrow_forecast(weather_data: Dict[str, Any]) -> Dict[str, Any]:
             "condition": condition,
             "description": symbol_code.replace("_", " ").title()
         }
+
+        return forecast_data, api_timestamp
 
     except Exception as e:
         logger.error(f"Failed to extract forecast: {e}")
@@ -223,7 +240,7 @@ def cache_weather_data(city_data: Dict[str, Any]) -> bool:
     Cache weather data in DynamoDB with 1-hour TTL.
 
     Args:
-        city_data: Weather data to cache
+        city_data: Weather data to cache (must include lastUpdated field)
 
     Returns:
         True if caching was successful, False otherwise
@@ -237,13 +254,16 @@ def cache_weather_data(city_data: Dict[str, Any]) -> bool:
         # Calculate TTL (1 hour = 3600 seconds from now)
         ttl = int(time.time()) + 3600
 
+        # Use the lastUpdated timestamp from city_data, or current time as fallback in Z format
+        last_updated = city_data.get('lastUpdated', datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'))
+
         # Prepare item for DynamoDB
         item = {
             'city_id': {'S': city_data['cityId']},
             'city_name': {'S': city_data['cityName']},
             'country': {'S': city_data['country']},
             'forecast': {'S': json.dumps(city_data['forecast'])},
-            'last_updated': {'S': datetime.now(timezone.utc).isoformat()},
+            'last_updated': {'S': last_updated},
             'ttl': {'N': str(ttl)}
         }
 
@@ -252,7 +272,7 @@ def cache_weather_data(city_data: Dict[str, Any]) -> bool:
             Item=item
         )
 
-        logger.info(f"Cached weather data for city {city_data['cityId']}")
+        logger.info(f"Cached weather data for city {city_data['cityId']} with lastUpdated: {last_updated}")
         return True
 
     except Exception as e:
@@ -267,7 +287,7 @@ def process_city_weather_with_cache(city_config: Dict[str, Any]) -> Dict[str, An
     # Try to get cached data first
     cached_data = get_cached_weather_data(city_id)
     if cached_data:
-        logger.info(f"Using cached data for city {city_id}")
+        logger.info(f"Using cached data for city {city_id} with lastUpdated: {cached_data.get('lastUpdated')}")
         return cached_data
 
     # If no cached data, fetch from API
@@ -275,13 +295,40 @@ def process_city_weather_with_cache(city_config: Dict[str, Any]) -> Dict[str, An
     try:
         coords = city_config["coordinates"]
         weather_data = fetch_weather_data(coords["latitude"], coords["longitude"])
-        forecast = extract_tomorrow_forecast(weather_data)
+        forecast_data, api_timestamp = extract_tomorrow_forecast(weather_data)
+
+        # Determine the lastUpdated timestamp
+        # Priority: 1) API timestamp, 2) Current time as fallback
+        if api_timestamp:
+            # Ensure API timestamp is in ISO 8601 format with Z suffix
+            try:
+                # Parse and normalize to Z format
+                if api_timestamp.endswith('Z'):
+                    # Validate by parsing, then keep Z format
+                    datetime.fromisoformat(api_timestamp.replace('Z', '+00:00'))
+                    last_updated = api_timestamp
+                else:
+                    # Parse and convert to Z format
+                    parsed_time = datetime.fromisoformat(api_timestamp)
+                    if parsed_time.tzinfo is None:
+                        parsed_time = parsed_time.replace(tzinfo=timezone.utc)
+                    last_updated = parsed_time.strftime('%Y-%m-%dT%H:%M:%SZ')
+                logger.info(f"Using API timestamp for city {city_id}: {last_updated}")
+            except ValueError:
+                # If API timestamp is malformed, use current time in Z format
+                last_updated = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+                logger.warning(f"API timestamp malformed for city {city_id}, using current time: {last_updated}")
+        else:
+            # No API timestamp available, use current time in Z format
+            last_updated = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+            logger.info(f"No API timestamp for city {city_id}, using current time: {last_updated}")
 
         city_weather = {
             "cityId": city_config["id"],
             "cityName": city_config["name"],
             "country": city_config["country"],
-            "forecast": forecast
+            "forecast": forecast_data,
+            "lastUpdated": last_updated
         }
 
         # Cache the successful result
@@ -291,7 +338,7 @@ def process_city_weather_with_cache(city_config: Dict[str, Any]) -> Dict[str, An
 
     except Exception as e:
         logger.error(f"Failed to process weather for {city_config['name']}: {e}")
-        # Return a fallback response
+        # Return a fallback response with current timestamp in Z format
         return {
             "cityId": city_config["id"],
             "cityName": city_config["name"],
@@ -301,6 +348,7 @@ def process_city_weather_with_cache(city_config: Dict[str, Any]) -> Dict[str, An
                 "condition": "unknown",
                 "description": "Data unavailable"
             },
+            "lastUpdated": datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
             "error": str(e)
         }
 
@@ -310,6 +358,7 @@ def get_weather_summary() -> Dict[str, Any]:
     cities_config = get_cities_config()
     cities_weather = []
     has_errors = False
+    most_recent_update = None
 
     for city_config in cities_config:
         city_weather = process_city_weather_with_cache(city_config)
@@ -319,13 +368,29 @@ def get_weather_summary() -> Dict[str, Any]:
         if 'error' in city_weather:
             has_errors = True
 
+        # Track the most recent lastUpdated timestamp across all cities
+        city_last_updated = city_weather.get('lastUpdated')
+        if city_last_updated:
+            try:
+                city_timestamp = datetime.fromisoformat(city_last_updated.replace('Z', '+00:00'))
+                if most_recent_update is None or city_timestamp > most_recent_update:
+                    most_recent_update = city_timestamp
+            except ValueError:
+                logger.warning(f"Invalid timestamp format for city {city_config['id']}: {city_last_updated}")
+
         # Add small delay to be respectful to the API (only if we made an API call)
         if 'error' not in city_weather:
             time.sleep(0.5)
 
+    # Use the most recent city update time, or current time if none available
+    summary_last_updated = (
+        most_recent_update.strftime('%Y-%m-%dT%H:%M:%SZ') if most_recent_update
+        else datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+    )
+
     return {
         "cities": cities_weather,
-        "lastUpdated": datetime.now(timezone.utc).isoformat(),
+        "lastUpdated": summary_last_updated,
         "status": "success" if not has_errors else "partial_failure",
         "hasErrors": has_errors
     }
@@ -405,7 +470,7 @@ def create_error_response(
         "error": {
             "type": error_type,
             "message": error_message,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
         }
     }
 
@@ -485,7 +550,7 @@ def handle_health_request(event: Dict[str, Any], context: Any) -> Dict[str, Any]
         # Basic health check information
         health_data = {
             "status": "healthy",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
             "version": "1.0.0",
             "service": "weather-forecast-app",
             "requestId": context.aws_request_id,
@@ -597,7 +662,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 "error": {
                     "type": "CriticalError",
                     "message": "Critical system error",
-                    "timestamp": datetime.now(timezone.utc).isoformat()
+                    "timestamp": datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
                 }
             })
         }

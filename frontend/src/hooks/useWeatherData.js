@@ -72,14 +72,33 @@ export const useWeatherData = (options = {}) => {
       // Only update state if component is still mounted
       if (mountedRef.current) {
         setWeatherData(data);
-        setLastUpdated(new Date());
+
+        // Extract lastUpdated from API response, fallback to current time
+        let apiLastUpdated = null;
+        if (data && data.lastUpdated) {
+          try {
+            // Parse the API timestamp (should be in ISO 8601 format)
+            apiLastUpdated = new Date(data.lastUpdated);
+            // Validate the parsed date
+            if (isNaN(apiLastUpdated.getTime())) {
+              console.warn('Invalid lastUpdated timestamp from API:', data.lastUpdated);
+              apiLastUpdated = null;
+            }
+          } catch (e) {
+            console.warn('Failed to parse lastUpdated timestamp from API:', data.lastUpdated, e);
+            apiLastUpdated = null;
+          }
+        }
+
+        // Use API timestamp if available, otherwise use current time as fallback
+        setLastUpdated(apiLastUpdated || new Date());
 
         // Call success callback if provided
         if (onSuccessRef.current) {
           onSuccessRef.current(data);
         }
 
-        console.log('Weather data updated successfully');
+        console.log('Weather data updated successfully', apiLastUpdated ? 'with API timestamp' : 'with fallback timestamp');
       }
 
     } catch (err) {
@@ -88,6 +107,8 @@ export const useWeatherData = (options = {}) => {
       // Only update state if component is still mounted
       if (mountedRef.current) {
         setError(err);
+        // Clear lastUpdated on error
+        setLastUpdated(null);
 
         // Call error callback if provided
         if (onErrorRef.current) {
@@ -133,6 +154,54 @@ export const useWeatherData = (options = {}) => {
       mountedRef.current = false;
       fetchingRef.current = false; // Reset fetching state
     };
+  }, []);
+
+  /**
+   * Format timestamp for user-friendly display
+   */
+  const formatLastUpdated = useCallback((timestamp) => {
+    if (!timestamp || !(timestamp instanceof Date) || isNaN(timestamp.getTime())) {
+      return null;
+    }
+
+    const now = new Date();
+    const diffMs = now.getTime() - timestamp.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    // Handle future timestamps (shouldn't happen but be defensive)
+    if (diffMs < 0) {
+      return 'Just now';
+    }
+
+    // Less than 1 minute
+    if (diffMinutes < 1) {
+      return 'Just now';
+    }
+
+    // Less than 1 hour
+    if (diffMinutes < 60) {
+      return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
+    }
+
+    // Less than 24 hours
+    if (diffHours < 24) {
+      return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    }
+
+    // Less than 7 days
+    if (diffDays < 7) {
+      return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    }
+
+    // More than 7 days - show actual date
+    return timestamp.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   }, []);
 
   /**
@@ -190,7 +259,8 @@ export const useWeatherData = (options = {}) => {
     retry,
 
     // Status helpers
-    getErrorMessage: getErrorMessage()
+    getErrorMessage: getErrorMessage(),
+    formatLastUpdated
   };
 };
 
