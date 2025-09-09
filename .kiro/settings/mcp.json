@@ -45,16 +45,19 @@
     "awslabs-knowledge-mcp-server": {
       "command": "uvx",
       "args": [
-        "mcp-proxy",
-        "--transport",
-        "streamablehttp",
-        "https://knowledge-mcp.global.api.aws"
+          "mcp-proxy",
+          "--transport",
+          "streamablehttp",
+          "https://knowledge-mcp.global.api.aws"
       ],
       "env": {
         "FASTMCP_LOG_LEVEL": "ERROR"
       },
-      "disabled": false,
-      "autoApprove": []
+      "disabled": true,
+      "autoApprove": [
+        "aws___search_documentation",
+        "aws___read_documentation"
+      ]
     },
     "awslabs-cdk": {
       "command": "uvx",
@@ -77,7 +80,8 @@
       },
       "disabled": false,
       "autoApprove": [
-        "SearchAwsProviderDocs"
+        "SearchAwsProviderDocs",
+        "SearchAwsccProviderDocs"
       ]
     },
     "awslabs-serverless": {
@@ -113,12 +117,11 @@
       ],
       "env": {
         "FASTMCP_LOG_LEVEL": "ERROR",
-        "AWS_PROFILE": "your-aws-profile",
+        "AWS_PROFILE": "default",
         "AWS_REGION": "us-east-1"
       },
       "disabled": false,
       "autoApprove": [
-        "get_pricing_service_codes",
         "get_pricing_service_codes"
       ]
     }
