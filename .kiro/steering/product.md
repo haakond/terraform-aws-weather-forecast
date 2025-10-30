@@ -1,15 +1,15 @@
-# Product Overview
+# Product Context
 
-This workspace is a Hello World sample application including AWS container infrastructure definitions.
+Weather forecast web application displaying tomorrow's forecast for Oslo, Paris, London, and Barcelona.
 
-## Purpose
-- Demonstrate how a Hello World sample application can be deployed with the blue/green pattern on AWS ECS Fargate.
-- Target audience is architects and developers familiar with AWS infrstructure.
+## Architecture
+- **Frontend**: Static site on S3 + CloudFront (15min cache, price class 100)
+- **Backend**: Python Lambda + API Gateway + DynamoDB (1hr cache)
+- **External API**: Norwegian Meteorological Institute (api.met.no)
+- **Infrastructure**: Terraform modules, deployed to eu-west-1
 
-## Key Features
-- The application is a simple plain text HTML file.
-- The application is deployed on AWS ECS Fargate as a separate Service with the blue/green deployment pattern
-
-## Context
-- This is a development workspace configured with Kiro AI assistant.
-- MCP (Model Context Protocol) servers are enabled and should be consulted for guidance.
+## Key Constraints
+- Must respect api.met.no Terms of Service (User-Agent required, 20 req/sec max)
+- Cache-control: 60s on success, 0s on failure
+- Mobile-responsive design required
+- CloudFront: GET/HEAD/OPTIONS only, query param caching

@@ -7,7 +7,9 @@
       ],
       "env": {},
       "disabled": false,
-      "autoApprove": []
+      "autoApprove": [
+        "fetch"
+      ]
     },
     "awslabs-docs": {
       "command": "uvx",
@@ -45,10 +47,10 @@
     "awslabs-knowledge-mcp-server": {
       "command": "uvx",
       "args": [
-          "mcp-proxy",
-          "--transport",
-          "streamablehttp",
-          "https://knowledge-mcp.global.api.aws"
+        "mcp-proxy",
+        "--transport",
+        "streamablehttp",
+        "https://knowledge-mcp.global.api.aws"
       ],
       "env": {
         "FASTMCP_LOG_LEVEL": "ERROR"
