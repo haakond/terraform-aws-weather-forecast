@@ -13,7 +13,7 @@ import time
 import urllib.request
 import urllib.parse
 import boto3
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, Optional, List
 
 # Weather service functionality embedded to avoid import issues
@@ -121,8 +121,7 @@ def extract_tomorrow_forecast(weather_data: Dict[str, Any]) -> tuple[Dict[str, A
 
         # Find tomorrow's data (approximately 24 hours from now)
         now = datetime.now(timezone.utc)
-        tomorrow = now.replace(hour=12, minute=0, second=0, microsecond=0)
-        tomorrow = tomorrow.replace(day=tomorrow.day + 1)
+        tomorrow = now.replace(hour=12, minute=0, second=0, microsecond=0) + timedelta(days=1)
 
         # Find the closest forecast to tomorrow noon
         best_forecast = None
