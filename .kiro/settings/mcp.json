@@ -45,13 +45,8 @@
       "autoApprove": []
     },
     "awslabs-knowledge-mcp-server": {
-      "command": "uvx",
-      "args": [
-        "mcp-proxy",
-        "--transport",
-        "streamablehttp",
-        "https://knowledge-mcp.global.api.aws"
-      ],
+      "url": "https://knowledge-mcp.global.api.aws",
+      "type": "http",
       "env": {
         "FASTMCP_LOG_LEVEL": "ERROR"
       },
