@@ -133,19 +133,6 @@ const WeatherDisplay = () => {
               Last updated: {formatLastUpdated(lastUpdated) || 'recently'}
             </p>
           )}
-
-          {/* Debug controls for development */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="weather-display__debug">
-              <button
-                onClick={() => refresh()}
-                className="weather-display__debug-button"
-                disabled={loading}
-              >
-                Force Refresh
-              </button>
-            </div>
-          )}
         </div>
       </div>
 
@@ -180,20 +167,6 @@ const WeatherDisplay = () => {
         <div className="weather-display__loading-indicator">
           <div className="weather-display__loading-spinner"></div>
           <p className="weather-display__loading-text">Loading weather data...</p>
-        </div>
-      )}
-
-      {/* Refresh controls */}
-      {!loading && !hasGlobalError && (
-        <div className="weather-display__controls">
-          <button
-            className="weather-display__refresh-button"
-            onClick={() => refresh()}
-            disabled={loading}
-            title="Refresh weather data"
-          >
-            🔄 Refresh
-          </button>
         </div>
       )}
 

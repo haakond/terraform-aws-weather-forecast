@@ -540,50 +540,7 @@ s indicators */
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* Refresh Controls */
-.weather-display__controls {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin: 2rem 0;
-  flex-wrap: wrap;
-}
 
-.weather-display__refresh-button,
-.weather-display__force-refresh-button {
-  background: rgba(72, 187, 120, 0.8);
-  color: white;
-  border: 1px solid rgba(72, 187, 120, 0.9);
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.weather-display__force-refresh-button {
-  background: rgba(237, 137, 54, 0.8);
-  border-color: rgba(237, 137, 54, 0.9);
-}
-
-.weather-display__refresh-button:hover:not(:disabled) {
-  background: rgba(72, 187, 120, 0.9);
-  transform: translateY(-1px);
-}
-
-.weather-display__force-refresh-button:hover:not(:disabled) {
-  background: rgba(237, 137, 54, 0.9);
-  transform: translateY(-1px);
-}
-
-.weather-display__refresh-button:disabled,
-.weather-display__force-refresh-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
 
 /* Partial Error Banner */
 .weather-display__partial-error {
@@ -661,9 +618,7 @@ s indicators */
 }
 
 @media (max-width: 480px) {
-  .weather-display__clear-cache-button,
-  .weather-display__refresh-button,
-  .weather-display__force-refresh-button {
+  .weather-display__clear-cache-button {
     padding: 0.6rem 1.2rem;
     font-size: 0.85rem;
   }
