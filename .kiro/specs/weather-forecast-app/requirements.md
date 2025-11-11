@@ -18,6 +18,17 @@ This specification will create a weather forecast application, to be deployed wi
 
 ### Requirement 2
 
+**User Story:** As an end user, I want to see a text-based summary of the weather forecast below the main weather cards, so that I can quickly read the forecast information in a simple format.
+
+#### Acceptance Criteria
+
+1. WHEN an end user is viewing the weather forecast THEN the system SHALL display a text summary box below the main weather card area
+2. WHEN the text summary is displayed THEN the system SHALL include weather information for each of the four cities (Oslo, Paris, London, Barcelona)
+3. WHEN the text summary is displayed THEN the system SHALL format the text in a readable and concise manner
+4. WHEN the text summary is displayed on a mobile device THEN the system SHALL ensure the text is properly formatted and readable on small screens
+
+### Requirement 3
+
 **User Story:** As a developer, my application requirements are as follows:
 
 #### Acceptance Criteria
@@ -32,7 +43,7 @@ This specification will create a weather forecast application, to be deployed wi
 8. WHEN weather data is cached in DynamoDB and the weather API does not provide timestamp information THEN the system SHALL use the DynamoDB cache timestamp as the lastUpdated value in the API response
 
 
-### Requirement 3
+### Requirement 4
 
 **User Story:** As a developer, my cloud infrastructure requirements are as follows:
 

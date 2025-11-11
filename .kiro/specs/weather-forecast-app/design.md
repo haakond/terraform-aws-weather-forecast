@@ -20,6 +20,82 @@ The application follows a serverless architecture pattern with the following com
 3. **Data Layer**: DynamoDB for caching weather data and API rate limiting
 4. **External Integration**: Norwegian Meteorological Institute API (api.met.no)
 
+### Architecture Diagram
+
+```mermaid
+graph TB
+    User[End User]
+    CF[CloudFront Distribution]
+    S3[S3 Bucket<br/>Static Website]
+    APIGW[API Gateway]
+    Lambda[Lambda Function<br/>Weather Service]
+    DDB[DynamoDB<br/>Cache Table]
+    MetAPI[api.met.no<br/>Weather API]
+    CW[CloudWatch<br/>Logs & Metrics]
+
+    User -->|HTTPS Request| CF
+    CF -->|Cache Miss| S3
+    S3 -->|HTML/CSS/JS| CF
+    CF -->|Static Content| User
+
+    User -->|API Request| APIGW
+    APIGW -->|Invoke| Lambda
+    Lambda -->|Check Cache| DDB
+    DDB -->|Cache Hit| Lambda
+    Lambda -->|Cache Miss| MetAPI
+    MetAPI -->|Weather Data| Lambda
+    Lambda -->|Store Cache| DDB
+    Lambda -->|Response| APIGW
+    APIGW -->|JSON Response| User
+
+    Lambda -->|Logs & Traces| CW
+    APIGW -->|Metrics| CW
+
+    style CF fill:#FF9900
+    style S3 fill:#569A31
+    style Lambda fill:#FF9900
+    style DDB fill:#527FFF
+    style APIGW fill:#FF4F8B
+    style CW fill:#FF9900
+```
+
+### Data Flow Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant CloudFront
+    participant S3
+    participant APIGateway
+    participant Lambda
+    participant DynamoDB
+    participant MetAPI as api.met.no
+
+    User->>CloudFront: Request webpage
+    CloudFront->>S3: Fetch static content
+    S3-->>CloudFront: HTML/CSS/JS
+    CloudFront-->>User: Cached content (15min TTL)
+
+    User->>APIGateway: GET /weather
+    APIGateway->>Lambda: Invoke function
+
+    Lambda->>DynamoDB: Check cache for cities
+    alt Cache Hit (< 1 hour)
+        DynamoDB-->>Lambda: Cached weather data
+    else Cache Miss
+        loop For each city
+            Lambda->>MetAPI: GET forecast (with User-Agent)
+            MetAPI-->>Lambda: Weather data
+            Lambda->>DynamoDB: Store with 1hr TTL
+        end
+    end
+
+    Lambda-->>APIGateway: JSON response + cache-control
+    APIGateway-->>User: Weather data (60s cache)
+
+    User->>User: Display weather cards + text summary
+```
+
 ### Architecture Rationale
 - **Static hosting with S3/CloudFront**: Provides fast global content delivery and handles traffic spikes efficiently
 - **Lambda functions**: Serverless compute eliminates server management and scales automatically
@@ -60,6 +136,22 @@ The application follows a serverless architecture pattern with the following com
   - Temperature (current and forecast)
   - Weather condition icon
   - Weather description
+
+#### Weather Text Summary Component
+- **Purpose**: Display a text-based summary of weather forecasts below the main weather cards
+- **Responsibilities**:
+  - Render weather information for all four cities in text format
+  - Format text in a readable and concise manner
+  - Adapt layout for mobile devices
+  - Handle loading and error states consistently with main display
+- **Properties**:
+  - Weather data array from API
+  - Loading state
+  - Error state
+- **Text Format**:
+  - Each city's forecast on a separate line or in a structured paragraph format
+  - Include city name, temperature, and weather condition description
+  - Example: "Oslo: -2°C, Partly cloudy | Paris: 8°C, Rainy | London: 5°C, Cloudy | Barcelona: 15°C, Sunny"
 
 ### Backend Components
 
@@ -223,10 +315,10 @@ The application follows a serverless architecture pattern with the following com
 ## Testing Strategy
 
 ### Frontend Testing
-- **Unit Tests**: Test individual components with Jest and React Testing Library
-- **Integration Tests**: Test API integration and data flow
-- **Visual Regression Tests**: Ensure UI consistency across devices
-- **Accessibility Tests**: Validate WCAG compliance for mobile and desktop
+- **Unit Tests**: Test individual components with Jest and React Testing Library, including the new Weather Text Summary component
+- **Integration Tests**: Test API integration and data flow, ensuring text summary displays correctly with weather data
+- **Visual Regression Tests**: Ensure UI consistency across devices, including text summary layout
+- **Accessibility Tests**: Validate WCAG compliance for mobile and desktop, ensuring text summary is accessible
 
 ### Backend Testing
 - **Unit Tests**: Test Lambda functions with mocked dependencies

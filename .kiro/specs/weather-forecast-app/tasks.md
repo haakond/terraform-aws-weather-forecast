@@ -239,4 +239,29 @@
   - Create basic deployment guide and troubleshooting documentation
   - Write operational runbooks for maintenance
   - Add basic examples for CI/CD integration and how to configure relevant variables
-  - _Requirem
+  - _Requirements: 3.7_
+
+- [x] 11. Add text-based weather summary component
+  - [x] 11.1 Create WeatherTextSummary component
+    - Create new React component in frontend/src/components/WeatherTextSummary.js
+    - Implement text formatting logic to display weather data for all four cities
+    - Format output as readable text (e.g., "Oslo: -2°C, Partly cloudy | Paris: 8°C, Rainy...")
+    - Handle loading and error states consistently with existing components
+    - Ensure component receives weather data array as props
+    - _Requirements: 2.1, 2.2, 2.3_
+
+  - [x] 11.2 Style the text summary component
+    - Create CSS file for WeatherTextSummary component styling
+    - Implement responsive design for mobile and desktop views
+    - Add proper spacing and visual separation from weather cards above
+    - Ensure text is readable with appropriate font size and contrast
+    - Style the container box with subtle background and borders
+    - _Requirements: 2.3, 2.4_
+
+  - [x] 11.3 Integrate text summary into main App component
+    - Import WeatherTextSummary component in App.js
+    - Position component below the existing weather cards display
+    - Pass weather data from existing state to the new component
+    - Ensure loading and error states are properly propagated
+    - Test that component renders correctly with real weather data
+    - _Requirements: 2.1, 2.2_
