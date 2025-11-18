@@ -45,11 +45,10 @@
       "autoApprove": []
     },
     "awslabs-knowledge-mcp-server": {
-      "url": "https://knowledge-mcp.global.api.aws",
-      "type": "http",
       "env": {
         "FASTMCP_LOG_LEVEL": "ERROR"
       },
+      "url": "https://knowledge-mcp.global.api.aws",
       "disabled": false,
       "autoApprove": [
         "aws___search_documentation",
@@ -78,8 +77,25 @@
       "env": {
         "FASTMCP_LOG_LEVEL": "ERROR"
       },
-      "disabled": false,
-      "autoApprove": []
+      "disabled": true,
+      "autoApprove": [],
+      "disabledTools": [
+        "sam_build",
+        "sam_deploy",
+        "sam_init",
+        "sam_local_invoke",
+        "sam_logs",
+        "configure_domain",
+        "deploy_webapp",
+        "update_webapp_frontend",
+        "esm_guidance",
+        "esm_kafka_troubleshoot",
+        "esm_optimize",
+        "secure_esm_msk_policy",
+        "secure_esm_sqs_policy",
+        "secure_esm_kinesis_policy",
+        "secure_esm_dynamodb_policy"
+      ]
     },
     "awslabs-diagram": {
       "command": "uvx",
@@ -109,6 +125,9 @@
       "disabled": false,
       "autoApprove": [
         "get_pricing_service_codes"
+      ],
+      "disabledTools": [
+        "analyze_cdk_project"
       ]
     }
   }
