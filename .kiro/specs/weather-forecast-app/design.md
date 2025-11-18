@@ -137,21 +137,33 @@ sequenceDiagram
   - Weather condition icon
   - Weather description
 
-#### Weather Text Summary Component
-- **Purpose**: Display a text-based summary of weather forecasts below the main weather cards
+#### Weather Text Summary Component (Star Wars Credits Style)
+- **Purpose**: Display a text-based summary of weather forecasts below the main weather cards with a cinematic Star Wars opening credits visual effect
 - **Responsibilities**:
   - Render weather information for all four cities in text format
   - Format text in a readable and concise manner
-  - Adapt layout for mobile devices
+  - Apply Star Wars opening credits visual effect with scrolling animation
+  - Implement CSS 3D transforms for perspective and tilted scrolling
+  - Adapt layout for mobile devices while maintaining the cinematic effect
   - Handle loading and error states consistently with main display
 - **Properties**:
   - Weather data array from API
   - Loading state
   - Error state
+  - Animation state (playing, paused)
 - **Text Format**:
   - Each city's forecast on a separate line or in a structured paragraph format
   - Include city name, temperature, and weather condition description
   - Example: "Oslo: -2°C, Partly cloudy | Paris: 8°C, Rainy | London: 5°C, Cloudy | Barcelona: 15°C, Sunny"
+- **Visual Effect Implementation**:
+  - **CSS 3D Transforms**: Use `perspective`, `rotateX`, and `translateZ` for the tilted scrolling effect
+  - **Animation**: CSS keyframe animation scrolling text from bottom to top
+  - **Perspective Angle**: Approximately 20-25 degrees tilt (rotateX) for authentic Star Wars feel
+  - **Scroll Speed**: Configurable animation duration (default: 20-30 seconds for full scroll)
+  - **Container Setup**: Fixed-height container with overflow hidden and perspective origin at center
+  - **Text Styling**: Large, bold, centered text with appropriate line spacing for readability
+  - **Mobile Optimization**: Adjust perspective angle and scroll speed for smaller screens
+  - **Performance**: Use CSS transforms and GPU acceleration for smooth animation
 
 ### Backend Components
 
@@ -183,6 +195,99 @@ sequenceDiagram
   - Extract tomorrow's forecast data
   - Transform data into consistent format
   - Handle different weather condition mappings
+
+### Star Wars Credits Visual Effect - Technical Implementation
+
+#### CSS Architecture
+The Star Wars opening credits effect will be implemented using pure CSS3 transforms and animations for optimal performance and browser compatibility.
+
+**HTML Structure**:
+```html
+<div class="credits-container">
+  <div class="credits-content">
+    <div class="credits-text">
+      <!-- Weather forecast text content -->
+    </div>
+  </div>
+</div>
+```
+
+**CSS Implementation**:
+```css
+.credits-container {
+  position: relative;
+  height: 400px; /* Adjustable viewport height */
+  overflow: hidden;
+  perspective: 400px;
+  perspective-origin: 50% 50%;
+  background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.8));
+}
+
+.credits-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  transform-origin: 50% 100%;
+  transform: rotateX(25deg);
+  animation: scroll-credits 30s linear infinite;
+}
+
+.credits-text {
+  text-align: center;
+  font-size: 1.5rem;
+  line-height: 2;
+  color: #ffd700; /* Star Wars yellow */
+  font-weight: bold;
+  padding: 2rem;
+}
+
+@keyframes scroll-credits {
+  from {
+    transform: rotateX(25deg) translateY(100%);
+  }
+  to {
+    transform: rotateX(25deg) translateY(-100%);
+  }
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+  .credits-container {
+    height: 300px;
+    perspective: 300px;
+  }
+
+  .credits-content {
+    transform: rotateX(20deg);
+  }
+
+  .credits-text {
+    font-size: 1.2rem;
+    line-height: 1.8;
+  }
+
+  @keyframes scroll-credits {
+    from {
+      transform: rotateX(20deg) translateY(100%);
+    }
+    to {
+      transform: rotateX(20deg) translateY(-100%);
+    }
+  }
+}
+```
+
+#### Animation Control
+- **Auto-play**: Animation starts automatically when component mounts
+- **Infinite Loop**: Continuous scrolling with seamless restart
+- **Performance**: Uses CSS transforms (GPU-accelerated) instead of JavaScript for smooth 60fps animation
+- **Accessibility**: Respects `prefers-reduced-motion` media query for users with motion sensitivity
+
+#### Browser Compatibility
+- Modern browsers (Chrome, Firefox, Safari, Edge) with CSS3 transform support
+- Graceful fallback: Static text display for older browsers without 3D transform support
+- Progressive enhancement approach ensures core functionality works everywhere
 
 ### External Interfaces
 
@@ -315,10 +420,25 @@ sequenceDiagram
 ## Testing Strategy
 
 ### Frontend Testing
-- **Unit Tests**: Test individual components with Jest and React Testing Library, including the new Weather Text Summary component
-- **Integration Tests**: Test API integration and data flow, ensuring text summary displays correctly with weather data
-- **Visual Regression Tests**: Ensure UI consistency across devices, including text summary layout
+- **Unit Tests**: Test individual components with Jest and React Testing Library, including the Weather Text Summary component with Star Wars credits effect
+  - Test component rendering with weather data
+  - Test animation initialization and state management
+  - Test CSS class application for 3D transforms
+  - Test mobile responsive behavior
+- **Integration Tests**: Test API integration and data flow, ensuring text summary displays correctly with weather data and animation triggers properly
+- **Visual Regression Tests**: Ensure UI consistency across devices, including text summary layout and Star Wars credits animation
+  - Capture screenshots at different animation states
+  - Validate perspective transform rendering
+  - Test animation smoothness and performance
 - **Accessibility Tests**: Validate WCAG compliance for mobile and desktop, ensuring text summary is accessible
+  - Test `prefers-reduced-motion` media query support
+  - Validate keyboard navigation and focus management
+  - Ensure text remains readable during animation
+- **Animation Tests**: Validate Star Wars credits effect implementation
+  - Test CSS animation keyframes are applied correctly
+  - Verify 3D transform calculations
+  - Test animation performance (60fps target)
+  - Validate infinite loop behavior
 
 ### Backend Testing
 - **Unit Tests**: Test Lambda functions with mocked dependencies
@@ -365,6 +485,13 @@ sequenceDiagram
 - **Image Optimization**: Use WebP format with fallbacks
 - **Static Content Caching**: Configure Cache-Control headers with Max-Age=900 (15 minutes) for all static assets including HTML, CSS, JavaScript, and images
 - **CDN Distribution**: Leverage CloudFront for global content delivery with optimized cache behaviors
+- **Animation Performance**: Optimize Star Wars credits effect for smooth rendering
+  - Use CSS transforms (translateY, rotateX) for GPU acceleration
+  - Avoid JavaScript-based animations for better performance
+  - Use `will-change: transform` hint for browser optimization
+  - Implement `prefers-reduced-motion` for accessibility and performance
+  - Minimize repaints and reflows during animation
+  - Target 60fps animation frame rate
 
 ### Backend Performance
 - **Connection Pooling**: Reuse database connections in Lambda functions

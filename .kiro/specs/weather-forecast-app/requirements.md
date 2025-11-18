@@ -18,7 +18,7 @@ This specification will create a weather forecast application, to be deployed wi
 
 ### Requirement 2
 
-**User Story:** As an end user, I want to see a text-based summary of the weather forecast below the main weather cards, so that I can quickly read the forecast information in a simple format.
+**User Story:** As an end user, I want to see a text-based summary of the weather forecast below the main weather cards with a Star Wars opening credits visual effect, so that I can enjoy an engaging and cinematic presentation of the forecast information.
 
 #### Acceptance Criteria
 
@@ -26,6 +26,9 @@ This specification will create a weather forecast application, to be deployed wi
 2. WHEN the text summary is displayed THEN the system SHALL include weather information for each of the four cities (Oslo, Paris, London, Barcelona)
 3. WHEN the text summary is displayed THEN the system SHALL format the text in a readable and concise manner
 4. WHEN the text summary is displayed on a mobile device THEN the system SHALL ensure the text is properly formatted and readable on small screens
+5. WHEN the text summary is rendered THEN the system SHALL apply a Star Wars opening credits visual effect with text scrolling from bottom to top at an angle with perspective transformation
+6. WHEN the Star Wars credits effect is applied THEN the system SHALL use CSS 3D transforms to create the perspective and scrolling animation
+7. WHEN the text scrolls THEN the system SHALL maintain readability while creating the cinematic tilted perspective effect characteristic of Star Wars opening credits
 
 ### Requirement 3
 

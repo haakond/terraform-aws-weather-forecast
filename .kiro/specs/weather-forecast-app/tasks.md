@@ -265,3 +265,76 @@
     - Ensure loading and error states are properly propagated
     - Test that component renders correctly with real weather data
     - _Requirements: 2.1, 2.2_
+
+- [ ] 12. Implement Star Wars credits visual effect for text summary
+  - [x] 12.1 Create CSS architecture for Star Wars credits effect
+    - Create new CSS file (WeatherCredits.css) with 3D transform styles
+    - Implement perspective container with appropriate perspective value (400px)
+    - Add rotateX transform (25deg) for tilted scrolling effect
+    - Create keyframe animation for bottom-to-top scrolling
+    - Set up proper transform-origin and perspective-origin
+    - Add gradient background for fade-in/fade-out effect at edges
+    - _Requirements: 2.5, 2.6_
+
+  - [x] 12.2 Implement scrolling animation with CSS transforms
+    - Define @keyframes animation for continuous scrolling motion
+    - Set animation duration to 30 seconds for full scroll cycle
+    - Configure animation to use linear timing function for consistent speed
+    - Set animation to infinite loop for continuous effect
+    - Use translateY transform for vertical scrolling motion
+    - Ensure GPU acceleration with transform properties
+    - _Requirements: 2.5, 2.6_
+
+  - [x] 12.3 Add mobile-responsive adjustments for credits effect
+    - Create media query for screens below 768px width
+    - Adjust perspective value to 300px for smaller screens
+    - Reduce rotateX angle to 20deg for better mobile readability
+    - Scale down font size and line height for mobile devices
+    - Adjust container height for mobile viewport
+    - Update animation keyframes for mobile-specific transform values
+    - _Requirements: 2.4, 2.7_
+
+  - [x] 12.4 Update WeatherTextSummary component with credits structure
+    - Refactor component to use credits-container HTML structure
+    - Add credits-content wrapper div with transform styles
+    - Wrap text content in credits-text div for styling
+    - Apply Star Wars yellow color (#ffd700) to text
+    - Increase font size and weight for cinematic effect
+    - Add proper line spacing for readability during animation
+    - _Requirements: 2.5, 2.6, 2.7_
+
+  - [x] 12.5 Implement accessibility features for animation
+    - Add prefers-reduced-motion media query support
+    - Disable animation for users with motion sensitivity preferences
+    - Provide static text display as fallback when animation is disabled
+    - Ensure text remains readable in both animated and static states
+    - Test keyboard navigation and focus management
+    - Validate WCAG compliance for animated content
+    - _Requirements: 2.7_
+
+  - [ ]* 12.6 Add performance optimizations for smooth animation
+    - Add will-change: transform CSS hint for browser optimization
+    - Verify GPU acceleration is active for transform animations
+    - Test animation performance to achieve 60fps target
+    - Minimize repaints and reflows during animation
+    - Optimize CSS selectors for animation performance
+    - Test performance on various devices and browsers
+    - _Requirements: 2.6, 2.7_
+
+  - [ ]* 12.7 Create unit tests for Star Wars credits component
+    - Test component renders with correct CSS classes applied
+    - Verify animation state initialization
+    - Test mobile responsive class application
+    - Validate prefers-reduced-motion handling
+    - Test component with various weather data inputs
+    - Verify error and loading state handling
+    - _Requirements: 2.5, 2.6, 2.7_
+
+  - [ ]* 12.8 Add visual regression tests for credits animation
+    - Capture screenshots at different animation states
+    - Test perspective transform rendering across browsers
+    - Validate mobile vs desktop layout differences
+    - Test animation smoothness and frame rate
+    - Verify text readability during animation
+    - Test graceful fallback for browsers without 3D transform support
+    - _Requirements: 2.6, 2.7_

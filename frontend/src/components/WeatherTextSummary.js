@@ -1,5 +1,6 @@
 import React from 'react';
 import './WeatherTextSummary.css';
+import './WeatherCredits.css';
 
 const WeatherTextSummary = ({
   weatherData = null,
@@ -50,24 +51,27 @@ const WeatherTextSummary = ({
     return `${cityName}: ${temp}°C, ${description}`;
   };
 
-  // Create text summary for all cities
-  const summaryText = weatherData.cities
-    .map(formatCityWeather)
-    .join(' | ');
+  // Create text summary for all cities with line breaks for cinematic effect
+  const summaryLines = weatherData.cities.map(formatCityWeather);
 
   return (
     <div
-      className="weather-text-summary"
+      className="credits-container"
       role="complementary"
-      aria-label="Text-based weather summary"
+      aria-label="Text-based weather summary with Star Wars credits effect"
+      aria-live="polite"
+      tabIndex="0"
     >
-      <h2 className="weather-text-summary__title">Weather Summary</h2>
-      <p
-        className="weather-text-summary__text"
-        aria-label={`Weather summary: ${summaryText}`}
-      >
-        {summaryText}
-      </p>
+      <div className="credits-content" aria-hidden="false">
+        <div className="credits-text">
+          {summaryLines.map((line, index) => (
+            <React.Fragment key={index}>
+              {line}
+              {index < summaryLines.length - 1 && <br />}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
