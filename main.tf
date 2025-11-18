@@ -1,36 +1,7 @@
 # Weather Forecast App - Main Terraform Configuration
 # This is the main entry point for the weather forecast application infrastructure
 
-# Configure the AWS Provider
-provider "aws" {
-  region = var.aws_region
-
-  default_tags {
-    tags = {
-      Service     = "weather-forecast-app"
-      Environment = var.environment
-      ManagedBy   = "terraform"
-    }
-  }
-}
-
-provider "awscc" {
-  region = var.aws_region
-}
-
-# Local values for common configurations
-locals {
-  name_prefix = "${var.project_name}-${var.environment}"
-
-  common_tags = {
-    Name        = local.name_prefix
-    Service     = "weather-forecast-app"
-    Environment = var.environment
-    ManagedBy   = "terraform"
-  }
-}
-
-# Module calls - these will be implemented in subsequent tasks
+# Module calls
 module "backend" {
   source = "./modules/backend"
 
