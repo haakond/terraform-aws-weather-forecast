@@ -324,6 +324,22 @@ resource "aws_budgets_budget" "weather_app_budget" {
     values = ["Service$weather-forecast-app"]
   }
 
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 80
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "ACTUAL"
+    subscriber_email_addresses = var.budget_notification_emails
+  }
+
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 100
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "ACTUAL"
+    subscriber_email_addresses = var.budget_notification_emails
+  }
+
   tags = var.common_tags
 }
 

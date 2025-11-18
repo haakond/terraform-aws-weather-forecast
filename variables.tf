@@ -55,6 +55,20 @@ variable "budget_limit" {
   }
 }
 
+variable "budget_notification_emails" {
+  description = "List of email addresses to receive budget notifications when actual costs exceed 80% and 100% of the budget limit"
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition = alltrue([
+      for email in var.budget_notification_emails :
+      can(regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", email))
+    ])
+    error_message = "All budget notification emails must be valid email addresses."
+  }
+}
+
 variable "log_retention_days" {
   description = "CloudWatch log retention period in days"
   type        = number

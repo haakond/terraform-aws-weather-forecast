@@ -15,6 +15,12 @@ variable "budget_limit" {
   type        = number
 }
 
+variable "budget_notification_emails" {
+  description = "List of email addresses to receive budget notifications"
+  type        = list(string)
+  default     = []
+}
+
 variable "common_tags" {
   description = "Common tags to apply to all resources"
   type        = map(string)
