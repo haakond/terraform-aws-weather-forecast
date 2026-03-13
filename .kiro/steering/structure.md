@@ -1,5 +1,7 @@
 ---
 inclusion: auto
+name: project-structure
+description: Project directory layout, file organization conventions, and root Terraform file roles. Use when creating new files, organizing code, or understanding where things live.
 ---
 
 # Project Structure

@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: "**/*.tf,**/*.tfvars,**/*.tftest.hcl"
+fileMatchPattern: ["**/*.tf", "**/*.tfvars", "**/*.tftest.hcl"]
 ---
 
 # Terraform Steering

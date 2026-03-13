@@ -1,5 +1,7 @@
 ---
 inclusion: auto
+name: mcp-servers
+description: MCP server configuration, available tools, and usage priority. Use when configuring MCP servers, troubleshooting server connections, or selecting which MCP tool to use.
 ---
 
 # MCP Servers

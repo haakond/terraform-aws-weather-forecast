@@ -1,3 +1,7 @@
+---
+inclusion: always
+---
+
 # Product Context
 
 Weather forecast web application displaying tomorrow's forecast for Oslo, Paris, London, and Barcelona.

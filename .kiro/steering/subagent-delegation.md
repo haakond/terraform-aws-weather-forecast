@@ -1,5 +1,7 @@
 ---
 inclusion: auto
+name: subagent-delegation
+description: Subagent delegation rules and file-pattern routing. Use when executing spec tasks, editing code files, or orchestrating multi-domain work across Terraform, Python, frontend, security, docs, cost analysis, or diagram agents.
 ---
 
 # Subagent Delegation
