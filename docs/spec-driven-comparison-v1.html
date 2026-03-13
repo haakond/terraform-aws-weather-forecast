@@ -2,26 +2,25 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Spec vs. Vibe — Detailed Comparison</title>
+<title>From Vibe to Spec — Tool Comparison</title>
 <style>
   body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; background: #fff; }
   h1 { font-size: 28px; color: #232f3e; margin-bottom: 8px; }
   p.subtitle { font-size: 14px; color: #666; margin-bottom: 24px; }
-  table { border-collapse: collapse; width: 100%; font-size: 13px; }
-  th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; vertical-align: top; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { border: 1px solid #ddd; padding: 10px 14px; text-align: left; vertical-align: top; }
   th { background: #232f3e; color: #fff; font-weight: 600; }
   th:first-child { background: #37475a; }
   td:first-child { font-weight: 600; background: #f7f8fa; color: #232f3e; white-space: nowrap; }
   tr:nth-child(even) td:not(:first-child) { background: #fafbfc; }
   td.kiro { background: #e6f4ea !important; }
   tr:nth-child(even) td.kiro { background: #d4edda !important; }
-  .takeaway { margin-top: 20px; padding: 14px 18px; background: #e6f4ea; border-left: 4px solid #1a8754; font-size: 14px; color: #232f3e; }
-  code { background: #eee; padding: 2px 5px; border-radius: 3px; font-size: 12px; }
+  .takeaway { margin-top: 20px; padding: 14px 18px; background: #e6f4ea; border-left: 4px solid #1a8754; font-size: 15px; color: #232f3e; }
 </style>
 </head>
 <body>
-<h1>Spec vs. Vibe — How Tools Compare</h1>
-<p class="subtitle">Detailed comparison table</p>
+<h1>From Vibe to Spec — How Tools Compare</h1>
+<p class="subtitle">Structured development capabilities across AI coding tools</p>
 <table>
   <tr>
     <th></th>
@@ -33,63 +32,39 @@
   </tr>
   <tr>
     <td>Approach</td>
-    <td class="kiro">Native spec workflow baked into IDE</td>
+    <td class="kiro">Native spec workflow</td>
     <td>Plan Mode (bolt-on)</td>
     <td>Plan Mode (bolt-on)</td>
-    <td>Plan agent + Spec Kit (external)</td>
+    <td>Plan agent + Spec Kit (external add-on)</td>
     <td>Planning Mode (conversational)</td>
   </tr>
   <tr>
-    <td>Phases</td>
-    <td class="kiro">Requirements → Design → Tasks (or Design-first)</td>
+    <td>SDLC phases</td>
+    <td class="kiro">Requirements → Design → Tasks</td>
     <td>Prompt → Plan → Execute</td>
     <td>Prompt → Plan → Execute</td>
-    <td>Discovery → Alignment → Design → Refine</td>
-    <td>Prompt → Step breakdown → Execute</td>
+    <td>Discover → Align → Design → Refine</td>
+    <td>Prompt → Steps → Execute</td>
   </tr>
   <tr>
-    <td>Artifacts</td>
-    <td class="kiro"><code>requirements.md</code>, <code>design.md</code>, <code>tasks.md</code> — persisted in repo</td>
-    <td>Markdown plan (session-scoped)</td>
-    <td>User-managed spec files</td>
-    <td>Spec Kit generates files externally</td>
+    <td>Persistent artifacts</td>
+    <td class="kiro">requirements.md, design.md, tasks.md — versioned in repo</td>
+    <td>Session-scoped plan</td>
+    <td>User-managed files</td>
+    <td>External tool generates files</td>
     <td>None</td>
   </tr>
   <tr>
-    <td>Requirements format</td>
-    <td class="kiro">EARS notation (WHEN / SHALL)</td>
-    <td>Free-form</td>
-    <td>Free-form</td>
-    <td>Free-form</td>
-    <td>Free-form</td>
-  </tr>
-  <tr>
     <td>Task tracking</td>
-    <td class="kiro">Built-in with status &amp; incremental execution</td>
+    <td class="kiro">Built-in status tracking &amp; incremental execution</td>
     <td>Checkboxes in plan UI</td>
     <td>Manual</td>
-    <td>Checkboxes (no cross-session)</td>
-    <td>Step-by-step progress only</td>
-  </tr>
-  <tr>
-    <td>Extensibility</td>
-    <td class="kiro">Powers marketplace (Stripe, Figma, Datadog, AWS); steering files; MCP; hooks; community loadouts</td>
-    <td>Plugin marketplace (30+ partners); cursor.directory for rules; MCP; hooks</td>
-    <td>Plugin system (Superpowers, etc.); CLAUDE.md conventions; slash commands; MCP; 8,600+ community skills</td>
-    <td>VS Code extensions + Marketplace; agent plugins (preview); MCP; custom instructions &amp; prompts</td>
-    <td>Open VSX extensions; Cascade Hooks &amp; Flows; MCP; Windsurf rules</td>
-  </tr>
-  <tr>
-    <td>Convention files</td>
-    <td class="kiro"><code>.kiro/steering/*.md</code> (always-on, conditional, or manual); reads <code>AGENTS.md</code></td>
-    <td><code>.cursor/rules/*.mdc</code>; reads <code>AGENTS.md</code></td>
-    <td><code>CLAUDE.md</code> (project root + subdirs); <code>SKILL.md</code> for plugins; reads <code>AGENTS.md</code></td>
-    <td><code>.github/copilot-instructions.md</code>; agent plugins via <code>SKILL.md</code>; reads <code>AGENTS.md</code></td>
-    <td><code>.windsurfrules</code>; reads <code>AGENTS.md</code></td>
+    <td>Checkboxes (session only)</td>
+    <td>Step progress only</td>
   </tr>
 </table>
 <div class="takeaway">
-  <strong>Takeaway:</strong> Kiro is the only IDE where specs are a first-class, persistent, structured workflow — everyone else bolted on a "think before you code" step. All tools now support MCP and have growing plugin ecosystems, but Kiro's Powers are uniquely designed to steer agent behavior with domain expertise.
+  <strong>Takeaway:</strong> Kiro is the only IDE with a native, persistent spec workflow that mirrors the traditional SDLC — everyone else bolted on a "think before you code" step.
 </div>
 </body>
 </html>
