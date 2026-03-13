@@ -94,3 +94,6 @@ frontend/coverage/
 # AWS
 .aws/
 lambda_deployment.zip
+
+# Build artifacts
+*.zip
