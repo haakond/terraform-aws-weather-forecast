@@ -6,7 +6,7 @@ This module creates the AWS Lambda function and related infrastructure for the w
 
 ### Lambda Function
 - **aws_lambda_function.weather_api**: Main Lambda function for weather API
-  - Runtime: Python 3.11
+  - Runtime: Python 3.13
   - Handler: `lambda_handler.lambda_handler`
   - Timeout: 30 seconds
   - Memory: 512 MB (configurable)

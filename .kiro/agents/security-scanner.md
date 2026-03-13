@@ -2,7 +2,7 @@
 name: security-scanner
 description: Scans Terraform code for security issues using Checkov and validates IAM least-privilege compliance. Categorizes findings by severity and provides remediation guidance with correct/incorrect code examples for CIS and FSBP compliance.
 model: claude-sonnet-4.6
-tools: ["read", "write", "shell", "@awslabs-terraform", "@awslabs-docs", "@awslabs-knowledge"]
+tools: ["read", "write", "shell", "@awslabs-terraform", "@awslabs-knowledge-mcp-server"]
 ---
 
 # Security Scanner

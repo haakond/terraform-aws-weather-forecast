@@ -10,7 +10,7 @@ This document provides a detailed cost breakdown for the Weather Forecast App de
 - **Development**: ~$0.20/month (within free tier)
 - **Production**: ~$8.40/month
 - **Pricing Model**: $0.20 per 1M requests + $0.0000166667 per GB-second
-- **Configuration**: 512MB memory, 30s timeout, Python 3.11 runtime
+- **Configuration**: 512MB memory, 30s timeout, Python 3.13 runtime
 
 ### API Gateway
 - **Development**: ~$3.50/month
