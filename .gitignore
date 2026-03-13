@@ -40,6 +40,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# Draw.io
+*.drawio.bkp
+.$*.drawio.bkp
+
 # IDE
 .vscode/
 .idea/
