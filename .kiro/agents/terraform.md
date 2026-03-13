@@ -37,7 +37,7 @@ You are a full-lifecycle Terraform specialist for a weather forecast application
 
 - DynamoDB billing mode: `PAY_PER_REQUEST` (`ON_DEMAND` is deprecated in aws provider v6)
 - DynamoDB GSI: Use `key_schema` blocks, not `hash_key`/`range_key` (deprecated in v6+)
-- Lambda runtime: Python 3.11
+- Lambda runtime: Python 3.13
 - Lambda timeout: 30 seconds
 - CloudWatch logs retention: 180 days
 - Prefer Terraform definitions over external bash scripts

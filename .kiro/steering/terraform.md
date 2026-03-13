@@ -21,7 +21,7 @@ Terraform-specific patterns, AWS provider v6+ gotchas, testing standards, and de
 - CI/CD pipeline deploys on push to main — treat every push as a production change
 
 ### Resource Defaults
-- Lambda runtime: Python 3.11
+- Lambda runtime: Python 3.13
 - Lambda timeout: 30 seconds
 - CloudWatch logs retention: 180 days
 

@@ -156,7 +156,7 @@ resource "aws_lambda_function" "weather_api" {
   function_name = "${var.project_name}-weather-api"
   role          = aws_iam_role.lambda_dynamodb_role.arn
   handler       = "lambda_handler.lambda_handler"
-  runtime       = "python3.11"
+  runtime       = "python3.13"
   timeout       = 30
   memory_size   = var.lambda_memory_size
 
