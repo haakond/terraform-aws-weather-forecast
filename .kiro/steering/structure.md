@@ -1,3 +1,7 @@
+---
+inclusion: auto
+---
+
 # Project Structure
 
 ## Layout
@@ -5,12 +9,24 @@
 .
 ├── src/                # Python Lambda application code
 ├── tests/              # Unit and integration tests
-├── terraform/          # Infrastructure as code (follows terraform-best-practices.com)
+│   ├── unit/           # Python unit tests
+│   └── terraform/      # Terraform HCL-based tests
+├── modules/            # Terraform modules
+│   ├── backend/        # Lambda, API Gateway, DynamoDB
+│   ├── frontend/       # S3, CloudFront
+│   └── monitoring/     # CloudWatch, Budgets, Synthetics
+├── frontend/           # React frontend application
 ├── docs/               # Markdown documentation
 ├── examples/           # Terraform module usage examples
-├── .kiro/              # Kiro configuration and steering
+├── environments/       # Environment-specific tfvars
+├── .kiro/              # Kiro configuration, agents, and steering
 └── .vscode/            # Editor settings
 ```
+
+## Root Terraform Files
+- `main.tf` — Module calls (backend, frontend, monitoring)
+- `locals.tf` — Local values (name_prefix, common_tags)
+- `variables.tf` / `outputs.tf` — Root variables and outputs
 
 ## Conventions
 - Lowercase with hyphens for directories (e.g., `my-module/`)
