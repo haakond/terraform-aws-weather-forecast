@@ -79,6 +79,14 @@
     <td>VS Code extensions + Marketplace; agent plugins (preview); MCP; custom instructions &amp; prompts</td>
     <td>Open VSX extensions; Cascade Hooks &amp; Flows; MCP; Windsurf rules</td>
   </tr>
+  <tr>
+    <td>Convention files</td>
+    <td class="kiro"><code>.kiro/steering/*.md</code> (always-on, conditional, or manual); reads <code>AGENTS.md</code></td>
+    <td><code>.cursor/rules/*.mdc</code>; reads <code>AGENTS.md</code></td>
+    <td><code>CLAUDE.md</code> (project root + subdirs); <code>SKILL.md</code> for plugins; reads <code>AGENTS.md</code></td>
+    <td><code>.github/copilot-instructions.md</code>; agent plugins via <code>SKILL.md</code>; reads <code>AGENTS.md</code></td>
+    <td><code>.windsurfrules</code>; reads <code>AGENTS.md</code></td>
+  </tr>
 </table>
 <div class="takeaway">
   <strong>Takeaway:</strong> Kiro is the only IDE where specs are a first-class, persistent, structured workflow — everyone else bolted on a "think before you code" step. All tools now support MCP and have growing plugin ecosystems, but Kiro's Powers are uniquely designed to steer agent behavior with domain expertise.
