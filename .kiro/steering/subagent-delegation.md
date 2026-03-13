@@ -19,6 +19,11 @@ When executing spec tasks or any work matching these domains, delegate to the ap
 | Frontend (all) | `frontend-expert` | JS, React, HTML, CSS, accessibility, responsive design |
 | Architecture diagrams | `aws-diagram` | draw.io diagrams from Terraform modules |
 
+## Diagram output
+
+- Always save generated diagrams to a `.drawio` file (e.g., `docs/<name>.drawio`), then open the file with the draw.io application
+- Never open diagrams as temporary browser previews
+
 ## Rules
 
 - **MANDATORY**: Never edit, create, or delete files matching the patterns below directly — always delegate to the corresponding subagent via `invokeSubAgent`. No exceptions.
