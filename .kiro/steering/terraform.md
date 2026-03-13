@@ -35,6 +35,7 @@ Terraform-specific patterns, AWS provider v6+ gotchas, testing standards, and de
 - DynamoDB billing mode: `PAY_PER_REQUEST` (`ON_DEMAND` is deprecated in aws provider v6)
 - DynamoDB GSI: Use `key_schema` blocks, not `hash_key`/`range_key` (deprecated in v6+)
 - Prefer Terraform definitions over external bash scripts
+- **No `required_providers` in child modules** — internal modules inherit providers from the root module. Adding `required_providers` or `versions.tf` in child modules causes provider resolution failures on `terraform destroy`.
 
 ## AWS Provider v6+ Standards
 
