@@ -28,7 +28,8 @@
         "SearchAwsccProviderDocs",
         "SearchUserProvidedModule",
         "SearchSpecificAwsIaModules",
-        "RunCheckovScan"
+        "RunCheckovScan",
+        "ExecuteTerraformCommand"
       ]
     },
     "awslabs-api": {
