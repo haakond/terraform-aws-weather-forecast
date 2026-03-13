@@ -7,21 +7,21 @@
   body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; background: #fff; }
   h1 { font-size: 28px; color: #232f3e; margin-bottom: 8px; }
   p.subtitle { font-size: 14px; color: #666; margin-bottom: 24px; }
-  table { border-collapse: collapse; width: 100%; font-size: 14px; }
-  th, td { border: 1px solid #ddd; padding: 10px 14px; text-align: left; vertical-align: top; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; vertical-align: top; }
   th { background: #232f3e; color: #fff; font-weight: 600; }
   th:first-child { background: #37475a; }
   td:first-child { font-weight: 600; background: #f7f8fa; color: #232f3e; white-space: nowrap; }
   tr:nth-child(even) td:not(:first-child) { background: #fafbfc; }
   td.kiro { background: #e6f4ea !important; }
   tr:nth-child(even) td.kiro { background: #d4edda !important; }
-  .takeaway { margin-top: 20px; padding: 14px 18px; background: #e6f4ea; border-left: 4px solid #1a8754; font-size: 15px; color: #232f3e; }
-  code { background: #eee; padding: 2px 5px; border-radius: 3px; font-size: 13px; }
+  .takeaway { margin-top: 20px; padding: 14px 18px; background: #e6f4ea; border-left: 4px solid #1a8754; font-size: 14px; color: #232f3e; }
+  code { background: #eee; padding: 2px 5px; border-radius: 3px; font-size: 12px; }
 </style>
 </head>
 <body>
 <h1>Spec vs. Vibe — How Tools Compare</h1>
-<p class="subtitle">Version 1: Detailed comparison table</p>
+<p class="subtitle">Detailed comparison table</p>
 <table>
   <tr>
     <th></th>
@@ -71,9 +71,17 @@
     <td>Checkboxes (no cross-session)</td>
     <td>Step-by-step progress only</td>
   </tr>
+  <tr>
+    <td>Extensibility</td>
+    <td class="kiro">Powers marketplace (Stripe, Figma, Datadog, AWS); steering files; MCP; hooks; community loadouts</td>
+    <td>Plugin marketplace (30+ partners); cursor.directory for rules; MCP; hooks</td>
+    <td>Plugin system (Superpowers, etc.); CLAUDE.md conventions; slash commands; MCP; 8,600+ community skills</td>
+    <td>VS Code extensions + Marketplace; agent plugins (preview); MCP; custom instructions &amp; prompts</td>
+    <td>Open VSX extensions; Cascade Hooks &amp; Flows; MCP; Windsurf rules</td>
+  </tr>
 </table>
 <div class="takeaway">
-  <strong>Takeaway:</strong> Kiro is the only IDE where specs are a first-class, persistent, structured workflow — everyone else bolted on a "think before you code" step.
+  <strong>Takeaway:</strong> Kiro is the only IDE where specs are a first-class, persistent, structured workflow — everyone else bolted on a "think before you code" step. All tools now support MCP and have growing plugin ecosystems, but Kiro's Powers are uniquely designed to steer agent behavior with domain expertise.
 </div>
 </body>
 </html>
