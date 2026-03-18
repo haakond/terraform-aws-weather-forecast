@@ -24,16 +24,6 @@ output "alarm_names" {
   )
 }
 
-output "budget_name" {
-  description = "AWS Budget name"
-  value       = aws_budgets_budget.weather_app_budget.name
-}
-
-output "budget_arn" {
-  description = "AWS Budget ARN"
-  value       = aws_budgets_budget.weather_app_budget.arn
-}
-
 output "cost_dashboard_url" {
   description = "Cost monitoring CloudWatch dashboard URL"
   value       = "https://${data.aws_region.current.id}.console.aws.amazon.com/cloudwatch/home?region=${data.aws_region.current.id}#dashboards:name=${aws_cloudwatch_dashboard.cost_monitoring.dashboard_name}"

@@ -50,11 +50,6 @@ output "cloudwatch_dashboard_url" {
   value       = try(module.monitoring.dashboard_url, null)
 }
 
-output "budget_name" {
-  description = "AWS Budget name for cost monitoring"
-  value       = try(module.monitoring.budget_name, null)
-}
-
 output "cost_dashboard_url" {
   description = "Cost monitoring CloudWatch dashboard URL"
   value       = try(module.monitoring.cost_dashboard_url, null)

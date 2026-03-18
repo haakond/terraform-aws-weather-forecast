@@ -657,8 +657,6 @@ No resources.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS region for deployment | `string` | `"eu-west-1"` | no |
-| <a name="input_budget_limit"></a> [budget\_limit](#input\_budget\_limit) | Monthly budget limit in USD for cost monitoring | `number` | `50` | no |
-| <a name="input_budget_notification_emails"></a> [budget\_notification\_emails](#input\_budget\_notification\_emails) | List of email addresses to receive budget notifications when actual costs exceed 80% and 100% of the budget limit | `list(string)` | `[]` | no |
 | <a name="input_cities_config"></a> [cities\_config](#input\_cities\_config) | Configuration for cities to display weather forecasts | <pre>list(object({<br/>    id      = string<br/>    name    = string<br/>    country = string<br/>    coordinates = object({<br/>      latitude  = number<br/>      longitude = number<br/>    })<br/>  }))</pre> | <pre>[<br/>  {<br/>    "coordinates": {<br/>      "latitude": 59.9139,<br/>      "longitude": 10.7522<br/>    },<br/>    "country": "Norway",<br/>    "id": "oslo",<br/>    "name": "Oslo"<br/>  },<br/>  {<br/>    "coordinates": {<br/>      "latitude": 48.8566,<br/>      "longitude": 2.3522<br/>    },<br/>    "country": "France",<br/>    "id": "paris",<br/>    "name": "Paris"<br/>  },<br/>  {<br/>    "coordinates": {<br/>      "latitude": 51.5074,<br/>      "longitude": -0.1278<br/>    },<br/>    "country": "United Kingdom",<br/>    "id": "london",<br/>    "name": "London"<br/>  },<br/>  {<br/>    "coordinates": {<br/>      "latitude": 41.3851,<br/>      "longitude": 2.1734<br/>    },<br/>    "country": "Spain",<br/>    "id": "barcelona",<br/>    "name": "Barcelona"<br/>  }<br/>]</pre> | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name (e.g., dev, staging, prod) | `string` | `"dev"` | no |
 | <a name="input_frontend_config"></a> [frontend\_config](#input\_frontend\_config) | Configuration for the frontend module | <pre>object({<br/>    frontend_source_path = optional(string, "frontend")<br/>  })</pre> | <pre>{<br/>  "frontend_source_path": "frontend"<br/>}</pre> | no |
@@ -674,7 +672,6 @@ No resources.
 | Name | Description |
 |------|-------------|
 | <a name="output_api_gateway_url"></a> [api\_gateway\_url](#output\_api\_gateway\_url) | API Gateway endpoint URL |
-| <a name="output_budget_name"></a> [budget\_name](#output\_budget\_name) | AWS Budget name for cost monitoring |
 | <a name="output_cloudfront_distribution_domain"></a> [cloudfront\_distribution\_domain](#output\_cloudfront\_distribution\_domain) | CloudFront distribution domain name |
 | <a name="output_cloudfront_distribution_id"></a> [cloudfront\_distribution\_id](#output\_cloudfront\_distribution\_id) | CloudFront distribution ID |
 | <a name="output_cloudfront_price_class"></a> [cloudfront\_price\_class](#output\_cloudfront\_price\_class) | CloudFront price class used for cost optimization |

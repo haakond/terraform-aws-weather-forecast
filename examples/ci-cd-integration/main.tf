@@ -32,7 +32,6 @@ module "weather_app_with_build" {
   aws_region                            = var.aws_region
   weather_service_identification_domain = var.weather_service_identification_domain
   cities_config                         = var.cities_config
-  budget_limit                          = var.budget_limit
   log_retention_days                    = var.log_retention_days
 }
 
@@ -45,7 +44,6 @@ module "weather_app_cicd" {
   aws_region                            = var.aws_region
   weather_service_identification_domain = var.weather_service_identification_domain
   cities_config                         = var.cities_config
-  budget_limit                          = var.budget_limit
   log_retention_days                    = var.log_retention_days
 
   # Override frontend module configuration for CI/CD
@@ -64,7 +62,6 @@ module "weather_app_custom_path" {
   aws_region                            = var.aws_region
   weather_service_identification_domain = var.weather_service_identification_domain
   cities_config                         = var.cities_config
-  budget_limit                          = var.budget_limit
   log_retention_days                    = var.log_retention_days
 
   # Override frontend module configuration for custom path

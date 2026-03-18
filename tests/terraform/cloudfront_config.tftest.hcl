@@ -6,7 +6,6 @@ variables {
   environment                           = "test"
   weather_service_identification_domain = "test.example.com"
   aws_region                            = "eu-west-1"
-  budget_limit                          = 50
   log_retention_days                    = 180
 
   cities_config = [

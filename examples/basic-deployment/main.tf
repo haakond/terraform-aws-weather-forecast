@@ -25,7 +25,6 @@ module "weather_forecast_app" {
   environment                           = var.environment
   aws_region                            = var.aws_region
   weather_service_identification_domain = var.weather_service_identification_domain
-  budget_limit                          = var.budget_limit
 }
 
 # Output the important URLs and information
@@ -54,6 +53,5 @@ output "deployment_summary" {
     s3_bucket            = module.weather_forecast_app.s3_bucket_name
     cloudfront_id        = module.weather_forecast_app.cloudfront_distribution_id
     monitoring_dashboard = module.weather_forecast_app.cloudwatch_dashboard_url
-    budget_name          = module.weather_forecast_app.budget_name
   }
 }

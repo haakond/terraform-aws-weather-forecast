@@ -24,12 +24,6 @@ variable "weather_service_identification_domain" {
   default     = "example.com"
 }
 
-variable "budget_limit" {
-  description = "Monthly budget limit in USD"
-  type        = number
-  default     = 30
-}
-
 variable "cities_config" {
   description = "Configuration for cities to display weather forecasts"
   type = list(object({

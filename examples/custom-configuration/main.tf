@@ -37,7 +37,6 @@ module "weather_forecast_app" {
   aws_region                            = var.aws_region
   weather_service_identification_domain = var.weather_service_identification_domain
   cities_config                         = var.cities_config
-  budget_limit                          = var.budget_limit
   log_retention_days                    = var.log_retention_days
 }
 

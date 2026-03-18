@@ -23,9 +23,3 @@ variable "weather_service_identification_domain" {
   type        = string
   default     = "example.com"
 }
-
-variable "budget_limit" {
-  description = "Monthly budget limit in USD"
-  type        = number
-  default     = 25
-}

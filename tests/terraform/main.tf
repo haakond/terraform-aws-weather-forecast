@@ -44,7 +44,6 @@ module "monitoring" {
 
   name_prefix                    = local.name_prefix
   environment                    = var.environment
-  budget_limit                   = var.budget_limit
   common_tags                    = local.common_tags
   lambda_function_name           = module.backend.lambda_function_name
   api_gateway_id                 = module.backend.api_gateway_id

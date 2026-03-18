@@ -24,12 +24,6 @@ variable "aws_region" {
   default     = "eu-west-1"
 }
 
-variable "budget_limit" {
-  description = "Budget limit in USD"
-  type        = number
-  default     = 50
-}
-
 variable "log_retention_days" {
   description = "Log retention period in days"
   type        = number

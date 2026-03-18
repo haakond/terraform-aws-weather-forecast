@@ -310,39 +310,6 @@ resource "aws_cloudwatch_metric_alarm" "weather_api_success_rate" {
 # with proper retention periods. No need to create them again here to avoid
 # ResourceAlreadyExistsException.
 
-# AWS Budget for cost monitoring
-resource "aws_budgets_budget" "weather_app_budget" {
-  name              = "${var.name_prefix}-budget"
-  budget_type       = "COST"
-  limit_amount      = var.budget_limit
-  limit_unit        = "USD"
-  time_unit         = "MONTHLY"
-  time_period_start = "2024-01-01_00:00"
-
-  cost_filter {
-    name   = "TagKeyValue"
-    values = ["Service$weather-forecast-app"]
-  }
-
-  notification {
-    comparison_operator        = "GREATER_THAN"
-    threshold                  = 80
-    threshold_type             = "PERCENTAGE"
-    notification_type          = "ACTUAL"
-    subscriber_email_addresses = var.budget_notification_emails
-  }
-
-  notification {
-    comparison_operator        = "GREATER_THAN"
-    threshold                  = 100
-    threshold_type             = "PERCENTAGE"
-    notification_type          = "ACTUAL"
-    subscriber_email_addresses = var.budget_notification_emails
-  }
-
-  tags = var.common_tags
-}
-
 # CloudWatch Synthetics for End-to-End Testing
 
 # S3 bucket for Synthetics artifacts
@@ -637,7 +604,7 @@ resource "aws_cloudwatch_dashboard" "cost_monitoring" {
         height = 3
 
         properties = {
-          markdown = "## Cost Optimization Tips\n\n**Top 3 Cost Items with Heavy Production Load:**\n\n1. **API Gateway Requests** - Each API call incurs a cost. Consider implementing client-side caching and request batching.\n2. **Lambda Invocations & Duration** - Optimize function memory allocation and execution time. Consider provisioned concurrency for consistent workloads.\n3. **DynamoDB Read/Write Operations** - Implement efficient caching strategies and consider using DynamoDB on-demand billing for variable workloads.\n\n**Budget Alert:** Current monthly limit is $${var.budget_limit} USD with alerts at 80% ($${var.budget_limit * 0.8}) and 100% forecasted."
+          markdown = "## Cost Optimization Tips\n\n**Top 3 Cost Items with Heavy Production Load:**\n\n1. **API Gateway Requests** - Each API call incurs a cost. Consider implementing client-side caching and request batching.\n2. **Lambda Invocations & Duration** - Optimize function memory allocation and execution time. Consider provisioned concurrency for consistent workloads.\n3. **DynamoDB Read/Write Operations** - Implement efficient caching strategies and consider using DynamoDB on-demand billing for variable workloads."
         }
       }
     ]

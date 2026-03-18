@@ -75,12 +75,6 @@ variable "cities_config" {
   ]
 }
 
-variable "budget_limit" {
-  description = "Budget limit for cost monitoring"
-  type        = number
-  default     = 50
-}
-
 variable "log_retention_days" {
   description = "CloudWatch log retention in days"
   type        = number

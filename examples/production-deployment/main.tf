@@ -35,7 +35,6 @@ module "weather_forecast_app" {
   environment                           = var.environment
   aws_region                            = var.aws_region
   weather_service_identification_domain = var.weather_service_identification_domain
-  budget_limit                          = var.budget_limit
   log_retention_days                    = var.log_retention_days
 }
 
@@ -99,7 +98,6 @@ output "deployment_info" {
     # Monitoring
     cloudwatch_dashboard_url = module.weather_forecast_app.cloudwatch_dashboard_url
     cost_dashboard_url       = module.weather_forecast_app.cost_dashboard_url
-    budget_name              = module.weather_forecast_app.budget_name
     alert_topic_arn          = aws_sns_topic.alerts.arn
 
     # Operational

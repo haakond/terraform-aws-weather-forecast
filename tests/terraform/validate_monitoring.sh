@@ -43,7 +43,6 @@ cd ../../tests/terraform
 # Run the monitoring tests
 echo "🧪 Running monitoring module tests..."
 terraform test -filter=monitoring_cloudwatch.tftest.hcl
-terraform test -filter=monitoring_budget.tftest.hcl
 
 echo "✅ All monitoring module validations passed!"
 echo ""
@@ -52,6 +51,4 @@ echo "  - CloudWatch Dashboard with Lambda, API Gateway, and DynamoDB metrics"
 echo "  - CloudWatch Alarms for Lambda errors, API Gateway 5XX errors, and DynamoDB throttling"
 echo "  - Custom metric filters for weather API success rates"
 echo "  - Log retention policies (180 days)"
-echo "  - AWS Budget with Service tag filter"
 echo "  - Cost monitoring dashboard with usage metrics"
-echo "  - Budget alerts at 80% actual and 100% forecasted thresholds"

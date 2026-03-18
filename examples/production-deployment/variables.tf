@@ -24,12 +24,6 @@ variable "weather_service_identification_domain" {
   default     = "mycompany.com"
 }
 
-variable "budget_limit" {
-  description = "Monthly budget limit in USD for production"
-  type        = number
-  default     = 100
-}
-
 variable "log_retention_days" {
   description = "CloudWatch log retention period in days"
   type        = number
