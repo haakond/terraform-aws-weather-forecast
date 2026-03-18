@@ -108,6 +108,30 @@ provider "local" { alias = "test" }
 - **`"No valid credential sources found"` error**: Use test provider config with `skip_credentials_validation = true`
 - **`"No value for required variable"` error**: Cross-check `variables.tf` for required variables before running tests
 
+## Multi-Environment Naming
+
+### IAM and CloudWatch — account-global resources cause `EntityAlreadyExists` collisions
+
+IAM roles, IAM policies, and CloudWatch log groups are **account-global** (not regional). Using only `var.project_name` as the name prefix means two environments (e.g. `dev` + `prod`) in the same account will collide.
+
+```hcl
+# ❌ Wrong — collides across environments
+resource "aws_iam_role" "lambda_role" {
+  name = "${var.project_name}-lambda-role"
+}
+
+# ✅ Correct — scoped to environment via a local
+locals {
+  name_prefix = "${var.project_name}-${var.environment}"
+}
+
+resource "aws_iam_role" "lambda_role" {
+  name = "${local.name_prefix}-lambda-role"
+}
+```
+
+Apply `local.name_prefix` to all account-global resources: IAM roles, IAM policies, and CloudWatch log groups. Regional resources (DynamoDB, Lambda, API Gateway) are already scoped by region and can use `var.project_name` alone, but using `name_prefix` consistently is preferred.
+
 ## Deployment Troubleshooting
 
 ### S3 CORS — `ExposeHeader` wildcard not supported

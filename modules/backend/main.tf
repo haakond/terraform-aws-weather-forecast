@@ -1,6 +1,10 @@
 # Backend Module - Lambda, API Gateway, and DynamoDB
 # This module handles the serverless backend infrastructure
 
+locals {
+  name_prefix = "${var.project_name}-${var.environment}"
+}
+
 # DynamoDB table for weather data caching
 resource "aws_dynamodb_table" "weather_cache" {
   name         = "${var.project_name}-weather-cache"
@@ -39,7 +43,7 @@ resource "aws_dynamodb_table" "weather_cache" {
 
 # IAM role for Lambda function to access DynamoDB
 resource "aws_iam_role" "lambda_dynamodb_role" {
-  name = "${var.project_name}-lambda-dynamodb-role"
+  name = "${local.name_prefix}-lambda-dynamodb-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -55,14 +59,14 @@ resource "aws_iam_role" "lambda_dynamodb_role" {
   })
 
   tags = merge(var.common_tags, {
-    Name    = "${var.project_name}-lambda-dynamodb-role"
+    Name    = "${local.name_prefix}-lambda-dynamodb-role"
     Service = var.service_name
   })
 }
 
 # IAM policy for DynamoDB access with least privilege
 resource "aws_iam_policy" "lambda_dynamodb_policy" {
-  name        = "${var.project_name}-lambda-dynamodb-policy"
+  name        = "${local.name_prefix}-lambda-dynamodb-policy"
   description = "IAM policy for Lambda to access DynamoDB weather cache table"
 
   policy = jsonencode({
@@ -102,7 +106,7 @@ resource "aws_iam_policy" "lambda_dynamodb_policy" {
   })
 
   tags = merge(var.common_tags, {
-    Name    = "${var.project_name}-lambda-dynamodb-policy"
+    Name    = "${local.name_prefix}-lambda-dynamodb-policy"
     Service = var.service_name
   })
 }
@@ -121,11 +125,11 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
 
 # CloudWatch Log Group for Lambda function
 resource "aws_cloudwatch_log_group" "lambda_logs" {
-  name              = "/aws/lambda/${var.project_name}-weather-api"
+  name              = "/aws/lambda/${local.name_prefix}-weather-api"
   retention_in_days = var.log_retention_days
 
   tags = merge(var.common_tags, {
-    Name    = "${var.project_name}-lambda-logs"
+    Name    = "${local.name_prefix}-lambda-logs"
     Service = var.service_name
   })
 }
@@ -226,7 +230,7 @@ data "aws_caller_identity" "current" {}
 
 # IAM role for API Gateway CloudWatch Logs
 resource "aws_iam_role" "api_gateway_cloudwatch_role" {
-  name = "${var.project_name}-api-gateway-cloudwatch-role"
+  name = "${local.name_prefix}-api-gateway-cloudwatch-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -242,7 +246,7 @@ resource "aws_iam_role" "api_gateway_cloudwatch_role" {
   })
 
   tags = merge(var.common_tags, {
-    Name    = "${var.project_name}-api-gateway-cloudwatch-role"
+    Name    = "${local.name_prefix}-api-gateway-cloudwatch-role"
     Service = var.service_name
   })
 }
@@ -353,11 +357,11 @@ resource "aws_api_gateway_stage" "weather_api" {
 
 # CloudWatch Log Group for API Gateway
 resource "aws_cloudwatch_log_group" "api_gateway_logs" {
-  name              = "/aws/apigateway/${var.project_name}-weather-api"
+  name              = "/aws/apigateway/${local.name_prefix}-weather-api"
   retention_in_days = var.log_retention_days
 
   tags = merge(var.common_tags, {
-    Name    = "${var.project_name}-api-gateway-logs"
+    Name    = "${local.name_prefix}-api-gateway-logs"
     Service = var.service_name
   })
 }
