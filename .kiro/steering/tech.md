@@ -22,7 +22,6 @@ inclusion: always
 - **Tracing**: AWS X-Ray for Lambda functions
 - **Logging**: CloudWatch Logs with 180-day retention
 - **Monitoring**: CloudWatch Dashboard with reliability, performance, cost metrics
-- **Budgets**: AWS Budget based on Service tag with alerts
 
 ## Documentation
 - **Format**: Markdown in `docs/` directory with TL;DR sections

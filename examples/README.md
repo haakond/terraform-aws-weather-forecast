@@ -16,7 +16,6 @@ module "weather_forecast_app" {
   environment     = "prod"
   aws_region      = "eu-west-1"
   company_website = "mycompany.com"
-  budget_limit    = 50
 }
 ```
 
@@ -145,7 +144,6 @@ The following environment variables can be used to configure the deployment:
 | `TF_VAR_environment` | Environment name | `dev` |
 | `TF_VAR_aws_region` | AWS region | `eu-west-1` |
 | `TF_VAR_company_website` | Company website for User-Agent | `example.com` |
-| `TF_VAR_budget_limit` | Monthly budget limit in USD | `50` |
 
 ## Cost Considerations
 

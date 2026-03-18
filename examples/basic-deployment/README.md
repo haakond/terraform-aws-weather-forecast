@@ -45,7 +45,6 @@ project_name    = "my-weather-app"
 environment     = "prod"
 aws_region      = "eu-central-1"
 company_website = "mycompany.com"
-budget_limit    = 50
 ```
 
 ## Expected Costs
@@ -61,7 +60,7 @@ After deployment, you'll have:
 - ✅ REST API for weather data
 - ✅ Automatic caching (1-hour TTL)
 - ✅ CloudWatch monitoring dashboard
-- ✅ Cost monitoring and budget alerts
+- ✅ Cost monitoring via CloudWatch dashboards
 - ✅ High availability across multiple AZs
 
 ## Clean Up

@@ -5,23 +5,22 @@ This example demonstrates how to deploy the Weather Forecast App across multiple
 ## What This Example Deploys
 
 Three complete environments:
-- **Development**: Lower budget, shorter log retention
-- **Staging**: Medium budget, medium log retention  
-- **Production**: Higher budget, extended log retention
+- **Development**: Shorter log retention
+- **Staging**: Medium log retention
+- **Production**: Extended log retention
 
 Each environment includes:
 - Isolated infrastructure stack
 - Environment-specific resource naming
-- Appropriate budget limits and monitoring
 - Independent scaling and configuration
 
 ## Environment Configuration
 
-| Environment | Budget Limit | Log Retention | Use Case |
-|-------------|-------------|---------------|----------|
-| Development | $25/month   | 30 days       | Feature development and testing |
-| Staging     | $50/month   | 90 days       | Pre-production validation |
-| Production  | $100/month  | 180 days      | Live application |
+| Environment | Log Retention | Use Case |
+|-------------|---------------|----------|
+| Development | 30 days       | Feature development and testing |
+| Staging     | 90 days       | Pre-production validation |
+| Production  | 180 days      | Live application |
 
 ## Usage
 
@@ -44,19 +43,16 @@ Each environment includes:
 
 ### Development Environment
 - **Purpose**: Feature development and initial testing
-- **Budget**: $25/month (sufficient for development workloads)
 - **Log Retention**: 30 days (shorter retention for cost optimization)
 - **Monitoring**: Basic CloudWatch dashboards and alarms
 
-### Staging Environment  
+### Staging Environment
 - **Purpose**: Pre-production testing and validation
-- **Budget**: $50/month (handles moderate testing loads)
 - **Log Retention**: 90 days (extended for troubleshooting)
 - **Monitoring**: Enhanced monitoring for production-like testing
 
 ### Production Environment
 - **Purpose**: Live application serving real users
-- **Budget**: $100/month (handles production traffic)
 - **Log Retention**: 180 days (compliance and audit requirements)
 - **Monitoring**: Comprehensive monitoring and alerting
 
@@ -109,13 +105,6 @@ jobs:
 
 ## Cost Management
 
-### Total Monthly Budget
-- **Combined Budget**: $175/month across all environments
-- **Cost Allocation**:
-  - Development: 14% ($25)
-  - Staging: 29% ($50)  
-  - Production: 57% ($100)
-
 ### Cost Optimization Tips
 1. **Development**: Use for short-term testing, destroy when not needed
 2. **Staging**: Schedule on/off during business hours
@@ -135,7 +124,6 @@ Each environment has completely isolated resources:
 ### Per-Environment Monitoring
 - Individual CloudWatch dashboards
 - Environment-specific alarms and thresholds
-- Separate budget alerts
 - Independent log groups
 
 ### Cross-Environment Comparison

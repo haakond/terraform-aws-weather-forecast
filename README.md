@@ -72,7 +72,7 @@ The application follows a serverless-first architecture pattern:
 - **Backend**: AWS Lambda functions with API Gateway
 - **Database**: DynamoDB for weather data caching
 - **External API**: Norwegian Meteorological Institute weather service
-- **Monitoring**: CloudWatch dashboards and AWS Budget alerts
+- **Monitoring**: CloudWatch dashboards and alarms
 
 ### System Architecture
 
@@ -85,7 +85,7 @@ The architecture diagram shows the complete AWS serverless infrastructure includ
 - **Compute**: Lambda functions handle weather data processing
 - **Data Storage**: DynamoDB provides caching with TTL
 - **External Integration**: Norwegian Meteorological Institute API
-- **Monitoring**: CloudWatch and AWS Budget for observability
+- **Monitoring**: CloudWatch for observability
 
 ### Data Flow Sequence
 
@@ -121,7 +121,7 @@ The deployment diagram shows the infrastructure-as-code approach:
 - ✅ Serverless architecture for minimal operational overhead
 - ✅ Infrastructure-as-code with Terraform
 - ✅ Automated testing (unit, integration, infrastructure)
-- ✅ Cost monitoring and budget alerts
+- ✅ Cost monitoring with CloudWatch dashboards
 - ✅ Security best practices (CIS AWS Security Hub compliance)
 - ✅ High availability with multi-AZ deployment
 
@@ -136,7 +136,7 @@ The deployment diagram shows the infrastructure-as-code approach:
 ├── modules/               # Terraform modules
 │   ├── backend/          # Lambda, API Gateway, DynamoDB
 │   ├── frontend/         # S3, CloudFront
-│   └── monitoring/       # CloudWatch, AWS Budget
+│   └── monitoring/       # CloudWatch, Synthetics
 ├── src/                  # Python application code
 │   ├── weather_service/  # Weather service package
 │   └── lambda_handler.py # Lambda function handler
@@ -515,9 +515,7 @@ For more detailed testing information:
 
 ### Cost Monitoring
 
-- **AWS Budget**: Configured with $50 monthly limit
-- **Alerts**: 80% actual spend and 100% forecasted spend
-- **Dashboard**: Real-time cost tracking by service
+- **Dashboard**: Real-time cost tracking by service via CloudWatch
 - **Tags**: All resources tagged with "Service=weather-forecast-app" for cost allocation
 
 ### Lambda Concurrency Configuration
@@ -564,7 +562,6 @@ lambda_reserved_concurrency = -1
 ## Monitoring and Observability
 
 - **CloudWatch Dashboard**: Custom dashboard with key metrics
-- **AWS Budget**: Cost monitoring with Service tag filter
 - **X-Ray Tracing**: Distributed tracing for Lambda functions
 - **Log Retention**: 180-day retention for all CloudWatch logs
 

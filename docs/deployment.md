@@ -29,7 +29,6 @@ Your AWS credentials need the following permissions:
 - **CloudFront**: Create and manage distributions
 - **CloudWatch**: Create dashboards and alarms
 - **IAM**: Create roles and policies
-- **AWS Budgets**: Create budget alerts
 
 ### AWS CLI Configuration
 
@@ -82,7 +81,6 @@ project_name    = "my-weather-app"
 environment     = "dev"
 aws_region      = "eu-west-1"
 company_website = "mycompany.com"
-budget_limit    = 50
 ```
 
 ### Step 3: Initialize Terraform
@@ -142,7 +140,6 @@ project_name     = "weather-app-dev"
 environment      = "dev"
 aws_region       = "eu-west-1"
 company_website  = "mycompany.com"
-budget_limit     = 25
 log_retention_days = 30
 ```
 
@@ -162,7 +159,6 @@ project_name     = "weather-app-staging"
 environment      = "staging"
 aws_region       = "eu-west-1"
 company_website  = "mycompany.com"
-budget_limit     = 50
 log_retention_days = 90
 ```
 
@@ -182,7 +178,6 @@ project_name     = "weather-app-prod"
 environment      = "prod"
 aws_region       = "eu-west-1"
 company_website  = "mycompany.com"
-budget_limit     = 100
 log_retention_days = 180
 ```
 

@@ -263,7 +263,6 @@ frontend_config = {
   frontend_source_path = "frontend"
 }
 
-budget_limit = 100
 log_retention_days = 365
 ```
 

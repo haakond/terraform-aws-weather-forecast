@@ -136,9 +136,7 @@
     - Add log retention policies (180 days)
     - _Requirements: 3.6, 3.7_
 
-  - [x] 7.2 Set up AWS Budget and cost monitoring
-    - Create Terraform module for AWS Budget with Service tag filter
-    - Configure budget alerts for cost thresholds
+  - [x] 7.2 Set up cost monitoring CloudWatch dashboard
     - Implement simple and intuitive cost monitoring Cloudwatch dashboard
     - _Requirements: 3.3, 3.7_
 

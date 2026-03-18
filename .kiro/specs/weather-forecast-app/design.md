@@ -520,14 +520,14 @@ The Star Wars opening credits effect will be implemented using pure CSS3 transfo
 
 ### Infrastructure Monitoring
 - **CloudWatch Alarms**: Monitor Lambda errors, DynamoDB throttling, and API Gateway 5xx errors
-- **Cost Monitoring**: AWS Budget alerts based on Service tag
+- **Cost Monitoring**: CloudWatch cost dashboard
 - **Performance Metrics**: Track response times, throughput, and error rates
 - **Health Checks**: Monitor application endpoints and external API availability
 
 ### Alerting Strategy
 - **Critical Alerts**: Immediate notification for service outages
 - **Warning Alerts**: Proactive alerts for performance degradation
-- **Cost Alerts**: Budget threshold notifications
+- **Cost Alerts**: CloudWatch cost threshold monitoring
 - **Operational Alerts**: Infrastructure changes and deployment notifications
 
 ## Deployment Strategy

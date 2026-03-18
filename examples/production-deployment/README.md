@@ -7,7 +7,6 @@ This example demonstrates a production-ready deployment of the Weather Forecast 
 - ✅ Enhanced monitoring and alerting
 - ✅ SNS notifications for critical events
 - ✅ Extended log retention (180 days)
-- ✅ Higher budget limits for production traffic
 - ✅ Additional CloudWatch alarms
 - ✅ Comprehensive tagging strategy
 - ✅ Operational dashboards and console links
@@ -27,7 +26,6 @@ This example demonstrates a production-ready deployment of the Weather Forecast 
    environment     = "prod"
    aws_region      = "eu-west-1"
    company_website = "mycompany.com"
-   budget_limit    = 100
    owner          = "Platform Team"
    cost_center    = "Engineering"
    alert_email    = "alerts@mycompany.com"
@@ -52,7 +50,6 @@ This example demonstrates a production-ready deployment of the Weather Forecast 
 - **CloudWatch Dashboards**: Application and cost monitoring
 - **CloudWatch Alarms**: Lambda errors, API Gateway 5xx, DynamoDB throttling
 - **SNS Alerts**: Email notifications for critical issues
-- **Budget Alerts**: Cost threshold notifications
 
 ### High Availability
 - Multi-AZ deployment for Lambda functions
@@ -93,8 +90,7 @@ Monthly cost estimates for different usage levels:
 
 ### Weekly Operations
 1. Review CloudWatch logs for errors
-2. Check budget utilization
-3. Validate backup and recovery procedures
+2. Validate backup and recovery procedures
 
 ### Monthly Operations
 1. Review and optimize costs

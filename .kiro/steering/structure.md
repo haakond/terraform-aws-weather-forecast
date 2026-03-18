@@ -16,7 +16,7 @@ description: Project directory layout, file organization conventions, and root T
 ├── modules/            # Terraform modules
 │   ├── backend/        # Lambda, API Gateway, DynamoDB
 │   ├── frontend/       # S3, CloudFront
-│   └── monitoring/     # CloudWatch, Budgets, Synthetics
+│   └── monitoring/     # CloudWatch, Synthetics
 ├── frontend/           # React frontend application
 ├── docs/               # Markdown documentation
 ├── examples/           # Terraform module usage examples
