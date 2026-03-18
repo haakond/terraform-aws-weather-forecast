@@ -1,5 +1,5 @@
-# Monitoring Module - CloudWatch and AWS Budget
-# This module handles monitoring, alerting, and cost management
+# Monitoring Module - CloudWatch
+# This module handles monitoring and alerting
 
 # Data sources
 data "aws_region" "current" {}
