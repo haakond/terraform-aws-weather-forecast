@@ -1,5 +1,7 @@
 import React from 'react';
 import './WeatherCard.css';
+import WeatherAnimation from './WeatherAnimation';
+import WeatherTextSummary from './WeatherTextSummary';
 
 const WeatherCard = ({
   cityData,
@@ -158,6 +160,7 @@ const WeatherCard = ({
       </div>
 
       <div className="weather-card__content">
+        <WeatherAnimation condition={forecast.condition} />
         <div className="weather-card__icon-container">
           <div
             className={`weather-card__icon weather-card__icon--${icon}`}
@@ -181,6 +184,8 @@ const WeatherCard = ({
         <p className="weather-card__description" aria-label={`Weather description: ${description}`}>
           {description}
         </p>
+
+        <WeatherTextSummary forecast={forecast} />
 
         <div className="weather-card__details" role="group" aria-label="Additional weather details">
           {forecast.humidity && (

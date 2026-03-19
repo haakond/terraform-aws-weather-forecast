@@ -171,7 +171,8 @@ def extract_tomorrow_forecast(weather_data: Dict[str, Any]) -> tuple[Dict[str, A
                 "unit": "celsius"
             },
             "condition": condition,
-            "description": symbol_code.replace("_", " ").title()
+            "description": symbol_code.replace("_", " ").title(),
+            "windDirection": instant_data.get("wind_from_direction", None)
         }
 
         return forecast_data, api_timestamp

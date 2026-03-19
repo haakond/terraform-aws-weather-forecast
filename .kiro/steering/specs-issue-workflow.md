@@ -1,5 +1,5 @@
 ---
-inclusion: auto
+inclusion: always
 name: specs-issue-workflow
 description: Spec and GitHub issue lifecycle rules — creating issues from specs, linking requirements.md to issues, posting progress comments, and closing issues on completion. Use when creating, executing, or completing a Kiro spec.
 ---

@@ -99,7 +99,7 @@ Extend the backend to expose `windDirection`, add two new frontend components (`
     - Add `PropTypes` validation
     - _Requirements: 1.1, 1.2, 1.3_
 
-  - [~] 5.2 Create `frontend/src/components/WeatherAnimation.css`
+  - [x] 5.2 Create `frontend/src/components/WeatherAnimation.css`
     - Define keyframe animations using only `transform` and `opacity` properties for all 7 scenes
     - Include `@media (prefers-reduced-motion: reduce)` block that removes motion while preserving static visuals
     - Ensure component is fully visible and correctly sized from 320px to 1440px viewport width
@@ -126,11 +126,11 @@ Extend the backend to expose `windDirection`, add two new frontend components (`
     - Add to `frontend/src/components/WeatherAnimation.test.js`
     - _Requirements: 1.1, 1.2, 1.3_
 
-- [~] 6. Checkpoint — ensure frontend utility and component tests pass
+- [x] 6. Checkpoint — ensure frontend utility and component tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 7. Wire new components into `WeatherCard`
-  - [~] 7.1 Update `frontend/src/components/WeatherCard.js` to render `WeatherAnimation` and `WeatherTextSummary`
+  - [x] 7.1 Update `frontend/src/components/WeatherCard.js` to render `WeatherAnimation` and `WeatherTextSummary`
     - Import `WeatherAnimation` and `WeatherTextSummary`
     - Render `<WeatherAnimation condition={forecast.condition} />` above the emoji icon
     - Render `<WeatherTextSummary forecast={forecast} />` below the description
@@ -144,10 +144,10 @@ Extend the backend to expose `windDirection`, add two new frontend components (`
     - Add to `frontend/src/components/WeatherCard.test.js`
     - _Requirements: 1.4, 1.5, 2.6, 2.7_
 
-- [~] 8. Final checkpoint — ensure all tests pass
+- [x] 8. Final checkpoint — ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [~] 9. Close GitHub issue #10
+- [x] 9. Close GitHub issue #10
 
 ## Notes
 
