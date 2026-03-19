@@ -40,4 +40,8 @@ When generating tasks in `tasks.md`, always add a final task at the end:
 - [ ] Close GitHub issue #<number>
 ```
 
-When all other tasks are complete, close the corresponding GitHub issue via the GitHub MCP server, then mark this final task as done.
+When all other tasks are complete, before closing the issue:
+
+1. Post a comment on the GitHub issue summarising how the work was completed. For each requirement in `requirements.md`, write a maximum of 3 sentences covering: how the requirement was met, how it was implemented, and how it was tested/verified.
+2. Then close the corresponding GitHub issue via the GitHub MCP server.
+3. Mark this final task as done.
