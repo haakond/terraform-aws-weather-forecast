@@ -75,3 +75,29 @@ Restart Kiro and check MCP logs — you should see a successful connection with 
 | `Non-200 status code (400)` | PAT env var not set or not expanded | Verify `echo $GITHUB_PERSONAL_ACCESS_TOKEN` returns a value |
 | `docker: command not found` | Docker CLI not installed or Colima not started | `brew install docker && colima start` |
 | Image pull fails | Colima not running | `colima start` |
+
+## Team Composition
+
+| Name | Email | GitHub Username |
+|------|-------|-----------------|
+| Håkon Eriksen Drange | haakondrange@gmail.com | haakond |
+
+When the user asks for issues assigned to them, look up issues assigned to `haakond`.
+
+## Spec ↔ GitHub Issue Workflow
+
+### New spec → GitHub Issue
+
+When a new Kiro spec is created and `requirements.md` is accepted:
+
+1. Create a GitHub issue in `haakond/terraform-aws-weather-forecast` using the contents of `requirements.md`
+2. The issue body should contain the user stories and acceptance criteria from `requirements.md`
+3. One `requirements.md` = one GitHub issue
+4. Assign the issue to `haakond`
+
+### GitHub Issue → New spec
+
+When the user asks to create a Kiro spec from an existing GitHub issue:
+
+1. Create the spec (requirements, design, tasks) based on the issue content
+2. Once `requirements.md` is accepted, update the existing GitHub issue body to reflect the finalized requirements — do not create a new issue
