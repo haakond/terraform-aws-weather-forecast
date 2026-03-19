@@ -9,7 +9,7 @@ Terraform-specific patterns, AWS provider v6+ gotchas, testing standards, and de
 
 ## Core Principles
 
-### Mandatory Delegation
+### Terraform Mandatory Delegation
 - **NEVER edit `*.tf`, `*.tfvars`, or `*.tftest.hcl` files directly** — always delegate to the `terraform` subagent via `invokeSubAgent`, regardless of how small the change is.
 
 ### Infrastructure-as-Code Standards

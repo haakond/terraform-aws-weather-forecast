@@ -24,7 +24,7 @@ When executing spec tasks or any work matching these domains, delegate to the ap
 - Always save generated diagrams to a `.drawio` file (e.g., `docs/<name>.drawio`), then open the file with the draw.io application
 - Never open diagrams as temporary browser previews
 
-## Rules
+## Delegation Rules
 
 - **MANDATORY**: Never edit, create, or delete files matching the patterns below directly — always delegate to the corresponding subagent via `invokeSubAgent`. No exceptions.
 
