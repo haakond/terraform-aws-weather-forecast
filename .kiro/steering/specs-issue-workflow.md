@@ -28,4 +28,10 @@ When the user asks to create a Kiro spec from an existing GitHub issue:
 
 ## Spec Completion → Close Issue
 
-When all tasks in a spec's `tasks.md` are marked as done, close the corresponding GitHub issue.
+When generating tasks in `tasks.md`, always add a final task at the end:
+
+```
+- [ ] Close GitHub issue #<number>
+```
+
+When all other tasks are complete, close the corresponding GitHub issue via the GitHub MCP server, then mark this final task as done.
