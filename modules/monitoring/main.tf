@@ -484,7 +484,7 @@ resource "aws_synthetics_canary" "weather_app_e2e" {
   runtime_version      = "syn-nodejs-puppeteer-13.1"
 
   schedule {
-    expression          = "rate(5 minutes)"
+    expression          = "rate(15 minutes)"
     duration_in_seconds = 0
   }
 
