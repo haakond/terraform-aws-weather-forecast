@@ -94,3 +94,76 @@ describe('WeatherDisplay', () => {
     });
   });
 });
+
+describe('CSS gradient properties', () => {
+  const { readDefaultGradient, parseHexChannel } = require('./cssTestHelpers');
+  const fc = require('fast-check');
+
+  // Property 1: default gradient stops are blue-dominant
+  // Feature: improved-background-color, Property 1: default gradient stops are blue-dominant
+  it('all default gradient stops have blue channel > red channel', () => {
+    const gradient = readDefaultGradient('WeatherDisplay.css');
+    const hexMatches = gradient.match(/#([0-9a-fA-F]{6})/g);
+    expect(hexMatches).not.toBeNull();
+    hexMatches.forEach(hex => {
+      const r = parseHexChannel(hex, 'r');
+      const b = parseHexChannel(hex, 'b');
+      expect(b).toBeGreaterThan(r);
+    });
+  });
+
+  // Property 1 PBT: verify parseHexChannel correctness with arbitrary hex colors
+  // Feature: improved-background-color, Property 1: default gradient stops are blue-dominant
+  it('parseHexChannel correctly extracts channels from arbitrary hex colors', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 255 }),
+        fc.integer({ min: 0, max: 255 }),
+        fc.integer({ min: 0, max: 255 }),
+        (r, g, b) => {
+          const hex = '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+          expect(parseHexChannel(hex, 'r')).toBe(r);
+          expect(parseHexChannel(hex, 'g')).toBe(g);
+          expect(parseHexChannel(hex, 'b')).toBe(b);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  // Property 2: WeatherDisplay and WeatherCard default gradients are identical
+  // Feature: improved-background-color, Property 2: WeatherDisplay and WeatherCard default gradients are identical
+  it('WeatherDisplay and WeatherCard share the same default gradient', () => {
+    expect(readDefaultGradient('WeatherDisplay.css')).toBe(readDefaultGradient('WeatherCard.css'));
+  });
+
+  // Property 4: gradient structure is preserved
+  // Feature: improved-background-color, Property 4: Default gradient structure is preserved
+  it('default gradient uses 135deg angle with two stops at 0% and 100%', () => {
+    const gradient = readDefaultGradient('WeatherDisplay.css');
+    expect(gradient).toMatch(/^linear-gradient\(135deg,\s*#[0-9a-fA-F]{6}\s+0%,\s*#[0-9a-fA-F]{6}\s+100%\)$/);
+  });
+
+  // Property 5: media-query rules unchanged
+  // Feature: improved-background-color, Property 5: Media-query gradients are unchanged
+  it('dark-mode gradient is unchanged', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const css = fs.readFileSync(path.join(__dirname, 'WeatherDisplay.css'), 'utf8');
+    expect(css).toContain('linear-gradient(135deg, #1e293b 0%, #334155 100%)');
+  });
+
+  it('high-contrast override is present', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const css = fs.readFileSync(path.join(__dirname, 'WeatherDisplay.css'), 'utf8');
+    expect(css).toContain('prefers-contrast: high');
+  });
+
+  it('print background is white', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const css = fs.readFileSync(path.join(__dirname, 'WeatherDisplay.css'), 'utf8');
+    expect(css).toContain('background: white');
+  });
+});

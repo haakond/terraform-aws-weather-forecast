@@ -134,3 +134,34 @@ describe('WeatherCard', () => {
     expect(screen.queryByText(/Updated.*ago/)).not.toBeInTheDocument();
   });
 });
+
+describe('CSS gradient properties', () => {
+  const { readDefaultGradient } = require('./cssTestHelpers');
+  const fs = require('fs');
+  const path = require('path');
+
+  // Property 3: weather-condition-specific gradients unchanged
+  // Feature: improved-background-color, Property 3: Weather-condition-specific gradients are unchanged
+  const CONDITIONS = {
+    '--clear':        'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    '--cloudy':       'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    '--rain':         'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+    '--snow':         'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+    '--thunderstorm': 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+    '--fog':          'linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)',
+  };
+
+  Object.entries(CONDITIONS).forEach(([condition, expectedGradient]) => {
+    it(`weather-card${condition} gradient is unchanged`, () => {
+      const css = fs.readFileSync(path.join(__dirname, 'WeatherCard.css'), 'utf8');
+      expect(css).toContain(expectedGradient);
+    });
+  });
+
+  // Property 4: gradient structure preserved in WeatherCard
+  // Feature: improved-background-color, Property 4: Default gradient structure is preserved
+  it('WeatherCard default gradient uses 135deg angle with two stops at 0% and 100%', () => {
+    const gradient = readDefaultGradient('WeatherCard.css');
+    expect(gradient).toMatch(/^linear-gradient\(135deg,\s*#[0-9a-fA-F]{6}\s+0%,\s*#[0-9a-fA-F]{6}\s+100%\)$/);
+  });
+});
