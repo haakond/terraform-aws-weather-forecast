@@ -163,6 +163,17 @@ runtime_version = "syn-nodejs-puppeteer-6.2"
 runtime_version = "syn-nodejs-puppeteer-13.1"
 ```
 
+## Validation Sequence
+
+After every code change:
+1. `terraform fmt -check -recursive` — fix formatting
+2. `terraform validate` — fix validation errors
+3. `terraform init` followed by `terraform test` — fix failing assertions
+
+## Git Rules
+- **Never** use `git add -A` or `git add .` blindly — stage only relevant files
+- **Never** push to `main` — committing is permitted, pushing is the user's responsibility
+
 ## Pre-commit for Terraform
 
 Hooks configured with `fail_fast: true`:
