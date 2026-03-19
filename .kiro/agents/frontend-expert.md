@@ -41,6 +41,17 @@ You are a senior frontend specialist. You handle all frontend work in this repos
 - Tests in `frontend/src/components/*.test.js` and `frontend/src/hooks/__tests__/`
 - Run tests: `npm test -- --watchAll=false` from `frontend/` directory
 
+## Shell Commands
+
+Run commands without piping — always use redirection or plain invocation:
+
+- ✅ `npm install 2>&1`
+- ✅ `npm run build 2>&1`
+- ❌ `npm install 2>&1 | tail -5`
+- ❌ `npm run build 2>&1 | grep error`
+
+Never pipe command output through shell tools like `tail`, `grep`, `head`, etc.
+
 ## Operational Rules
 
 1. All changes happen in the `frontend/` directory
