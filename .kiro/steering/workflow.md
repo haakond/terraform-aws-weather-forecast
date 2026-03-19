@@ -70,3 +70,12 @@ When making any change that touches a spec (requirements, design, or tasks), tre
 - **All three files** (`requirements.md`, `design.md`, `tasks.md`) should always be consistent with each other and with the actual implementation
 
 This prevents spec drift where the implementation diverges from the documented design.
+
+## Agent Definition and Steering Consistency
+
+Agent definitions (`.kiro/agents/*.md`) and their corresponding steering files (`.kiro/steering/*.md`) must stay in sync:
+
+- **Steering is the single source of truth** for domain rules — never duplicate rules between an agent definition and a steering file
+- **Agent definitions** should contain only: identity (name, description, model, tools) and a pointer to the relevant steering file
+- When creating or updating a steering optimization spec, **always audit `.kiro/agents/`** for content that belongs in steering and include that consolidation in the spec's scope
+- When adding a new rule to a steering file, **check the corresponding agent definition** and remove any duplicate content from it
