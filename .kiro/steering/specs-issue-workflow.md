@@ -1,3 +1,7 @@
+---
+inclusion: always
+---
+
 # Spec ↔ GitHub Issue Workflow
 
 ## Team Composition
@@ -21,6 +25,8 @@ When a new Kiro spec is created and `requirements.md` is accepted:
    - Bugfix spec → label `bug`
 6. Add a link reference to the GitHub issue at the top of `requirements.md`, e.g. `> GitHub Issue: https://github.com/haakond/terraform-aws-weather-forecast/issues/<number>`
 
+**IMPORTANT**: Do not proceed to design until the GitHub issue has been created and the link added to `requirements.md`. This is a mandatory step, not optional.
+
 ## GitHub Issue → New Spec
 
 When the user asks to create a Kiro spec from an existing GitHub issue:
@@ -32,12 +38,18 @@ When the user asks to create a Kiro spec from an existing GitHub issue:
    - Assignee: `haakond`
    - Label: `enhancement` for feature specs, `bug` for bugfix specs
 
+## Spec Complete → Move Issue to Ready
+
+When `tasks.md` has been created and accepted by the user:
+
+1. Move the linked GitHub issue to **Ready** on the Kanban board at `https://github.com/users/haakond/projects/1/views/1` using the GitHub MCP server.
+
 ## Starting Work → Notify Issue
 
 When beginning execution of the **first task** in a spec's `tasks.md`:
 
 1. Post a comment on the linked GitHub issue: `🚧 Starting work on this issue.`
-2. Update the issue's project status to **In Progress** on the Kanban board at `https://github.com/users/haakond/projects/1/views/1` using the GitHub MCP server if the API supports it.
+2. Move the issue to **In Progress** on the Kanban board at `https://github.com/users/haakond/projects/1/views/1` using the GitHub MCP server.
 
 ## Spec Completion → Close Issue
 
