@@ -32,6 +32,13 @@ When the user asks to create a Kiro spec from an existing GitHub issue:
    - Assignee: `haakond`
    - Label: `enhancement` for feature specs, `bug` for bugfix specs
 
+## Starting Work → Notify Issue
+
+When beginning execution of the **first task** in a spec's `tasks.md`:
+
+1. Post a comment on the linked GitHub issue: `🚧 Starting work on this issue.`
+2. Update the issue's project status to **In Progress** on the Kanban board at `https://github.com/users/haakond/projects/1/views/1` using the GitHub MCP server if the API supports it.
+
 ## Spec Completion → Close Issue
 
 When generating tasks in `tasks.md`, always add a final task at the end:
@@ -44,4 +51,14 @@ When all other tasks are complete, before closing the issue:
 
 1. Post a comment on the GitHub issue summarising how the work was completed. For each requirement in `requirements.md`, write a maximum of 3 sentences covering: how the requirement was met, how it was implemented, and how it was tested/verified.
 2. Then close the corresponding GitHub issue via the GitHub MCP server.
-3. Mark this final task as done.
+3. Update the issue's project status to **In Review** on the Kanban board — a human will move it to Done after verifying.
+4. Mark this final task as done.
+
+## Completed Spec Guardrail
+
+A spec is considered **locked** when all tasks in `tasks.md` are marked complete (`[x]`).
+
+- **Never amend or add to a locked spec's `requirements.md`, `design.md`, or `tasks.md`.**
+- If the user requests changes or additions to a completed spec, **always create a new spec** instead.
+- Treat a completed spec the same way as a closed GitHub issue — immutable after the fact.
+- If asked to modify a locked spec, explain that it's complete and offer to create a new spec for the requested change.
