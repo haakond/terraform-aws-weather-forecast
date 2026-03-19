@@ -38,20 +38,17 @@ When the user asks to create a Kiro spec from an existing GitHub issue:
    - Assignee: `haakond`
    - Label: `enhancement` for feature specs, `bug` for bugfix specs
 
-## Spec Complete → Move Issue to Ready
+## Spec Complete → Comment on Issue
 
 When `tasks.md` has been created and accepted by the user:
 
-1. Move the linked GitHub issue to **Open** on the Kanban board at `https://github.com/users/haakond/projects/1/views/1` using the GitHub MCP server.
+1. Post a comment on the linked GitHub issue: `📋 Spec complete — requirements, design, and tasks are finalized. Ready to implement.`
 
-## Starting Work → Notify Issue
+## Starting Work → Comment on Issue
 
 When beginning execution of the **first task** in a spec's `tasks.md`:
 
 1. Post a comment on the linked GitHub issue: `🚧 Starting work on this issue.`
-2. Move the issue to **In Progress** on the Kanban board at `https://github.com/users/haakond/projects/1/views/1` using the GitHub MCP server.
-
-> Note: If the project board token lacks `read:project` / `project` scopes, board status updates will fail silently — skip them and note the limitation to the user.
 
 ## Spec Completion → Close Issue
 
@@ -64,9 +61,8 @@ When generating tasks in `tasks.md`, always add a final task at the end:
 When all other tasks are complete, before closing the issue:
 
 1. Post a comment on the GitHub issue summarising how the work was completed. For each requirement in `requirements.md`, write a maximum of 3 sentences covering: how the requirement was met, how it was implemented, and how it was tested/verified.
-2. Then close the corresponding GitHub issue via the GitHub MCP server.
-3. Update the issue's project status to **Done** on the Kanban board — a human will verify before archiving.
-4. Mark this final task as done.
+2. Close the corresponding GitHub issue via the GitHub MCP server.
+3. Mark this final task as done.
 
 ## Completed Spec Guardrail
 
