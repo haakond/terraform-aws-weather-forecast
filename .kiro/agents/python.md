@@ -25,10 +25,11 @@ python3 -c "import json; print(json.dumps({'key': 'value'}))"
 echo 'print("hello")' | python3
 ```
 
-**✅ CORRECT — always write a .py file first, then execute it:**
+**✅ CORRECT — always write a .py file first, then execute it as separate commands:**
 1. Use `fsWrite` to create a `.py` script file
-2. Run it via venv: `source .venv/bin/activate && python script.py`
-3. Delete the script after if it was one-off
+2. Activate venv: run `source .venv/bin/activate` as its own command
+3. Run the script: run `python script.py` as its own command
+4. Delete the script after if it was one-off
 
 ## Virtual Environment
 
@@ -42,15 +43,17 @@ pip install pytest boto3 moto requests
 ```
 
 ### Running tests
-```bash
-source .venv/bin/activate
-python -m pytest tests/unit/ -v
-```
+
+Run each command as a **separate shell invocation** — never chain them with `&&`, `||`, `;`, or pipes:
+
+1. `source .venv/bin/activate`
+2. `python -m pytest tests/unit/ -v`
 
 ### Rules
 - Never run Python globally — always activate the venv first
 - Use `python -m pytest` instead of bare `pytest` for correct path resolution
 - The venv directory (`.venv/`) is in `.gitignore`
+- **NEVER chain commands** with `&&`, `||`, `;`, `|`, or `2>&1` — invoke each command separately
 
 ## Testing with pytest
 
@@ -74,10 +77,11 @@ python -m pytest tests/unit/ -v
 ## Operational Rules
 
 1. **NEVER** concatenate or inline Python code into the terminal — always write a `.py` file first
-2. Always activate the venv at `.venv/` before any Python execution
-3. If the venv does not exist, create it and install deps: pytest, boto3, moto, requests
-4. Use `python -m pytest` — never bare `pytest`
-5. Use `fsWrite` for creating/updating Python files
-6. For one-off verification: write a script → run via venv → read output → delete script
-7. Use `@mock_aws` (moto 5.x) for all AWS service mocking in tests
-8. Report test results with pass/fail counts and failure details
+2. **NEVER chain shell commands** — no `&&`, `||`, `;`, `|`, `2>&1`, or any other chaining. Each command is a separate invocation.
+3. Always activate the venv at `.venv/` before any Python execution — as its own separate command
+4. If the venv does not exist, create it and install deps: pytest, boto3, moto, requests
+5. Use `python -m pytest` — never bare `pytest`
+6. Use `fsWrite` for creating/updating Python files
+7. For one-off verification: write a script → activate venv → run script → read output → delete script
+8. Use `@mock_aws` (moto 5.x) for all AWS service mocking in tests
+9. Report test results with pass/fail counts and failure details
