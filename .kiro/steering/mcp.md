@@ -9,8 +9,8 @@ description: MCP server configuration, available tools, and usage priority. Use 
 ## Usage Priority
 1. **awslabs-terraform** — Terraform provider docs, module search, Checkov scanning
 2. **awslabs-knowledge-mcp-server** — AWS docs search, regional availability, Well-Architected guidance
-3. **awslabs-pricing** — AWS pricing API, cost analysis, Terraform project cost estimation
-4. **awslabs-api** — Direct AWS CLI command execution
+3. **awslabs-api** — Direct AWS CLI command execution, pricing queries
+4. **github-mcp-server** — GitHub issues, PRs, repository operations
 
 ## Configuration
 - Workspace config: `.kiro/settings/mcp.json`
