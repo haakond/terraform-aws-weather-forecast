@@ -1,3 +1,5 @@
+> GitHub Issue: https://github.com/haakond/terraform-aws-weather-forecast/issues/7
+
 # Requirements Document
 
 ## Introduction
