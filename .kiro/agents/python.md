@@ -36,11 +36,12 @@ echo 'print("hello")' | python3
 All Python execution happens inside the venv at `.venv/` in the project root.
 
 ### Setup (one-time, if venv missing)
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install pytest boto3 moto requests hypothesis
-```
+
+Run each command as a **separate shell invocation**:
+
+1. `python3 -m venv .venv`
+2. `source .venv/bin/activate`
+3. `pip install -r requirements.txt`
 
 ### Running tests
 
@@ -79,7 +80,7 @@ Run each command as a **separate shell invocation** — never chain them with `&
 1. **NEVER** concatenate or inline Python code into the terminal — always write a `.py` file first
 2. **NEVER chain shell commands** — no `&&`, `||`, `;`, `|`, `2>&1`, or any other chaining. Each command is a separate invocation.
 3. Always activate the venv at `.venv/` before any Python execution — as its own separate command
-4. If the venv does not exist, create it and install deps: pytest, boto3, moto, requests, hypothesis
+4. If the venv does not exist, create it: `python3 -m venv .venv`, activate it, then `pip install -r requirements.txt`
 5. Use `python -m pytest` — never bare `pytest`
 6. Use `fsWrite` for creating/updating Python files
 7. For one-off verification: write a script → activate venv → run script → read output → delete script
