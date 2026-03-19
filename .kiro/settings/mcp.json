@@ -44,7 +44,10 @@
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
       },
       "disabled": false,
-      "autoApprove": [],
+      "autoApprove": [
+        "list_issues",
+        "get_me"
+      ],
       "disabledTools": [
         "assign_copilot_to_issue",
         "create_repository",
