@@ -1,6 +1,5 @@
 import React from 'react';
 import WeatherCard from './WeatherCard';
-import WeatherTextSummary from './WeatherTextSummary';
 import { useWeatherData } from '../hooks/useWeatherData';
 import { WeatherAPIError } from '../services/weatherApi';
 import './WeatherDisplay.css';
@@ -187,12 +186,6 @@ const WeatherDisplay = () => {
         </div>
       )}
 
-      {/* Text-based weather summary */}
-      <WeatherTextSummary
-        weatherData={weatherData}
-        isLoading={loading && !weatherData}
-        error={hasGlobalError ? error : null}
-      />
     </div>
   );
 };
