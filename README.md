@@ -462,7 +462,7 @@ Potential improvements to the testing strategy:
 For more detailed testing information:
 - [Unit Test Documentation](tests/unit/README.md) - Detailed Python test documentation
 - [Terraform Test Documentation](tests/terraform/README.md) - Infrastructure test details
-- [CI/CD Integration Examples](examples/ci-cd-integration/) - Pipeline integration examples
+
 
 ## Cost Analysis
 
@@ -595,7 +595,7 @@ lambda_reserved_concurrency = -1
 - [Monitoring Guide](docs/monitoring.md) - CloudWatch dashboards, alarms, and observability
 
 ### Integration Examples
-- [CI/CD Integration](examples/ci-cd-integration/) - GitHub Actions, GitLab CI, Jenkins, and Azure DevOps examples
+
 - [Basic Deployment](examples/basic-deployment/) - Simple deployment with default settings
 - [Production Deployment](examples/production-deployment/) - Production-ready configuration
 - [Multi-Environment](examples/multi-environment/) - Deploy across multiple environments
@@ -710,7 +710,7 @@ This solution is production-ready with:
 ### Getting Started
 1. **Quick Start**: Follow the [TL;DR](#tldr) section for immediate deployment
 2. **Production Deployment**: Use the [production example](examples/production-deployment/) for enterprise use
-3. **CI/CD Integration**: Implement automated deployments with [CI/CD examples](examples/ci-cd-integration/)
+
 4. **Operations**: Follow [operational runbooks](docs/operational-runbooks.md) for ongoing maintenance
 
 ### Support and Community
