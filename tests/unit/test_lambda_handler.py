@@ -15,6 +15,9 @@ from moto import mock_aws
 import boto3
 
 # Import the Lambda handler and its functions
+from hypothesis import given, settings
+from hypothesis import strategies as st
+
 from src.lambda_handler import (
     lambda_handler,
     handle_weather_request,
@@ -951,6 +954,103 @@ class TestRequestHandlers:
         assert "GET,OPTIONS" in response["headers"]["Access-Control-Allow-Methods"]
         assert response["headers"]["Access-Control-Max-Age"] == "86400"
         assert response["headers"]["Cache-Control"] == "max-age=86400"  # CORS preflight can be cached
+
+
+class TestSourceFields:
+    """Test cases for source attribution fields in API response."""
+
+    @patch('src.lambda_handler.process_city_weather_with_cache')
+    @patch('src.lambda_handler.get_cities_config')
+    def test_source_fields_present_on_success(self, mock_get_cities, mock_process_city):
+        """Assert source and source_url are present in a normal success response (DynamoDB cache hit)."""
+        mock_get_cities.return_value = [
+            {"id": "oslo", "name": "Oslo", "country": "Norway", "coordinates": {"latitude": 59.9139, "longitude": 10.7522}}
+        ]
+        mock_process_city.return_value = {
+            "cityId": "oslo",
+            "cityName": "Oslo",
+            "country": "Norway",
+            "forecast": {"temperature": {"value": 15, "unit": "celsius"}},
+            "lastUpdated": "2024-01-15T10:30:00Z"
+        }
+
+        with patch('time.sleep'):
+            result = get_weather_summary()
+
+        assert result["source"] == "Norwegian Meteorological Institute"
+        assert result["source_url"] == "https://api.met.no"
+
+    @patch('src.lambda_handler.fetch_weather_data')
+    @patch('src.lambda_handler.get_cached_weather_data')
+    @patch('src.lambda_handler.get_cities_config')
+    def test_source_fields_present_on_all_city_errors(self, mock_get_cities, mock_get_cached, mock_fetch):
+        """Assert source and source_url are present when all city fetches raise exceptions."""
+        mock_get_cities.return_value = [
+            {"id": "oslo", "name": "Oslo", "country": "Norway", "coordinates": {"latitude": 59.9139, "longitude": 10.7522}}
+        ]
+        mock_get_cached.return_value = None
+        mock_fetch.side_effect = Exception("network error")
+
+        with patch('time.sleep'):
+            result = get_weather_summary()
+
+        assert result["source"] == "Norwegian Meteorological Institute"
+        assert result["source_url"] == "https://api.met.no"
+
+    @given(st.lists(
+        st.fixed_dictionaries({
+            "id": st.sampled_from(["oslo", "paris", "london", "barcelona"]),
+            "name": st.just("City"),
+            "country": st.just("Country"),
+            "coordinates": st.fixed_dictionaries({
+                "latitude": st.floats(min_value=-90, max_value=90),
+                "longitude": st.floats(min_value=-180, max_value=180)
+            })
+        }),
+        min_size=1, max_size=4
+    ))
+    @settings(max_examples=100)
+    def test_property_source_fields_always_present(self, mock_cities):
+        """Property 2: API response always contains source fields regardless of city data source."""
+        # Feature: weather-forecast-source, Property 2: API response always contains source fields
+        with patch('src.lambda_handler.get_cities_config', return_value=mock_cities):
+            with patch('src.lambda_handler.get_cached_weather_data', return_value={
+                "cityId": "oslo",
+                "cityName": "Oslo",
+                "country": "Norway",
+                "forecast": {"temperature": {"value": 15, "unit": "celsius"}},
+                "lastUpdated": "2024-01-15T10:30:00Z"
+            }):
+                with patch('time.sleep'):
+                    result = get_weather_summary()
+
+        assert result["source"] == "Norwegian Meteorological Institute"
+        assert result["source_url"] == "https://api.met.no"
+
+    @given(st.lists(
+        st.fixed_dictionaries({
+            "id": st.sampled_from(["oslo", "paris", "london", "barcelona"]),
+            "name": st.just("City"),
+            "country": st.just("Country"),
+            "coordinates": st.fixed_dictionaries({
+                "latitude": st.floats(min_value=-90, max_value=90),
+                "longitude": st.floats(min_value=-180, max_value=180)
+            })
+        }),
+        min_size=1, max_size=4
+    ))
+    @settings(max_examples=100)
+    def test_property_source_fields_present_on_total_failure(self, mock_cities):
+        """Property 3: Source fields present even on total fetch failure."""
+        # Feature: weather-forecast-source, Property 3: Source fields present even on total fetch failure
+        with patch('src.lambda_handler.get_cities_config', return_value=mock_cities):
+            with patch('src.lambda_handler.fetch_weather_data', side_effect=Exception("network error")):
+                with patch('src.lambda_handler.get_cached_weather_data', return_value=None):
+                    with patch('time.sleep'):
+                        result = get_weather_summary()
+
+        assert result["source"] == "Norwegian Meteorological Institute"
+        assert result["source_url"] == "https://api.met.no"
 
 
 if __name__ == "__main__":

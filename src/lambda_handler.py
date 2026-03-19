@@ -23,6 +23,9 @@ dynamodb = boto3.client('dynamodb')
 
 # Configuration
 BASE_URL = "https://api.met.no/weatherapi/locationforecast/2.0/compact"
+SOURCE = "Norwegian Meteorological Institute"
+SOURCE_URL = "https://api.met.no"
+
 DEFAULT_CITIES = [
     {
         "id": "oslo",
@@ -391,7 +394,9 @@ def get_weather_summary() -> Dict[str, Any]:
         "cities": cities_weather,
         "lastUpdated": summary_last_updated,
         "status": "success" if not has_errors else "partial_failure",
-        "hasErrors": has_errors
+        "hasErrors": has_errors,
+        "source": SOURCE,
+        "source_url": SOURCE_URL
     }
 
 
