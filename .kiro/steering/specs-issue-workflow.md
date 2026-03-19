@@ -28,6 +28,9 @@ When the user asks to create a Kiro spec from an existing GitHub issue:
 1. Create the spec (requirements, design, tasks) based on the issue content
 2. Once `requirements.md` is accepted, update the existing GitHub issue body to reflect the finalized requirements — do not create a new issue
 3. Add a link reference to the GitHub issue at the top of `requirements.md`, e.g. `> GitHub Issue: https://github.com/haakond/terraform-aws-weather-forecast/issues/<number>`
+4. Ensure the issue has the correct properties — if any are missing, set them:
+   - Assignee: `haakond`
+   - Label: `enhancement` for feature specs, `bug` for bugfix specs
 
 ## Spec Completion → Close Issue
 
