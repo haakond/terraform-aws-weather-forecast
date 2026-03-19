@@ -15,8 +15,11 @@ When a new Kiro spec is created and `requirements.md` is accepted:
 1. Create a GitHub issue in `haakond/terraform-aws-weather-forecast` using the contents of `requirements.md`
 2. The issue body should contain the user stories and acceptance criteria from `requirements.md`
 3. One `requirements.md` = one GitHub issue
-4. Assign the issue to `haakond`
-5. Add a link reference to the GitHub issue at the top of `requirements.md`, e.g. `> GitHub Issue: https://github.com/haakond/terraform-aws-weather-forecast/issues/<number>`
+4. Assign the issue to `haakond` (default assignee)
+5. Set the label based on spec type:
+   - Feature spec → label `enhancement`
+   - Bugfix spec → label `bug`
+6. Add a link reference to the GitHub issue at the top of `requirements.md`, e.g. `> GitHub Issue: https://github.com/haakond/terraform-aws-weather-forecast/issues/<number>`
 
 ## GitHub Issue → New Spec
 
