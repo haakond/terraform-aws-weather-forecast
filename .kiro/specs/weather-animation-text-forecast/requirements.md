@@ -1,5 +1,7 @@
 # Requirements Document
 
+> GitHub Issue: https://github.com/haakond/terraform-aws-weather-forecast/issues/10
+
 ## Introduction
 
 This feature adds two enhancements to each city's weather card in the forecast web app:

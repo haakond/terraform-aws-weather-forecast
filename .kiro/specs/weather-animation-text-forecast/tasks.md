@@ -147,6 +147,8 @@ Extend the backend to expose `windDirection`, add two new frontend components (`
 - [ ] 8. Final checkpoint — ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
+- [ ] 9. Close GitHub issue #10
+
 ## Notes
 
 - Tasks marked with `*` are optional and can be skipped for a faster MVP
