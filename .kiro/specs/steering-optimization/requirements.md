@@ -100,3 +100,15 @@ The current steering setup has several files using `inclusion: always` that cont
 3. THE Steering_System SHALL ensure `tech.md` has its frontend testing gotcha section (`fast-check v4 + CRA Jest`) moved to a `fileMatch`-scoped file matching frontend file patterns, since it is only relevant when working on frontend code.
 4. THE Steering_System SHALL ensure `workflow.md` remains `inclusion: always` as it contains universally applicable development workflow rules.
 5. THE Steering_System SHALL ensure `product.md` remains `inclusion: always` as it contains product context needed on every request.
+
+### Requirement 8: One Domain Per Steering File
+
+**User Story:** As a developer, I want each steering file to cover exactly one domain or concern, so that the agent loads focused, predictable context rather than a mixed bag of unrelated rules.
+
+#### Acceptance Criteria
+
+1. THE Steering_System SHALL ensure each steering file is scoped to a single domain (e.g., Python, Terraform, CI/CD workflow, spec workflow, MCP configuration).
+2. WHEN a steering file contains content spanning multiple unrelated domains, THE Steering_System SHALL split it into separate domain-specific files.
+3. THE Steering_System SHALL ensure `tech.md` is split if it contains rules that belong to already-existing domain files (e.g., Python rules that belong in `python.md`, Terraform rules that belong in `terraform.md`).
+4. WHEN a new domain-specific file is created as a result of a split, THE Steering_System SHALL assign it the most appropriate inclusion mode for that domain.
+5. THE Steering_System SHALL name each domain-specific file after its domain in kebab-case (e.g., `frontend.md`, `ci-cd.md`), not after a generic category like `tech.md` or `misc.md`.
