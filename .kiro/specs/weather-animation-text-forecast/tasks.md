@@ -7,7 +7,7 @@ Extend the backend to expose `windDirection`, add two new frontend components (`
 ## Tasks
 
 - [ ] 1. Extend backend to expose windDirection
-  - [ ] 1.1 Add `windDirection` extraction to `extract_tomorrow_forecast` in `src/lambda_handler.py`
+  - [x] 1.1 Add `windDirection` extraction to `extract_tomorrow_forecast` in `src/lambda_handler.py`
     - Read `wind_from_direction` from `instant_data` using `.get("wind_from_direction", None)`
     - Add `"windDirection"` key to the returned `forecast_data` dict alongside `windSpeed`
     - _Requirements: 3.1, 3.2, 3.3_
@@ -35,11 +35,11 @@ Extend the backend to expose `windDirection`, add two new frontend components (`
     - Add to `tests/unit/test_lambda_handler.py`
     - _Requirements: 3.1, 3.2, 3.3_
 
-- [ ] 2. Checkpoint — ensure backend tests pass
+- [x] 2. Checkpoint — ensure backend tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 3. Implement shared frontend utility functions
-  - [ ] 3.1 Create `frontend/src/utils/weatherUtils.js` with `convertWindSpeed` and `getCardinalDirection`
+  - [x] 3.1 Create `frontend/src/utils/weatherUtils.js` with `convertWindSpeed` and `getCardinalDirection`
     - `convertWindSpeed(ms)`: returns `Math.round(ms * 3.6)`
     - `getCardinalDirection(degrees)`: 16-point compass lookup using 22.5° sectors as specified in the design
     - Export both functions
@@ -60,7 +60,7 @@ Extend the backend to expose `windDirection`, add two new frontend components (`
     - **Validates: Requirements 2.3**
 
 - [ ] 4. Implement `WeatherTextSummary` component
-  - [ ] 4.1 Create `frontend/src/components/WeatherTextSummary.js`
+  - [x] 4.1 Create `frontend/src/components/WeatherTextSummary.js`
     - Import `convertWindSpeed` and `getCardinalDirection` from `weatherUtils`
     - Accept `forecast` prop (shape: `temperature`, `description`, `windSpeed`, `windDirection`)
     - Return `null` if `forecast` is null/undefined
@@ -92,14 +92,14 @@ Extend the backend to expose `windDirection`, add two new frontend components (`
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
 - [ ] 5. Implement `WeatherAnimation` component
-  - [ ] 5.1 Create `frontend/src/components/WeatherAnimation.js`
+  - [x] 5.1 Create `frontend/src/components/WeatherAnimation.js`
     - Accept `condition` prop
     - Map condition to one of 7 scenes; unknown/absent falls back to `cloudy`
     - Render purely decorative CSS elements; wrap in `aria-hidden="true"`
     - Add `PropTypes` validation
     - _Requirements: 1.1, 1.2, 1.3_
 
-  - [ ] 5.2 Create `frontend/src/components/WeatherAnimation.css`
+  - [~] 5.2 Create `frontend/src/components/WeatherAnimation.css`
     - Define keyframe animations using only `transform` and `opacity` properties for all 7 scenes
     - Include `@media (prefers-reduced-motion: reduce)` block that removes motion while preserving static visuals
     - Ensure component is fully visible and correctly sized from 320px to 1440px viewport width
@@ -126,11 +126,11 @@ Extend the backend to expose `windDirection`, add two new frontend components (`
     - Add to `frontend/src/components/WeatherAnimation.test.js`
     - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 6. Checkpoint — ensure frontend utility and component tests pass
+- [~] 6. Checkpoint — ensure frontend utility and component tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 7. Wire new components into `WeatherCard`
-  - [ ] 7.1 Update `frontend/src/components/WeatherCard.js` to render `WeatherAnimation` and `WeatherTextSummary`
+  - [~] 7.1 Update `frontend/src/components/WeatherCard.js` to render `WeatherAnimation` and `WeatherTextSummary`
     - Import `WeatherAnimation` and `WeatherTextSummary`
     - Render `<WeatherAnimation condition={forecast.condition} />` above the emoji icon
     - Render `<WeatherTextSummary forecast={forecast} />` below the description
@@ -144,10 +144,10 @@ Extend the backend to expose `windDirection`, add two new frontend components (`
     - Add to `frontend/src/components/WeatherCard.test.js`
     - _Requirements: 1.4, 1.5, 2.6, 2.7_
 
-- [ ] 8. Final checkpoint — ensure all tests pass
+- [~] 8. Final checkpoint — ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 9. Close GitHub issue #10
+- [~] 9. Close GitHub issue #10
 
 ## Notes
 
