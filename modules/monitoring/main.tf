@@ -481,7 +481,7 @@ resource "aws_synthetics_canary" "weather_app_e2e" {
   execution_role_arn   = aws_iam_role.synthetics_canary_role.arn
   handler              = "pageLoadBlueprint.handler"
   zip_file             = data.archive_file.synthetics_canary_zip.output_path
-  runtime_version      = "syn-nodejs-puppeteer-6.2"
+  runtime_version      = "syn-nodejs-puppeteer-13.1"
 
   schedule {
     expression          = "rate(5 minutes)"

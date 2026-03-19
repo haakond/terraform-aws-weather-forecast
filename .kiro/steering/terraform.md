@@ -149,6 +149,20 @@ Include all API Gateway components (resources, methods, integrations, CORS) in d
 ### CloudFront + S3 ACL race condition
 Use `depends_on` to ensure ACL is set before CloudFront distribution update.
 
+## CloudWatch Synthetics
+
+### Deprecated runtime version — `ValidationException: Deprecated runtime version specified`
+
+AWS periodically deprecates Synthetics runtimes; always use the latest `syn-nodejs-puppeteer-X.Y` version.
+
+```hcl
+# ❌ Wrong — deprecated runtime
+runtime_version = "syn-nodejs-puppeteer-6.2"
+
+# ✅ Correct — current supported runtime
+runtime_version = "syn-nodejs-puppeteer-13.1"
+```
+
 ## Pre-commit for Terraform
 
 Hooks configured with `fail_fast: true`:
