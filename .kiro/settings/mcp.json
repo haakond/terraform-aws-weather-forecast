@@ -42,7 +42,8 @@
       },
       "disabled": false,
       "autoApprove": [
-        "suggest_aws_commands"
+        "suggest_aws_commands",
+        "call_aws"
       ]
     },
     "awslabs-pricing": {
