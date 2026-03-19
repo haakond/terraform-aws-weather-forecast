@@ -42,7 +42,17 @@ When the user asks to create a Kiro spec from an existing GitHub issue:
 
 When `tasks.md` has been created and accepted by the user:
 
-1. Post a comment on the linked GitHub issue: `📋 Spec complete — requirements, design, and tasks are finalized. Ready to implement.`
+1. Post a comment on the linked GitHub issue with the message `📋 Spec complete — requirements, design, and tasks are finalized. Ready to implement.` followed by a task list showing each top-level task and its direct sub-tasks (one level deep), e.g.:
+   ```
+   📋 Spec complete — requirements, design, and tasks are finalized. Ready to implement.
+
+   **Tasks:**
+   - 1. <top-level task title>
+     - 1.1 <sub-task title>
+     - 1.2 <sub-task title>
+   - 2. <top-level task title>
+     - 2.1 <sub-task title>
+   ```
 
 ## Starting Work → Comment on Issue
 
