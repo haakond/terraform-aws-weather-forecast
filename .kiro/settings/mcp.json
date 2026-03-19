@@ -30,33 +30,6 @@
         "aws___read_documentation"
       ]
     },
-    "github-mcp-server": {
-      "command": "docker",
-      "args": [
-        "run",
-        "-i",
-        "--rm",
-        "-e",
-        "GITHUB_PERSONAL_ACCESS_TOKEN",
-        "ghcr.io/github/github-mcp-server"
-      ],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
-      },
-      "disabled": false,
-      "autoApprove": [
-        "list_issues",
-        "get_me"
-      ],
-      "disabledTools": [
-        "assign_copilot_to_issue",
-        "create_repository",
-        "fork_repository",
-        "merge_pull_request",
-        "request_copilot_review",
-        "search_users"
-      ]
-    },
     "awslabs-terraform": {
       "command": "uvx",
       "args": [
