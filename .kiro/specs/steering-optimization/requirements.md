@@ -1,3 +1,5 @@
+> GitHub Issue: https://github.com/haakond/terraform-aws-weather-forecast/issues/9
+
 # Requirements Document
 
 ## Introduction
@@ -74,6 +76,18 @@ The current steering setup has several files using `inclusion: always` that cont
 1. THE Steering_System SHALL ensure each steering concern appears in exactly one file.
 2. WHEN content in one steering file duplicates content in another, THE Steering_System SHALL consolidate it into the most appropriate file and remove the duplicate.
 3. THE Steering_System SHALL ensure `tech.md` does not duplicate content already present in `python.md` or `terraform.md`.
+
+### Requirement 7: Content Conciseness and Topic Ordering Within Files
+
+**User Story:** As a developer, I want each steering file to be as concise as possible with topics ordered by importance, so that the agent processes the most critical rules first and context tokens are not wasted on verbose explanations.
+
+#### Acceptance Criteria
+
+1. THE Steering_System SHALL evaluate each steering file for verbose prose, redundant explanations, and low-signal content that can be removed without losing meaning.
+2. WHEN a steering file contains rules that can be expressed as a short bullet or code example rather than a paragraph, THE Steering_System SHALL rewrite them in the more concise form.
+3. THE Steering_System SHALL order topics within each file from highest to lowest importance, so the most critical rules appear first.
+4. WHEN a steering file contains introductory or contextual prose that restates information already clear from the section heading, THE Steering_System SHALL remove that prose.
+5. THE Steering_System SHALL ensure no steering file contains filler phrases, hedging language, or meta-commentary about the file itself.
 
 ### Requirement 6: Always-Included Files Remain Concise
 
