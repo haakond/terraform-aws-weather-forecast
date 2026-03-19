@@ -1,0 +1,19 @@
+.attribution {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: center;
+  margin: 1.5rem auto 0;
+}
+
+.attribution__link {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: underline;
+}
+
+@media (prefers-contrast: high) {
+  .attribution,
+  .attribution__link {
+    color: #ffffff;
+    text-decoration: underline;
+  }
+}

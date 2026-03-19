@@ -3,9 +3,9 @@ import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import WeatherDisplay from './WeatherDisplay';
 
-// Mock the WeatherCard component
+// Mock child components
 jest.mock('./WeatherCard', () => {
-  return function MockWeatherCard({ cityData, isLoading, error, onRetry }) {
+  return function MockWeatherCard({ cityData, isLoading, error }) {
     if (error) {
       return <div data-testid={`weather-card-${cityData?.cityName || 'unknown'}`}>Error: {error}</div>;
     }
@@ -20,18 +20,47 @@ jest.mock('./WeatherCard', () => {
   };
 });
 
+jest.mock('./Attribution', () => {
+  return function MockAttribution({ source, sourceUrl }) {
+    return (
+      <a href={sourceUrl} data-testid="attribution-link">
+        {source}
+      </a>
+    );
+  };
+});
+
+// Mock useWeatherData so all tests control state explicitly
+jest.mock('../hooks/useWeatherData', () => ({
+  useWeatherData: jest.fn()
+}));
+
+const { useWeatherData } = require('../hooks/useWeatherData');
+
+const loadingState = {
+  weatherData: null,
+  loading: true,
+  error: null,
+  lastUpdated: null,
+  refresh: jest.fn(),
+  retry: jest.fn(),
+  getErrorMessage: null,
+  formatLastUpdated: () => null
+};
+
+beforeEach(() => {
+  useWeatherData.mockReturnValue(loadingState);
+});
+
 describe('WeatherDisplay', () => {
   test('renders header correctly', () => {
     render(<WeatherDisplay />);
-
     expect(screen.getByText("Tomorrow's Weather Forecast")).toBeInTheDocument();
     expect(screen.getByText(/European Cities/)).toBeInTheDocument();
   });
 
   test('renders weather cards for all four cities', async () => {
     render(<WeatherDisplay />);
-
-    // Wait for the component to initialize
     await waitFor(() => {
       expect(screen.getByTestId('weather-card-Oslo')).toBeInTheDocument();
       expect(screen.getByTestId('weather-card-Paris')).toBeInTheDocument();
@@ -42,14 +71,11 @@ describe('WeatherDisplay', () => {
 
   test('shows loading states initially', () => {
     render(<WeatherDisplay />);
-
-    // Check that loading indicator is present
     expect(screen.getByText('Loading weather data...')).toBeInTheDocument();
   });
 
   test('displays correct city names', async () => {
     render(<WeatherDisplay />);
-
     await waitFor(() => {
       expect(screen.getByTestId('weather-card-Oslo')).toBeInTheDocument();
       expect(screen.getByTestId('weather-card-Paris')).toBeInTheDocument();
@@ -60,7 +86,6 @@ describe('WeatherDisplay', () => {
 
   test('has proper responsive grid structure', () => {
     render(<WeatherDisplay />);
-
     const grid = document.querySelector('.weather-display__grid');
     expect(grid).toBeInTheDocument();
     expect(grid).toHaveClass('weather-display__grid');
@@ -68,30 +93,51 @@ describe('WeatherDisplay', () => {
 
   test('applies correct CSS classes for styling', () => {
     render(<WeatherDisplay />);
-
-    const container = document.querySelector('.weather-display');
-    expect(container).toBeInTheDocument();
-
-    const header = document.querySelector('.weather-display__header');
-    expect(header).toBeInTheDocument();
-
-    const title = document.querySelector('.weather-display__title');
-    expect(title).toBeInTheDocument();
-
-    const subtitle = document.querySelector('.weather-display__subtitle');
-    expect(subtitle).toBeInTheDocument();
+    expect(document.querySelector('.weather-display')).toBeInTheDocument();
+    expect(document.querySelector('.weather-display__header')).toBeInTheDocument();
+    expect(document.querySelector('.weather-display__title')).toBeInTheDocument();
+    expect(document.querySelector('.weather-display__subtitle')).toBeInTheDocument();
   });
 
   test('displays lastUpdated timestamp when data is available', async () => {
     render(<WeatherDisplay />);
-
-    // Wait for the component to potentially load data and show lastUpdated
     await waitFor(() => {
-      const lastUpdatedElement = document.querySelector('.weather-display__last-updated');
-      // The element should exist (even if data hasn't loaded yet, it might show loading state)
-      // We're mainly testing that the component structure is correct
       expect(document.querySelector('.weather-display__status')).toBeInTheDocument();
     });
+  });
+
+  // Feature: weather-forecast-source, task 2.5: attribution integration test
+  test('renders Attribution link when weatherData includes source and source_url', () => {
+    useWeatherData.mockReturnValue({
+      weatherData: {
+        cities: [],
+        lastUpdated: '2024-01-15T12:00:00Z',
+        status: 'success',
+        hasErrors: false,
+        source: 'Norwegian Meteorological Institute',
+        source_url: 'https://api.met.no'
+      },
+      loading: false,
+      error: null,
+      lastUpdated: new Date('2024-01-15T12:00:00Z'),
+      refresh: jest.fn(),
+      retry: jest.fn(),
+      getErrorMessage: null,
+      formatLastUpdated: () => '1 hour ago'
+    });
+
+    render(<WeatherDisplay />);
+
+    const link = screen.getByTestId('attribution-link');
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('href', 'https://api.met.no');
+    expect(link).toHaveTextContent('Norwegian Meteorological Institute');
+  });
+
+  // Feature: weather-forecast-source, task 2.5: no attribution when weatherData is null
+  test('does not render Attribution when weatherData is null', () => {
+    render(<WeatherDisplay />); // default mock returns weatherData: null
+    expect(screen.queryByTestId('attribution-link')).not.toBeInTheDocument();
   });
 });
 
@@ -99,7 +145,6 @@ describe('CSS gradient properties', () => {
   const { readDefaultGradient, parseHexChannel } = require('./cssTestHelpers');
   const fc = require('fast-check');
 
-  // Property 1: default gradient stops are blue-dominant
   // Feature: improved-background-color, Property 1: default gradient stops are blue-dominant
   it('all default gradient stops have blue channel > red channel', () => {
     const gradient = readDefaultGradient('WeatherDisplay.css');
@@ -112,7 +157,6 @@ describe('CSS gradient properties', () => {
     });
   });
 
-  // Property 1 PBT: verify parseHexChannel correctness with arbitrary hex colors
   // Feature: improved-background-color, Property 1: default gradient stops are blue-dominant
   it('parseHexChannel correctly extracts channels from arbitrary hex colors', () => {
     fc.assert(
@@ -131,20 +175,17 @@ describe('CSS gradient properties', () => {
     );
   });
 
-  // Property 2: WeatherDisplay and WeatherCard default gradients are identical
   // Feature: improved-background-color, Property 2: WeatherDisplay and WeatherCard default gradients are identical
   it('WeatherDisplay and WeatherCard share the same default gradient', () => {
     expect(readDefaultGradient('WeatherDisplay.css')).toBe(readDefaultGradient('WeatherCard.css'));
   });
 
-  // Property 4: gradient structure is preserved
   // Feature: improved-background-color, Property 4: Default gradient structure is preserved
   it('default gradient uses 135deg angle with two stops at 0% and 100%', () => {
     const gradient = readDefaultGradient('WeatherDisplay.css');
     expect(gradient).toMatch(/^linear-gradient\(135deg,\s*#[0-9a-fA-F]{6}\s+0%,\s*#[0-9a-fA-F]{6}\s+100%\)$/);
   });
 
-  // Property 5: media-query rules unchanged
   // Feature: improved-background-color, Property 5: Media-query gradients are unchanged
   it('dark-mode gradient is unchanged', () => {
     const fs = require('fs');

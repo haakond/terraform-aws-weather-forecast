@@ -1,5 +1,6 @@
 import React from 'react';
 import WeatherCard from './WeatherCard';
+import Attribution from './Attribution';
 import { useWeatherData } from '../hooks/useWeatherData';
 import { WeatherAPIError } from '../services/weatherApi';
 import './WeatherDisplay.css';
@@ -184,6 +185,13 @@ const WeatherDisplay = () => {
             </button>
           </p>
         </div>
+      )}
+
+      {weatherData && (
+        <Attribution
+          source={weatherData.source}
+          sourceUrl={weatherData.source_url}
+        />
       )}
 
     </div>
